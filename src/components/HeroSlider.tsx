@@ -1,3 +1,6 @@
+"use client";
+
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,13 +28,23 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
   return (
     <section className="relative h-[280px] w-full overflow-hidden bg-muted md:h-[420px]">
       {slide.image_url && (
-        <img src={slide.image_url} alt={slide.title} className="absolute inset-0 h-full w-full object-cover" />
+        <Image
+          src={slide.image_url}
+          alt={slide.title}
+          fill
+          className="object-cover"
+          priority
+        />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
       <div className="relative mx-auto flex h-full max-w-7xl items-center px-4">
         <div className="max-w-2xl text-white">
           <h2 className="mb-3 text-2xl font-bold md:text-4xl">{slide.title}</h2>
-          {slide.subtitle && <p className="mb-5 text-base text-white/90 md:text-lg">{slide.subtitle}</p>}
+          {slide.subtitle && (
+            <p className="mb-5 text-base text-white/90 md:text-lg">
+              {slide.subtitle}
+            </p>
+          )}
           {slide.link_url && (
             <a href={slide.link_url}>
               <Button size="lg">আরও দেখুন</Button>
@@ -60,7 +73,9 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
               <button
                 key={i}
                 onClick={() => setIdx(i)}
-                className={`h-2 rounded-full transition-all ${i === idx ? "w-6 bg-white" : "w-2 bg-white/50"}`}
+                className={`h-2 rounded-full transition-all ${
+                  i === idx ? "w-6 bg-white" : "w-2 bg-white/50"
+                }`}
                 aria-label={`স্লাইড ${i + 1}`}
               />
             ))}

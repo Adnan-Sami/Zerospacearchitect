@@ -1,8 +1,10 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { REGISTRY_BY_KEY } from "@/content/registry";
 
-// In-memory cache shared across components
+// In-memory cache shared across components in the same browser tab
 let cache: Record<string, string> | null = null;
 let loadingPromise: Promise<Record<string, string>> | null = null;
 const listeners = new Set<() => void>();
@@ -13,7 +15,9 @@ async function loadAll(): Promise<Record<string, string>> {
   loadingPromise = (async () => {
     const { data } = await supabase.from("site_content").select("key,value");
     const map: Record<string, string> = {};
-    (data ?? []).forEach((row: any) => { map[row.key] = row.value ?? ""; });
+    (data ?? []).forEach((row: any) => {
+      map[row.key] = row.value ?? "";
+    });
     cache = map;
     loadingPromise = null;
     listeners.forEach((l) => l());
@@ -36,16 +40,23 @@ function resolve(key: string, fallback?: string): string {
 }
 
 /**
- * Returns the admin-edited value for a key, falling back to the registry default.
+ * Returns the admin-edited value for a content key, falling back to the registry default.
  */
 export function useSiteContent(key: string, fallback?: string): string {
   const [val, setVal] = useState<string>(() => resolve(key, fallback));
+
   useEffect(() => {
     let active = true;
-    const update = () => { if (active) setVal(resolve(key, fallback)); };
+    const update = () => {
+      if (active) setVal(resolve(key, fallback));
+    };
     listeners.add(update);
     loadAll().then(update);
-    return () => { active = false; listeners.delete(update); };
+    return () => {
+      active = false;
+      listeners.delete(update);
+    };
   }, [key, fallback]);
+
   return val;
 }
