@@ -1,0 +1,50 @@
+import { Link } from "@tanstack/react-router";
+import { Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { WishlistButton } from "@/components/WishlistButton";
+
+interface CourseCardProps {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+  price: number;
+  instructorName: string;
+  rating?: number;
+  reviewCount?: number;
+  categoryName?: string;
+}
+
+export function CourseCard({ id, title, thumbnailUrl, price, instructorName, rating = 0, reviewCount = 0, categoryName }: CourseCardProps) {
+  return (
+    <Link to="/courses/$courseId" params={{ courseId: id }}>
+      <Card className="group relative overflow-hidden transition-shadow hover:shadow-lg">
+        <div className="absolute right-2 top-2 z-10">
+          <WishlistButton courseId={id} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur" />
+        </div>
+        <div className="aspect-video overflow-hidden bg-muted">
+          {thumbnailUrl ? (
+            <img src={thumbnailUrl} alt={title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground">কোর্স</div>
+          )}
+        </div>
+        <CardContent className="p-4">
+          {categoryName && <Badge variant="secondary" className="mb-2 text-xs">{categoryName}</Badge>}
+          <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-foreground">{title}</h3>
+          <p className="mb-2 text-xs text-muted-foreground">{instructorName}</p>
+          <div className="mb-2 flex items-center gap-1">
+            {rating > 0 && (
+              <>
+                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-medium">{rating.toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">({reviewCount})</span>
+              </>
+            )}
+          </div>
+          <p className="text-base font-bold text-primary">৳{price.toLocaleString("bn-BD")}</p>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
