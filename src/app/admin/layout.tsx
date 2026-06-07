@@ -36,6 +36,7 @@ const navItems = [
   { href: "/admin/content", label: "সাইট কন্টেন্ট", icon: Type },
   { href: "/admin/pages", label: "কাস্টম পেজ", icon: FileText },
   { href: "/admin/menu", label: "মেনু", icon: MenuIcon },
+  { href: "/admin/subscribers", label: "সাবস্ক্রাইবার", icon: Users },
   { href: "/admin/settings", label: "সাইট সেটিংস", icon: Settings },
 ];
 

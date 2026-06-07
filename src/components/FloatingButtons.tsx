@@ -1,26 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { MessageCircle } from "lucide-react";
 
 export function FloatingButtons() {
   const pathname = usePathname();
 
-  // Hide on admin pages
-  if (pathname.startsWith("/admin")) return null;
+  // Hide on admin and dashboard pages
+  if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard") || pathname.startsWith("/learn") || pathname.startsWith("/my-courses") || pathname.startsWith("/profile")) return null;
 
   return (
     <>
-      {/* Live Chat - bottom left */}
-      <button
-        type="button"
-        aria-label="লাইভ চ্যাট"
-        onClick={() => window.open("https://m.me/", "_blank")}
-        className="fixed bottom-5 left-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg transition-transform hover:scale-110 hover:bg-blue-600"
-      >
-        <MessageCircle className="h-6 w-6 fill-white" />
-      </button>
-
       {/* WhatsApp - bottom right */}
       <a
         href="https://wa.me/8801521113539"

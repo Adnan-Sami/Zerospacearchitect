@@ -50,6 +50,7 @@ export default function HomePage() {
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [animatedStats, setAnimatedStats] = useState([0, 0, 0]);
+  const [subscribeSuccess, setSubscribeSuccess] = useState(false);
   const statsSectionRef = useRef<HTMLElement | null>(null);
   const statsAnimationStartedRef = useRef(false);
 
@@ -555,8 +556,22 @@ export default function HomePage() {
       <section className="px-4 py-10 md:px-8">
         <div className="mx-auto max-w-7xl rounded-2xl bg-blue-600 px-6 py-10 shadow-xl md:px-12">
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const emailInput = form.querySelector("input[type=email]") as HTMLInputElement;
+              const email = emailInput?.value?.trim();
+              if (!email) return;
+              
+              // Save subscriber and notify admin
+              await fetch("/api/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+              });
+              emailInput.value = "";
+              setSubscribeSuccess(true);
+              setTimeout(() => setSubscribeSuccess(false), 4000);
             }}
             className="flex flex-col items-center justify-between gap-6 md:flex-row"
           >
@@ -635,6 +650,26 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Subscribe success popup */}
+      {subscribeSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl bg-card p-8 text-center shadow-2xl">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-xl font-bold text-foreground">সাবস্ক্রিপশন সফল! 🎉</h3>
+            <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
+              ধন্যবাদ! নতুন কোর্স, অফার ও আপডেট সম্পর্কে আমরা আপনাকে জানাব।
+            </p>
+            <Button className="rounded-full bg-sky-600 px-8 hover:bg-sky-700" onClick={() => setSubscribeSuccess(false)}>
+              ঠিক আছে
+            </Button>
+          </div>
+        </div>
       )}
 
       <Footer />
