@@ -16,7 +16,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidPhone, normalizePhone, phoneToEmail } from "@/lib/phone-auth";
+import { isValidPhone, phoneToEmail } from "@/lib/phone-auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,6 +29,10 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!fullName.trim()) {
+      setError("নাম লিখুন।");
+      return;
+    }
     if (!isValidPhone(phone)) {
       setError("সঠিক ফোন নম্বর দিন।");
       return;
@@ -38,33 +42,34 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: phoneToEmail(phone),
-      password,
-      options: {
-        data: { full_name: fullName, phone: normalizePhone(phone) },
-        emailRedirectTo: window.location.origin,
-      },
+
+    // Step 1: Create user via server API (no email sent)
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, password, fullName: fullName.trim() }),
     });
-    if (error) {
-      setError(
-        error.message.includes("already")
-          ? "এই ফোন নম্বর দিয়ে আগেই অ্যাকাউন্ট আছে।"
-          : error.message
-      );
+    const result = await res.json();
+
+    if (!res.ok) {
+      setError(result.error || "রেজিস্ট্রেশন ব্যর্থ হয়েছে");
       setLoading(false);
       return;
     }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
-        .from("profiles")
-        .update({ phone: normalizePhone(phone) })
-        .eq("user_id", user.id);
+
+    // Step 2: Sign in immediately
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: phoneToEmail(phone),
+      password,
+    });
+
+    if (signInError) {
+      setError("রেজিস্ট্রেশন সফল! লগ-ইন পেজ থেকে প্রবেশ করুন।");
+      setLoading(false);
+      return;
     }
-    router.push("/");
+
+    router.push("/dashboard");
     setLoading(false);
   };
 

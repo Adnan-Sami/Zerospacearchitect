@@ -6,7 +6,7 @@ export function normalizePhone(input: string): string {
 }
 
 export function phoneToEmail(phone: string): string {
-  return `${normalizePhone(phone)}@phone.local`;
+  return `${normalizePhone(phone)}@phone.zerospace.app`;
 }
 
 export function isValidPhone(phone: string): boolean {
