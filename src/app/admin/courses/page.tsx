@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Certificate } from "@/components/Certificate";
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -46,7 +47,7 @@ export default function AdminCourses() {
   useEffect(() => { loadCourses(); loadCategories(); }, []);
 
   const openNew = () => {
-    setEditing({ title: "", description: "", thumbnail_url: "", intro_video_url: "", price: 0, original_price: null, duration_text: "", enrollment_count: 0, category_id: null, instructor_name: "", instructor_bio: "", is_published: false, what_will_learn: "", requirements: "", target_audience: "", materials_included: "", certificate_enabled: true, certificate_title: "", certificate_body: "", certificate_signature: "" });
+    setEditing({ title: "", description: "", thumbnail_url: "", intro_video_url: "", price: 0, original_price: null, duration_text: "", enrollment_count: 0, category_id: null, instructor_name: "", instructor_bio: "", instructor_avatar: "", is_published: false, what_will_learn: "", requirements: "", target_audience: "", materials_included: "", certificate_enabled: true, certificate_title: "", certificate_body: "", certificate_signature: "" });
     setModules([]);
     setExpandedModules(new Set());
   };
@@ -125,6 +126,21 @@ export default function AdminCourses() {
     setEditing((p: any) => ({ ...p, thumbnail_url: data.publicUrl }));
     toast.success("ইমেজ আপলোড হয়েছে");
     setUploadingImage(false);
+  };
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast.error("শুধু ইমেজ ফাইল আপলোড করুন"); return; }
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("course-thumbnails").upload(fileName, file);
+    if (error) { toast.error(error.message); setUploadingAvatar(false); return; }
+    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(fileName);
+    setEditing((p: any) => ({ ...p, instructor_avatar: data.publicUrl }));
+    toast.success("আভাটার আপলোড হয়েছে");
+    setUploadingAvatar(false);
   };
 
   const addCategory = async () => {
@@ -312,6 +328,29 @@ export default function AdminCourses() {
           <Card>
             <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">ইন্সট্রাক্টর</CardTitle></CardHeader>
             <CardContent className="space-y-3 pt-0">
+              {/* Avatar */}
+              <div>
+                <Label>ইন্সট্রাক্টর ছবি</Label>
+                <div className="mt-2 flex items-center gap-4">
+                  {editing.instructor_avatar ? (
+                    <div className="relative">
+                      <Image src={editing.instructor_avatar} alt="" width={72} height={72} className="h-18 w-18 rounded-full object-cover border" />
+                      <button onClick={() => setEditing((p: any) => ({ ...p, instructor_avatar: "" }))} className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImageIcon className="h-5 w-5" />}
+                    </div>
+                  )}
+                  <label className="cursor-pointer rounded-md border px-3 py-1.5 text-sm hover:bg-muted transition-colors">
+                    <Upload className="mr-1 inline h-3.5 w-3.5" />
+                    {uploadingAvatar ? "আপলোড হচ্ছে..." : "ছবি আপলোড"}
+                    <input type="file" accept="image/*" className="hidden" disabled={uploadingAvatar} onChange={(e) => e.target.files?.[0] && handleAvatarUpload(e.target.files[0])} />
+                  </label>
+                </div>
+              </div>
               <div>
                 <Label>নাম</Label>
                 <Input value={editing.instructor_name ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, instructor_name: e.target.value }))} />
@@ -455,18 +494,47 @@ export default function AdminCourses() {
               </div>
             </CardHeader>
             {editing.certificate_enabled && (
-              <CardContent className="space-y-3 pt-0">
+              <CardContent className="space-y-4 pt-0">
                 <div>
                   <Label>শিরোনাম</Label>
-                  <Input value={editing.certificate_title ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, certificate_title: e.target.value }))} />
+                  <Input
+                    placeholder="যেমন: কোর্স সমাপ্তি সার্টিফিকেট"
+                    value={editing.certificate_title ?? ""}
+                    onChange={(e) => setEditing((p: any) => ({ ...p, certificate_title: e.target.value }))}
+                  />
                 </div>
                 <div>
                   <Label>বডি টেক্সট</Label>
-                  <Textarea rows={2} value={editing.certificate_body ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, certificate_body: e.target.value }))} />
+                  <Textarea
+                    rows={2}
+                    placeholder="যেমন: সফলভাবে নিম্নলিখিত কোর্সটি সম্পন্ন করার জন্য:"
+                    value={editing.certificate_body ?? ""}
+                    onChange={(e) => setEditing((p: any) => ({ ...p, certificate_body: e.target.value }))}
+                  />
                 </div>
                 <div>
-                  <Label>স্বাক্ষর (ঐচ্ছিক)</Label>
-                  <Input value={editing.certificate_signature ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, certificate_signature: e.target.value }))} />
+                  <Label>স্বাক্ষর / পদবী (ঐচ্ছিক)</Label>
+                  <Input
+                    placeholder="যেমন: Engr. Dulal Reza, Founder"
+                    value={editing.certificate_signature ?? ""}
+                    onChange={(e) => setEditing((p: any) => ({ ...p, certificate_signature: e.target.value }))}
+                  />
+                </div>
+
+                {/* Live Preview */}
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">লাইভ প্রিভিউ</p>
+                  <div className="overflow-hidden rounded-lg border">
+                    <Certificate
+                      studentName="শিক্ষার্থীর নাম"
+                      courseName={editing.title || "কোর্সের নাম"}
+                      certificateNumber="CERT-PREVIEW"
+                      issuedDate={new Date().toLocaleDateString("bn-BD")}
+                      title={editing.certificate_title}
+                      body={editing.certificate_body}
+                      signature={editing.certificate_signature}
+                    />
+                  </div>
                 </div>
               </CardContent>
             )}
