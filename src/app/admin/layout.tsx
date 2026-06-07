@@ -24,22 +24,42 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { NotificationBell } from "@/components/NotificationBell";
 
-const navItems = [
-  { href: "/admin", label: "ড্যাশবোর্ড", icon: LayoutDashboard, exact: true },
-  { href: "/admin/courses", label: "কোর্স", icon: BookOpen },
-  { href: "/admin/books", label: "বই", icon: BookOpen },
-  { href: "/admin/orders", label: "অর্ডার", icon: ShoppingCart },
-  { href: "/admin/students", label: "শিক্ষার্থী", icon: Users },
-  { href: "/admin/slides", label: "হিরো স্লাইডার", icon: ImageIcon },
-  { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },
-  { href: "/admin/testimonials", label: "টেস্টিমোনিয়াল", icon: MessageSquare },
-  { href: "/admin/content", label: "সাইট কন্টেন্ট", icon: Type },
-  { href: "/admin/pages", label: "কাস্টম পেজ", icon: FileText },
-  { href: "/admin/menu", label: "মেনু", icon: MenuIcon },
-  { href: "/admin/subscribers", label: "সাবস্ক্রাইবার", icon: Users },
-  { href: "/admin/instructor-courses", label: "ইন্সট্রাক্টর কোর্স", icon: BookOpen },
-  { href: "/admin/instructors", label: "ইন্সট্রাক্টর তালিকা", icon: Users },
-  { href: "/admin/settings", label: "সাইট সেটিংস", icon: Settings },
+const navSections = [
+  {
+    title: "প্রধান",
+    items: [
+      { href: "/admin", label: "ড্যাশবোর্ড", icon: LayoutDashboard, exact: true },
+      { href: "/admin/orders", label: "অর্ডার", icon: ShoppingCart },
+      { href: "/admin/students", label: "শিক্ষার্থী", icon: Users },
+    ],
+  },
+  {
+    title: "কন্টেন্ট",
+    items: [
+      { href: "/admin/courses", label: "কোর্স", icon: BookOpen },
+      { href: "/admin/books", label: "বই", icon: BookOpen },
+      { href: "/admin/slides", label: "হিরো স্লাইডার", icon: ImageIcon },
+      { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },
+      { href: "/admin/testimonials", label: "টেস্টিমোনিয়াল", icon: MessageSquare },
+    ],
+  },
+  {
+    title: "ইন্সট্রাক্টর",
+    items: [
+      { href: "/admin/instructor-courses", label: "কোর্স রিভিউ", icon: BookOpen },
+      { href: "/admin/instructors", label: "তালিকা ও আয়", icon: Users },
+    ],
+  },
+  {
+    title: "সেটিংস",
+    items: [
+      { href: "/admin/content", label: "সাইট কন্টেন্ট", icon: Type },
+      { href: "/admin/pages", label: "কাস্টম পেজ", icon: FileText },
+      { href: "/admin/menu", label: "মেনু", icon: MenuIcon },
+      { href: "/admin/subscribers", label: "সাবস্ক্রাইবার", icon: Users },
+      { href: "/admin/settings", label: "সাইট সেটিংস", icon: Settings },
+    ],
+  },
 ];
 
 export default function AdminLayout({
@@ -126,27 +146,34 @@ export default function AdminLayout({
       </header>
       <div className="flex flex-1">
         <aside className="hidden w-56 border-r bg-card md:block">
-          <nav className="space-y-1 p-4">
-            {navItems.map((item) => {
-              const isActive = item.exact
-                ? pathname === item.href
-                : pathname.startsWith(item.href) && pathname !== "/admin";
-              const exactActive = item.exact && pathname === "/admin";
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
-                    exactActive || (!item.exact && isActive)
-                      ? "bg-primary/10 text-primary"
-                      : ""
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
+          <nav className="space-y-4 p-4">
+            {navSections.map((section) => (
+              <div key={section.title}>
+                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</p>
+                <div className="space-y-0.5">
+                  {section.items.map((item) => {
+                    const isActive = item.exact
+                      ? pathname === item.href
+                      : pathname.startsWith(item.href) && pathname !== "/admin";
+                    const exactActive = item.exact && pathname === "/admin";
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
+                          exactActive || (!item.exact && isActive)
+                            ? "bg-primary/10 text-primary"
+                            : ""
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </aside>
         <main className="flex-1 p-6">{children}</main>

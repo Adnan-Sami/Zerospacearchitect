@@ -27,6 +27,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/logo-footer.png" />
+      </head>
       <body suppressHydrationWarning>
         {children}
         <FloatingButtons />
