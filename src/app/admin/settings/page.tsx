@@ -27,14 +27,20 @@ export default function AdminSettings() {
   }, []);
 
   const persist = async (next: any) => {
+    // Build update payload — only include payment fields if the columns exist
+    const payload: Record<string, any> = {
+      logo_url: next.logo_url ?? "",
+      site_name: next.site_name,
+      footer_text: next.footer_text ?? "",
+      updated_at: new Date().toISOString(),
+    };
+    if (next.bkash_number !== undefined) payload.bkash_number = next.bkash_number ?? "";
+    if (next.nagad_number !== undefined) payload.nagad_number = next.nagad_number ?? "";
+    if (next.rocket_number !== undefined) payload.rocket_number = next.rocket_number ?? "";
+
     const { error } = await supabase
       .from("site_settings")
-      .update({
-        logo_url: next.logo_url ?? "",
-        site_name: next.site_name,
-        footer_text: next.footer_text ?? "",
-        updated_at: new Date().toISOString(),
-      })
+      .update(payload)
       .eq("id", next.id)
       .select()
       .maybeSingle();
@@ -142,6 +148,36 @@ export default function AdminSettings() {
               onChange={(e) =>
                 setSettings({ ...settings, footer_text: e.target.value })
               }
+            />
+          </div>
+          <div>
+            <Label>বিকাশ নম্বর</Label>
+            <Input
+              value={settings.bkash_number ?? ""}
+              onChange={(e) =>
+                setSettings({ ...settings, bkash_number: e.target.value })
+              }
+              placeholder="০১XXXXXXXXX"
+            />
+          </div>
+          <div>
+            <Label>নগদ নম্বর</Label>
+            <Input
+              value={settings.nagad_number ?? ""}
+              onChange={(e) =>
+                setSettings({ ...settings, nagad_number: e.target.value })
+              }
+              placeholder="০১XXXXXXXXX"
+            />
+          </div>
+          <div>
+            <Label>রকেট নম্বর</Label>
+            <Input
+              value={settings.rocket_number ?? ""}
+              onChange={(e) =>
+                setSettings({ ...settings, rocket_number: e.target.value })
+              }
+              placeholder="০১XXXXXXXXX"
             />
           </div>
           <Button onClick={save}>

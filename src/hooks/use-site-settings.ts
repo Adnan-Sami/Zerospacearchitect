@@ -7,12 +7,18 @@ export interface SiteSettings {
   logo_url: string;
   site_name: string;
   footer_text: string;
+  bkash_number?: string;
+  nagad_number?: string;
+  rocket_number?: string;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
   logo_url: "",
   site_name: "ZeroSpace Architect",
   footer_text: "",
+  bkash_number: "",
+  nagad_number: "",
+  rocket_number: "",
 };
 
 export function useSiteSettings(): SiteSettings {
@@ -21,7 +27,7 @@ export function useSiteSettings(): SiteSettings {
   useEffect(() => {
     supabase
       .from("site_settings")
-      .select("logo_url, site_name, footer_text")
+      .select("logo_url, site_name, footer_text, bkash_number, nagad_number, rocket_number")
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {

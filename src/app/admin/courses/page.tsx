@@ -30,6 +30,9 @@ export default function AdminCourses() {
   const [lessonDraft, setLessonDraft] = useState<{ moduleId: string; title: string; videoUrl: string; duration: string } | null>(null);
   const [quizDraft, setQuizDraft] = useState<{ moduleId: string; title: string } | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [newQuestion, setNewQuestion] = useState({ question: "", options: ["", "", "", ""], correct_answer: 0 });
 
   const loadCourses = async () => {
     const { data } = await supabase.from("courses").select("*, categories(name)").order("created_at", { ascending: false });
@@ -183,6 +186,41 @@ export default function AdminCourses() {
   const deleteLesson = async (lessonId: string) => {
     await supabase.from("lessons").delete().eq("id", lessonId);
     if (courseId) loadModules(courseId);
+    if (editingQuizId === lessonId) setEditingQuizId(null);
+  };
+
+  // Quiz question management
+  const openQuizEditor = async (lessonId: string) => {
+    if (editingQuizId === lessonId) { setEditingQuizId(null); return; }
+    setEditingQuizId(lessonId);
+    const { data } = await supabase.from("quiz_questions").select("*").eq("lesson_id", lessonId).order("sort_order");
+    setQuizQuestions(data ?? []);
+    setNewQuestion({ question: "", options: ["", "", "", ""], correct_answer: 0 });
+  };
+
+  const addQuestion = async () => {
+    if (!editingQuizId || !newQuestion.question.trim()) { toast.error("প্রশ্ন লিখুন"); return; }
+    const filledOptions = newQuestion.options.filter(o => o.trim());
+    if (filledOptions.length < 2) { toast.error("কমপক্ষে ২টি অপশন দিন"); return; }
+    const { error } = await supabase.from("quiz_questions").insert({
+      lesson_id: editingQuizId,
+      question: newQuestion.question.trim(),
+      options: filledOptions,
+      correct_answer: newQuestion.correct_answer,
+      sort_order: quizQuestions.length,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("প্রশ্ন যোগ হয়েছে");
+    setNewQuestion({ question: "", options: ["", "", "", ""], correct_answer: 0 });
+    const { data } = await supabase.from("quiz_questions").select("*").eq("lesson_id", editingQuizId).order("sort_order");
+    setQuizQuestions(data ?? []);
+  };
+
+  const deleteQuestion = async (qId: string) => {
+    if (!editingQuizId) return;
+    await supabase.from("quiz_questions").delete().eq("id", qId);
+    const { data } = await supabase.from("quiz_questions").select("*").eq("lesson_id", editingQuizId).order("sort_order");
+    setQuizQuestions(data ?? []);
   };
 
   // ── LIST VIEW ──────────────────────────────────────────────
@@ -405,15 +443,81 @@ export default function AdminCourses() {
                     {expandedModules.has(mod.id) && (
                       <div className="border-t px-3 pb-3 pt-2 space-y-1.5">
                         {mod.lessons?.sort((a: any, b: any) => a.sort_order - b.sort_order).map((lesson: any) => (
-                          <div key={lesson.id} className="flex items-center justify-between rounded border bg-background px-3 py-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              {lesson.lesson_type === "quiz"
-                                ? <HelpCircle className="h-3.5 w-3.5 text-primary" />
-                                : <Video className="h-3.5 w-3.5 text-muted-foreground" />}
-                              <span>{lesson.title}</span>
-                              {lesson.duration_minutes > 0 && <span className="text-xs text-muted-foreground">({lesson.duration_minutes} মি)</span>}
+                          <div key={lesson.id}>
+                            <div className="flex items-center justify-between rounded border bg-background px-3 py-2 text-sm">
+                              <div className="flex items-center gap-2">
+                                {lesson.lesson_type === "quiz"
+                                  ? <HelpCircle className="h-3.5 w-3.5 text-primary" />
+                                  : <Video className="h-3.5 w-3.5 text-muted-foreground" />}
+                                <span>{lesson.title}</span>
+                                {lesson.duration_minutes > 0 && <span className="text-xs text-muted-foreground">({lesson.duration_minutes} মি)</span>}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {lesson.lesson_type === "quiz" && (
+                                  <Button size="sm" variant="ghost" className="h-6 text-xs text-primary" onClick={() => openQuizEditor(lesson.id)}>
+                                    {editingQuizId === lesson.id ? "বন্ধ" : "প্রশ্ন"}
+                                  </Button>
+                                )}
+                                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => deleteLesson(lesson.id)}><Trash2 className="h-3 w-3" /></Button>
+                              </div>
                             </div>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => deleteLesson(lesson.id)}><Trash2 className="h-3 w-3" /></Button>
+
+                            {/* Quiz Question Editor */}
+                            {lesson.lesson_type === "quiz" && editingQuizId === lesson.id && (
+                              <div className="ml-4 mt-2 mb-2 space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                                <p className="text-xs font-semibold text-primary">কুইজ প্রশ্ন ({quizQuestions.length} টি)</p>
+
+                                {/* Existing questions */}
+                                {quizQuestions.map((q, qi) => (
+                                  <div key={q.id} className="flex items-start justify-between gap-2 rounded border bg-background p-2 text-xs">
+                                    <div className="flex-1">
+                                      <p className="font-medium">{qi + 1}. {q.question}</p>
+                                      <div className="mt-1 space-y-0.5">
+                                        {(Array.isArray(q.options) ? q.options : []).map((opt: string, oi: number) => (
+                                          <p key={oi} className={oi === q.correct_answer ? "font-semibold text-green-600" : "text-muted-foreground"}>
+                                            {oi === q.correct_answer ? "✓ " : "• "}{opt}
+                                          </p>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0 text-destructive" onClick={() => deleteQuestion(q.id)}><Trash2 className="h-3 w-3" /></Button>
+                                  </div>
+                                ))}
+
+                                {/* Add new question */}
+                                <div className="space-y-2 rounded border bg-background p-2">
+                                  <Input
+                                    placeholder="প্রশ্ন লিখুন"
+                                    value={newQuestion.question}
+                                    onChange={(e) => setNewQuestion({ ...newQuestion, question: e.target.value })}
+                                    className="text-sm"
+                                  />
+                                  {newQuestion.options.map((opt, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                      <input
+                                        type="radio"
+                                        name="correct_answer"
+                                        checked={newQuestion.correct_answer === i}
+                                        onChange={() => setNewQuestion({ ...newQuestion, correct_answer: i })}
+                                        title="সঠিক উত্তর"
+                                      />
+                                      <Input
+                                        placeholder={`অপশন ${i + 1}`}
+                                        value={opt}
+                                        onChange={(e) => {
+                                          const opts = [...newQuestion.options];
+                                          opts[i] = e.target.value;
+                                          setNewQuestion({ ...newQuestion, options: opts });
+                                        }}
+                                        className="text-sm"
+                                      />
+                                    </div>
+                                  ))}
+                                  <p className="text-[10px] text-muted-foreground">রেডিও বাটন দিয়ে সঠিক উত্তর নির্বাচন করুন</p>
+                                  <Button size="sm" onClick={addQuestion}><Plus className="mr-1 h-3 w-3" />প্রশ্ন যোগ করুন</Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
 

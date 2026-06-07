@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function LearnPage({
@@ -289,6 +290,7 @@ export default function LearnPage({
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

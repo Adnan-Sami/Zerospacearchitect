@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 export default function CheckoutPage({
   params,
@@ -24,6 +25,7 @@ export default function CheckoutPage({
 }) {
   const { courseId } = use(params);
   const router = useRouter();
+  const siteSettings = useSiteSettings();
   const [course, setCourse] = useState<any>(null);
   const [paymentPhone, setPaymentPhone] = useState("");
   const [transactionId, setTransactionId] = useState("");
@@ -33,15 +35,31 @@ export default function CheckoutPage({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.push("/login");
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
+        router.push("/login");
+        return;
+      }
+      const { data } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("id", courseId)
+        .single();
+      if (!data) return;
+
+      // Free course — auto-enroll and redirect
+      if (Number(data.price) === 0) {
+        setLoading(true);
+        await supabase.from("enrollments").insert({
+          user_id: session.user.id,
+          course_id: courseId,
+        });
+        router.push(`/learn/${courseId}`);
+        return;
+      }
+
+      setCourse(data);
     });
-    supabase
-      .from("courses")
-      .select("*")
-      .eq("id", courseId)
-      .single()
-      .then(({ data }) => setCourse(data));
   }, [courseId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,7 +97,7 @@ export default function CheckoutPage({
       <div className="flex min-h-screen flex-col">
         <Navbar />
         <div className="flex-1 py-20 text-center text-muted-foreground">
-          লোড হচ্ছে...
+          {loading ? "এনরোল হচ্ছে, অপেক্ষা করুন..." : "লোড হচ্ছে..."}
         </div>
         <Footer />
       </div>
@@ -123,12 +141,21 @@ export default function CheckoutPage({
                     </strong>{" "}
                     পাঠান
                   </li>
-                  <li>
-                    বিকাশ: <strong>০১৭XX-XXXXXX</strong>
-                  </li>
-                  <li>
-                    নগদ: <strong>০১৮XX-XXXXXX</strong>
-                  </li>
+                  {siteSettings.bkash_number && (
+                    <li>
+                      বিকাশ: <strong>{siteSettings.bkash_number}</strong>
+                    </li>
+                  )}
+                  {siteSettings.nagad_number && (
+                    <li>
+                      নগদ: <strong>{siteSettings.nagad_number}</strong>
+                    </li>
+                  )}
+                  {siteSettings.rocket_number && (
+                    <li>
+                      রকেট: <strong>{siteSettings.rocket_number}</strong>
+                    </li>
+                  )}
                   <li>ট্রানজেকশন আইডি ও ফোন নম্বর নিচে সাবমিট করুন</li>
                 </ol>
               </div>
