@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { Plus, Trash2, Edit, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 export default function AdminBanners() {
   const [items, setItems] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
@@ -61,6 +62,11 @@ export default function AdminBanners() {
   };
 
   const upload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("শুধু ইমেজ ফাইল আপলোড করুন");
+      return;
+    }
+    setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `banners/${Date.now()}-${Math.random()
       .toString(36)
@@ -69,13 +75,16 @@ export default function AdminBanners() {
       .from("course-thumbnails")
       .upload(path, file);
     if (error) {
-      toast.error(error.message);
+      toast.error("আপলোড ব্যর্থ: " + error.message);
+      setUploading(false);
       return;
     }
     const { data } = supabase.storage
       .from("course-thumbnails")
       .getPublicUrl(path);
-    setEditing({ ...editing, image_url: data.publicUrl });
+    setEditing((prev: any) => ({ ...prev, image_url: data.publicUrl }));
+    toast.success("ছবি আপলোড হয়েছে");
+    setUploading(false);
   };
 
   return (
@@ -109,10 +118,18 @@ export default function AdminBanners() {
               <Input
                 type="file"
                 accept="image/*"
+                disabled={uploading}
                 onChange={(e) =>
                   e.target.files?.[0] && upload(e.target.files[0])
                 }
               />
+              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                {uploading ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" /> আপলোড হচ্ছে...</>
+                ) : (
+                  <><Upload className="h-3 w-3" /> ছবি সিলেক্ট করুন বা নিচে URL দিন</>
+                )}
+              </div>
               {editing.image_url && (
                 <Image
                   src={editing.image_url}
@@ -162,7 +179,7 @@ export default function AdminBanners() {
               <Label>অ্যাক্টিভ</Label>
             </div>
             <div className="flex gap-2">
-              <Button onClick={save}>সেভ করুন</Button>
+              <Button onClick={save} disabled={uploading}>সেভ করুন</Button>
               <Button variant="outline" onClick={() => setEditing(null)}>
                 বাতিল
               </Button>

@@ -86,7 +86,7 @@ export default function AdminBooks() {
       return;
     }
     const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setEditing({ ...editing, cover_url: data.publicUrl });
+    setEditing((prev: any) => ({ ...prev, cover_url: data.publicUrl }));
     setUploading(false);
   };
 

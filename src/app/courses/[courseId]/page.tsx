@@ -37,22 +37,27 @@ export default function CourseDetailPage({
         .from("courses")
         .select("*, categories(name)")
         .eq("id", courseId)
+        .eq("is_published", true)
         .single();
       setCourse(courseData);
 
-      const { data: modulesData } = await supabase
-        .from("modules")
-        .select("*, lessons(*)")
-        .eq("course_id", courseId)
-        .order("sort_order");
-      setModules(modulesData ?? []);
+      if (!courseData) { setLoading(false); return; }
 
-      const { data: reviewsData } = await supabase
-        .from("reviews")
-        .select("*, profiles(full_name)")
-        .eq("course_id", courseId)
-        .order("created_at", { ascending: false });
-      setReviews(reviewsData ?? []);
+      const [modulesRes, reviewsRes] = await Promise.all([
+        supabase
+          .from("modules")
+          .select("*, lessons(*)")
+          .eq("course_id", courseId)
+          .order("sort_order"),
+        supabase
+          .from("reviews")
+          .select("*, profiles(full_name)")
+          .eq("course_id", courseId)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      setModules(modulesRes.data ?? []);
+      setReviews(reviewsRes.data ?? []);
 
       if (user) {
         const { data: enrollment } = await supabase
@@ -249,9 +254,14 @@ export default function CourseDetailPage({
           <div>
             <Card className="sticky top-20">
               <CardContent className="p-6">
-                <p className="mb-4 text-3xl font-bold text-primary">
+                <p className="mb-1 text-3xl font-bold text-primary">
                   ৳{Number(course.price).toLocaleString("bn-BD")}
                 </p>
+                {course.original_price && Number(course.original_price) > Number(course.price) && (
+                  <p className="mb-4 text-sm text-muted-foreground line-through">
+                    ৳{Number(course.original_price).toLocaleString("bn-BD")}
+                  </p>
+                )}
                 {enrolled ? (
                   <Link href={`/learn/${courseId}`}>
                     <Button className="w-full" size="lg">

@@ -301,9 +301,10 @@ export default function HomePage() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {courses.slice(0, 3).map((c) => (
-                <div
+                <Link
                   key={c.id}
-                  className="overflow-hidden rounded-2xl border border-sky-100 bg-card shadow-sm transition-shadow hover:shadow-xl"
+                  href={`/courses/${c.id}`}
+                  className="group overflow-hidden rounded-2xl border border-sky-100 bg-card shadow-sm transition-shadow hover:shadow-xl cursor-pointer"
                 >
                   <div className="relative">
                     {c.thumbnail_url ? (
@@ -312,7 +313,7 @@ export default function HomePage() {
                         alt={c.title}
                         width={600}
                         height={300}
-                        className="h-52 w-full object-cover"
+                        className="h-52 w-full object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-52 w-full items-center justify-center bg-muted text-muted-foreground">
@@ -344,17 +345,12 @@ export default function HomePage() {
                         <Clock className="h-4 w-4 text-sky-500" />
                         <span>{c.duration_text || "—"}</span>
                       </div>
-                      <Link href={`/courses/${c.id}`}>
-                        <Button
-                          variant="outline"
-                          className="rounded-full border-sky-400 text-sky-600 hover:bg-sky-50 hover:text-sky-700"
-                        >
-                          কোর্সটি কিনুন
-                        </Button>
-                      </Link>
+                      <span className="rounded-full border border-sky-400 px-4 py-1.5 text-sm font-medium text-sky-600 group-hover:bg-sky-50">
+                        কোর্সটি কিনুন
+                      </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
@@ -387,9 +383,10 @@ export default function HomePage() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {bestsellers.map((c) => (
-                <div
+                <Link
                   key={c.id}
-                  className="overflow-hidden rounded-2xl border border-sky-100 bg-card shadow-sm transition-shadow hover:shadow-xl"
+                  href={`/courses/${c.id}`}
+                  className="group overflow-hidden rounded-2xl border border-sky-100 bg-card shadow-sm transition-shadow hover:shadow-xl cursor-pointer"
                 >
                   <div className="relative">
                     {c.thumbnail_url ? (
@@ -398,7 +395,7 @@ export default function HomePage() {
                         alt={c.title}
                         width={600}
                         height={300}
-                        className="h-52 w-full object-cover"
+                        className="h-52 w-full object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-52 w-full items-center justify-center bg-muted text-muted-foreground">
@@ -430,17 +427,12 @@ export default function HomePage() {
                         <Clock className="h-4 w-4 text-sky-500" />
                         <span>{c.duration_text || "—"}</span>
                       </div>
-                      <Link href={`/courses/${c.id}`}>
-                        <Button
-                          variant="outline"
-                          className="rounded-full border-sky-400 text-sky-600 hover:bg-sky-50 hover:text-sky-700"
-                        >
-                          কোর্সটি কিনুন
-                        </Button>
-                      </Link>
+                      <span className="rounded-full border border-sky-400 px-4 py-1.5 text-sm font-medium text-sky-600 group-hover:bg-sky-50">
+                        কোর্সটি কিনুন
+                      </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
