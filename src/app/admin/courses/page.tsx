@@ -117,8 +117,30 @@ export default function AdminCourses() {
   };
 
   const deleteCourse = async (id: string) => {
-    if (!confirm("এই কোর্সটি ডিলিট করতে চান?")) return;
-    await supabase.from("courses").delete().eq("id", id);
+    if (!confirm("এই কোর্সটি ডিলিট করতে চান? সব মডিউল, লেসন, অর্ডার মুছে যাবে।")) return;
+    // Delete related records first (that don't have ON DELETE CASCADE)
+    const { data: modules } = await supabase.from("modules").select("id").eq("course_id", id);
+    const moduleIds = modules?.map((m) => m.id) ?? [];
+    if (moduleIds.length > 0) {
+      // Delete lessons in modules
+      await supabase.from("lessons").delete().in("module_id", moduleIds);
+      // Delete modules
+      await supabase.from("modules").delete().eq("course_id", id);
+    }
+    // Delete other related records
+    await supabase.from("orders").delete().eq("course_id", id);
+    await supabase.from("enrollments").delete().eq("course_id", id);
+    await supabase.from("certificates").delete().eq("course_id", id);
+    await supabase.from("reviews").delete().eq("course_id", id);
+    await supabase.from("wishlist").delete().eq("course_id", id);
+    await supabase.from("instructor_courses").delete().eq("course_id", id);
+    // Finally delete the course
+    const { error } = await supabase.from("courses").delete().eq("id", id);
+    if (error) {
+      toast.error("ডিলিট ব্যর্থ: " + error.message);
+    } else {
+      toast.success("কোর্স ডিলিট হয়েছে");
+    }
     loadCourses();
   };
 

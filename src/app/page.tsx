@@ -532,7 +532,7 @@ export default function HomePage() {
                 {instTitle}
               </h3>
               <p className="mb-6 text-lg font-semibold text-white/95">{instSubtitle}</p>
-              <Link href="/register">
+              <Link href="/become-instructor">
                 <Button className="rounded-full bg-white px-8 text-base font-semibold text-blue-600 hover:bg-white/90">
                   {instCta}
                 </Button>

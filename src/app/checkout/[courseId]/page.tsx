@@ -136,82 +136,78 @@ export default function CheckoutPage({
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>পেমেন্ট করুন</CardTitle>
+          <Card className="overflow-hidden">
+            <CardHeader className="border-b bg-muted/30 text-center">
+              <CardTitle className="text-xl">পেমেন্ট করুন</CardTitle>
               <CardDescription>
-                {course.title} — ৳
-                {Number(course.price).toLocaleString("bn-BD")}
+                {course.title} — <span className="font-bold text-sky-600">৳{Number(course.price).toLocaleString("bn-BD")}</span>
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="mb-6 rounded-lg bg-primary/5 p-4">
-                <h3 className="mb-2 font-semibold text-primary">
-                  পেমেন্ট নির্দেশনা:
-                </h3>
+            <CardContent className="p-6">
+              {/* Payment instruction */}
+              <div className="mb-6 rounded-xl bg-sky-50 p-4">
+                <h3 className="mb-2 text-sm font-bold text-sky-700">পেমেন্ট নির্দেশনা:</h3>
                 <ol className="list-inside list-decimal space-y-1 text-sm text-muted-foreground">
-                  <li>
-                    নিচের যেকোনো নম্বরে{" "}
-                    <strong>
-                      ৳{Number(course.price).toLocaleString("bn-BD")}
-                    </strong>{" "}
-                    পাঠান
-                  </li>
-                  {siteSettings.bkash_number && (
-                    <li>
-                      বিকাশ: <strong>{siteSettings.bkash_number}</strong>
-                    </li>
-                  )}
-                  {siteSettings.nagad_number && (
-                    <li>
-                      নগদ: <strong>{siteSettings.nagad_number}</strong>
-                    </li>
-                  )}
-                  {siteSettings.rocket_number && (
-                    <li>
-                      রকেট: <strong>{siteSettings.rocket_number}</strong>
-                    </li>
-                  )}
+                  <li>নিচের যেকোনো নম্বরে <strong className="text-foreground">৳{Number(course.price).toLocaleString("bn-BD")}</strong> পাঠান</li>
                   <li>ট্রানজেকশন আইডি ও ফোন নম্বর নিচে সাবমিট করুন</li>
                 </ol>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
-                  <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                    {error}
-                  </p>
+                  <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>
                 )}
-                <div className="space-y-2">
-                  <Label>পেমেন্ট মাধ্যম</Label>
-                  <div className="flex gap-2">
-                    {["bkash", "nagad", "rocket"].map((m) => (
-                      <Badge
-                        key={m}
-                        variant={paymentMethod === m ? "default" : "outline"}
-                        className="cursor-pointer px-4 py-2"
-                        onClick={() => setPaymentMethod(m)}
+
+                {/* Payment method with logos */}
+                <div>
+                  <Label className="mb-2 block">পেমেন্ট মাধ্যম নির্বাচন করুন</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: "bkash", label: "বিকাশ", logo: "/bkash_logo_0.webp", color: "border-pink-400 bg-pink-50" },
+                      { id: "nagad", label: "নগদ", logo: "/nagad.webp", color: "border-orange-400 bg-orange-50" },
+                      { id: "rocket", label: "রকেট", logo: "/unnamed (1).png", color: "border-purple-400 bg-purple-50" },
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setPaymentMethod(m.id)}
+                        className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all ${
+                          paymentMethod === m.id ? m.color + " shadow-md scale-[1.02]" : "border-border hover:border-muted-foreground/30"
+                        }`}
                       >
-                        {m === "bkash"
-                          ? "বিকাশ"
-                          : m === "nagad"
-                          ? "নগদ"
-                          : "রকেট"}
-                      </Badge>
+                        <img src={m.logo} alt={m.label} className="h-8 w-auto object-contain" />
+                        <span className={`text-xs font-semibold ${paymentMethod === m.id ? "text-foreground" : "text-muted-foreground"}`}>{m.label}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>আপনার ফোন নম্বর</Label>
-                  <Input
-                    placeholder="০১XXXXXXXXX"
-                    value={paymentPhone}
-                    onChange={(e) => setPaymentPhone(e.target.value)}
-                    required
+
+                {/* Show payment number based on selection */}
+                <div className="rounded-xl border-2 border-dashed border-sky-300 bg-sky-50 p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">এই নম্বরে পেমেন্ট করুন:</p>
+                  <p className="text-xl font-bold text-foreground">
+                    {paymentMethod === "bkash" && (siteSettings.bkash_number || "নম্বর সেট করা হয়নি")}
+                    {paymentMethod === "nagad" && (siteSettings.nagad_number || "নম্বর সেট করা হয়নি")}
+                    {paymentMethod === "rocket" && (siteSettings.rocket_number || "নম্বর সেট করা হয়নি")}
+                  </p>
+                  <p className="mt-1 text-xs text-sky-600 font-medium">
+                    {paymentMethod === "bkash" ? "বিকাশ" : paymentMethod === "nagad" ? "নগদ" : "রকেট"} পার্সোনাল নম্বর
+                  </p>
+                </div>
+
+                {/* Phone & Transaction ID */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label>আপনার ফোন নম্বর *</Label>
+                    <Input
+                      placeholder="০১XXXXXXXXX"
+                      value={paymentPhone}
+                      onChange={(e) => setPaymentPhone(e.target.value)}
+                      required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>ট্রানজেকশন আইডি</Label>
+                <div>
+                  <Label>ট্রানজেকশন আইডি *</Label>
                   <Input
                     placeholder="ট্রানজেকশন আইডি লিখুন"
                     value={transactionId}
@@ -219,7 +215,8 @@ export default function CheckoutPage({
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                </div>
+                <Button type="submit" className="w-full rounded-full bg-sky-600 py-3 text-base font-semibold shadow-lg hover:bg-sky-700" disabled={loading}>
                   {loading ? "সাবমিট হচ্ছে..." : "অর্ডার সাবমিট করুন"}
                 </Button>
               </form>

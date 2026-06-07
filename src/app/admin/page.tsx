@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, BookOpen, ShoppingCart, DollarSign, Download, FileText, TrendingUp } from "lucide-react";
+import { Users, BookOpen, ShoppingCart, DollarSign, Download, FileText, TrendingUp, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { supabase } from "@/integrations/supabase/client";
 
 type Period = "all" | "month" | "year";
@@ -15,7 +16,10 @@ export default function AdminDashboard() {
   const [generalStats, setGeneralStats] = useState({ students: 0, courses: 0, books: 0 });
   const [courseOrders, setCourseOrders] = useState<any[]>([]);
   const [bookOrders, setBookOrders] = useState<any[]>([]);
-
+  const [pendingTasks, setPendingTasks] = useState<any[]>([]);
+  const [pendingCourseOrders, setPendingCourseOrders] = useState(0);
+  const [pendingBookOrders, setPendingBookOrders] = useState(0);
+  const [instructorCommission, setInstructorCommission] = useState(0);
   const getDateFilter = () => {
     const now = new Date();
     if (period === "month") {
@@ -64,6 +68,37 @@ export default function AdminDashboard() {
         approved: bApproved.length,
         revenue: bApproved.reduce((s, o) => s + Number(o.amount), 0),
       });
+
+      // Pending tasks
+      const { data: approvedInstructorCourses } = await supabase
+        .from("instructor_courses")
+        .select("id, course_title, instructor_name, created_at")
+        .eq("status", "approved")
+        .is("course_id", null)
+        .order("created_at", { ascending: false });
+      setPendingTasks(approvedInstructorCourses ?? []);
+
+      // Pending orders counts
+      const { count: pendingC } = await supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending");
+      const { count: pendingB } = await supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending");
+      setPendingCourseOrders(pendingC ?? 0);
+      setPendingBookOrders(pendingB ?? 0);
+
+      // Calculate instructor commission (only for instructor-linked courses)
+      const { data: instructorCourses } = await supabase
+        .from("instructor_courses")
+        .select("course_id")
+        .eq("status", "approved");
+      const instructorCourseIds = (instructorCourses ?? []).map((ic: any) => ic.course_id).filter(Boolean);
+      
+      if (instructorCourseIds.length > 0) {
+        const instructorOrderRevenue = cData
+          .filter((o) => o.status === "approved" && instructorCourseIds.includes(o.course_id))
+          .reduce((s, o) => s + Number(o.amount), 0);
+        setInstructorCommission(Math.round(instructorOrderRevenue * 0.4));
+      } else {
+        setInstructorCommission(0);
+      }
     };
     fetchAll();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,7 +150,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">মোট আয় ({periodLabel})</CardTitle>
@@ -123,6 +158,16 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">৳{totalRevenue.toLocaleString("bn-BD")}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-purple-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">প্ল্যাটফর্ম লাভ</CardTitle>
+            <DollarSign className="h-5 w-5 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-purple-600">৳{(totalRevenue - instructorCommission).toLocaleString("bn-BD")}</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">ইন্সট্রাক্টর কমিশন: ৳{instructorCommission.toLocaleString("bn-BD")}</p>
           </CardContent>
         </Card>
         <Card>
@@ -153,6 +198,48 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Pending Tasks Reminder */}
+      {(pendingTasks.length > 0 || pendingCourseOrders > 0 || pendingBookOrders > 0) && (
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base text-amber-800">
+              <AlertTriangle className="h-4 w-4" />
+              পেন্ডিং কাজ
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pendingTasks.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-amber-700">🎓 অ্যাপ্রুভড কোর্স — পাবলিশ বাকি ({pendingTasks.length})</p>
+                {pendingTasks.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium">{t.course_title}</p>
+                      <p className="text-xs text-muted-foreground">ইন্সট্রাক্টর: {t.instructor_name || "—"} · {new Date(t.created_at).toLocaleDateString("bn-BD")}</p>
+                    </div>
+                    <Link href="/admin/courses">
+                      <Button size="sm" variant="outline" className="h-7 text-xs">কোর্স তৈরি করুন</Button>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+            {pendingCourseOrders > 0 && (
+              <Link href="/admin/orders" className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2">
+                <p className="text-sm">📚 <span className="font-medium">{pendingCourseOrders}</span> টি কোর্স অর্ডার পেন্ডিং</p>
+                <span className="text-xs text-sky-600">দেখুন →</span>
+              </Link>
+            )}
+            {pendingBookOrders > 0 && (
+              <Link href="/admin/orders" className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2">
+                <p className="text-sm">📖 <span className="font-medium">{pendingBookOrders}</span> টি বই অর্ডার পেন্ডিং</p>
+                <span className="text-xs text-sky-600">দেখুন →</span>
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Course Analytics */}
       <Card className="mb-6">

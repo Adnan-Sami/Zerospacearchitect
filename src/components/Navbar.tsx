@@ -69,7 +69,7 @@ export function Navbar() {
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/95 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+    <nav className="sticky top-0 z-50">
       <div className="mx-auto max-w-380 px-3 py-3 sm:px-4 lg:px-5">
         <div className="flex items-center gap-3 rounded-[1.75rem] border border-slate-200/80 bg-white px-3 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.05)] sm:px-4 lg:gap-4 lg:px-5">
           {/* Logo */}

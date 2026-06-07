@@ -37,6 +37,8 @@ const navItems = [
   { href: "/admin/pages", label: "কাস্টম পেজ", icon: FileText },
   { href: "/admin/menu", label: "মেনু", icon: MenuIcon },
   { href: "/admin/subscribers", label: "সাবস্ক্রাইবার", icon: Users },
+  { href: "/admin/instructor-courses", label: "ইন্সট্রাক্টর কোর্স", icon: BookOpen },
+  { href: "/admin/instructors", label: "ইন্সট্রাক্টর তালিকা", icon: Users },
   { href: "/admin/settings", label: "সাইট সেটিংস", icon: Settings },
 ];
 

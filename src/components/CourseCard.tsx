@@ -30,7 +30,7 @@ export function CourseCard({
 }: CourseCardProps) {
   return (
     <Link href={`/courses/${id}`}>
-      <Card className="group relative overflow-hidden transition-shadow hover:shadow-lg">
+      <Card className="group relative flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
         <div className="absolute right-2 top-2 z-10">
           <WishlistButton courseId={id} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur" />
         </div>
@@ -49,17 +49,17 @@ export function CourseCard({
             </div>
           )}
         </div>
-        <CardContent className="p-4">
+        <CardContent className="flex flex-1 flex-col p-4">
           {categoryName && (
-            <Badge variant="secondary" className="mb-2 text-xs">
+            <Badge variant="secondary" className="mb-2 w-fit text-xs">
               {categoryName}
             </Badge>
           )}
-          <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-foreground">
+          <h3 className="mb-1 line-clamp-2 min-h-[2.5rem] text-sm font-semibold text-foreground">
             {title}
           </h3>
-          <p className="mb-2 text-xs text-muted-foreground">{instructorName}</p>
-          <div className="mb-2 flex items-center gap-1">
+          <p className="mb-2 text-xs text-muted-foreground">{instructorName || "—"}</p>
+          <div className="mb-2 flex items-center gap-1 min-h-[1.25rem]">
             {rating > 0 && (
               <>
                 <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
@@ -68,7 +68,7 @@ export function CourseCard({
               </>
             )}
           </div>
-          <p className="text-base font-bold text-primary">
+          <p className="mt-auto text-base font-bold text-primary">
             ৳{price.toLocaleString("bn-BD")}
           </p>
         </CardContent>
