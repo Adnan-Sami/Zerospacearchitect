@@ -87,6 +87,22 @@ export default function CheckoutPage({
     if (orderError) {
       setError("অর্ডার সাবমিট করতে সমস্যা হয়েছে।");
     } else {
+      // Notify user + admins via server API (bypasses RLS)
+      await fetch("/api/notify-admins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "নতুন অর্ডার এসেছে",
+          message: `${course.title} কোর্সের নতুন অর্ডার।`,
+          type: "order",
+          link: "/admin/orders",
+          userId: user.id,
+          userTitle: "অর্ডার সাবমিট হয়েছে",
+          userMessage: `"${course.title}" কোর্সের অর্ডার পেন্ডিং আছে। অ্যাডমিন অ্যাপ্রুভ করলে কোর্স পাবেন।`,
+          userLink: "/dashboard",
+        }),
+      });
+
       setSuccess(true);
     }
     setLoading(false);

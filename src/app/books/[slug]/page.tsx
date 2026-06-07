@@ -3,13 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { BookOpen, Star, ShoppingCart, ArrowLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { BookOpen, Star, ShoppingCart, ArrowLeft, FileText, Truck, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -17,135 +17,421 @@ import { toast } from "sonner";
 
 export default function BookDetailsPage() {
   const params = useParams<{ slug: string }>();
+  const router = useRouter();
   const slug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
   const [book, setBook] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ full_name: "", phone: "", email: "", project_location: "", message: "" });
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [invoice, setInvoice] = useState<any>(null);
+  const [form, setForm] = useState({ full_name: "", phone: "", email: "", address: "", message: "", transaction_id: "" });
 
   useEffect(() => {
     const load = async () => {
       if (!slug) return;
       setLoading(true);
-      const { data } = await supabase.from("books").select("*").eq("slug", slug).eq("is_published", true).single();
+      
+      // Try by slug first
+      let { data } = await supabase.from("books").select("*").eq("slug", slug).eq("is_published", true).limit(1).maybeSingle();
+      
+      // If not found by slug, try by id (in case slug is actually a UUID)
+      if (!data) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(slug)) {
+          const res = await supabase.from("books").select("*").eq("id", slug).eq("is_published", true).limit(1).maybeSingle();
+          data = res.data;
+        }
+      }
+
+      // If still not found, try decoded slug
+      if (!data) {
+        const decoded = decodeURIComponent(slug);
+        if (decoded !== slug) {
+          const res = await supabase.from("books").select("*").eq("slug", decoded).eq("is_published", true).limit(1).maybeSingle();
+          data = res.data;
+        }
+      }
+
       setBook(data ?? null);
       setLoading(false);
     };
     load();
   }, [slug]);
 
-  const handleOrder = async (e: React.FormEvent) => {
+  const handleHardcopyOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!book) return;
     setSubmitting(true);
-    const { error } = await supabase.from("service_requests").insert([
-      {
-        full_name: form.full_name,
+
+    // Check if logged in (optional for hardcopy)
+    const { data: { session } } = await supabase.auth.getSession();
+    const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
+
+    const { error } = await supabase.from("book_orders").insert({
+      user_id: session?.user?.id || null,
+      book_id: book.id,
+      amount: Number(book.price),
+      payment_phone: form.phone,
+      transaction_id: form.transaction_id,
+      customer_name: form.full_name,
+      customer_phone: form.phone,
+      customer_email: form.email || null,
+      delivery_address: form.address || null,
+      order_note: form.message || null,
+      invoice_number: invoiceNumber,
+    });
+
+    if (!error) {
+      // Notify via server API
+      await fetch("/api/notify-admins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "নতুন বই অর্ডার",
+          message: `"${book.title}" বইয়ের নতুন অর্ডার। গ্রাহক: ${form.full_name}`,
+          type: "book_order",
+          link: "/admin/orders",
+          userId: session?.user?.id || null,
+          userTitle: session ? "বই অর্ডার সাবমিট হয়েছে" : null,
+          userMessage: session ? `"${book.title}" বইয়ের অর্ডার পেন্ডিং আছে।` : null,
+          userLink: "/dashboard",
+        }),
+      });
+
+      // Show invoice
+      setInvoice({
+        number: invoiceNumber,
+        date: new Date().toLocaleDateString("bn-BD"),
+        bookTitle: book.title,
+        price: Number(book.price),
+        customerName: form.full_name,
         phone: form.phone,
-        email: form.email || null,
-        project_location: form.project_location || null,
-        service_type: `বই অর্ডার: ${book.title}`,
-        message: `বই: ${book.title} | দাম: ৳${Number(book.price).toLocaleString("bn-BD")}\n${form.message}`,
-      },
-    ]);
-    setSubmitting(false);
-    if (error) {
-      toast.error("অর্ডার ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
-      return;
+        address: form.address,
+        transactionId: form.transaction_id,
+      });
+      setShowOrderForm(false);
+    } else {
+      toast.error("অর্ডার ব্যর্থ হয়েছে।");
     }
-    toast.success("অর্ডার সফল হয়েছে! আমরা শীঘ্রই যোগাযোগ করব।");
-    setForm({ full_name: "", phone: "", email: "", project_location: "", message: "" });
+    setSubmitting(false);
   };
 
-  return (
+  if (loading) return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1 bg-slate-50/40">
-        {loading ? (
-          <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">লোড হচ্ছে...</div>
-        ) : !book ? (
-          <div className="container mx-auto px-4 py-20 text-center">
-            <p className="mb-4 text-lg font-semibold">বইটি পাওয়া যায়নি</p>
-            <Link href="/books">
-              <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" />বই তালিকায় ফিরে যান</Button>
-            </Link>
+      <div className="flex-1 py-20 text-center text-muted-foreground">লোড হচ্ছে...</div>
+      <Footer />
+    </div>
+  );
+
+  if (!book) return (
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <div className="flex-1 py-20 text-center">
+        <p className="text-lg font-semibold">বইটি পাওয়া যায়নি</p>
+        <Link href="/books" className="mt-4 inline-block">
+          <Button variant="outline"><ArrowLeft className="mr-1 h-4 w-4" />বই তালিকায় ফিরুন</Button>
+        </Link>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  const isPDF = book.book_type === "pdf";
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Navbar />
+      <main className="flex-1">
+        <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
+          {/* Breadcrumb */}
+          <Link href="/books" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-sky-600 transition-colors">
+            <ArrowLeft className="h-3.5 w-3.5" /> বই তালিকা
+          </Link>
+
+          {/* Main layout */}
+          <div className="flex gap-6 sm:gap-8 lg:gap-10">
+            {/* Left: Cover */}
+            <div className="shrink-0 md:sticky md:top-24 md:self-start">
+              <div className="w-36 overflow-hidden rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] sm:w-44 md:w-52 lg:w-56">
+                {book.cover_url ? (
+                  <Image src={book.cover_url} alt={book.title} width={448} height={640} className="h-auto w-full" priority />
+                ) : (
+                  <div className="flex aspect-[3/4] items-center justify-center bg-sky-50"><BookOpen className="h-10 w-10 text-sky-200" /></div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Content */}
+            <div className="min-w-0 flex-1 py-1">
+              {/* Badge + Title */}
+              <div className="mb-1">
+                <Badge className="mb-2 bg-sky-100 text-sky-700 hover:bg-sky-100">
+                  {isPDF ? <><FileText className="mr-1 h-3 w-3" />PDF</> : <><Truck className="mr-1 h-3 w-3" />হার্ডকপি</>}
+                </Badge>
+              </div>
+              <h1 className="mb-1 text-xl font-black leading-tight text-foreground sm:text-2xl md:text-3xl">
+                {book.title}
+              </h1>
+              <p className="mb-3 text-sm text-muted-foreground">{book.author || "—"}</p>
+
+              {/* Rating */}
+              <div className="mb-4 flex items-center gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className={`h-4 w-4 ${i < book.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/20"}`} />
+                ))}
+                <span className="ml-1 text-xs text-muted-foreground">({book.rating}/5)</span>
+              </div>
+
+              {/* Price */}
+              <div className="mb-5 flex items-center gap-3">
+                <span className="text-2xl font-extrabold text-sky-600 sm:text-3xl">
+                  ৳{Number(book.price).toLocaleString("bn-BD")}
+                </span>
+                {book.original_price && Number(book.original_price) > Number(book.price) && (
+                  <>
+                    <span className="text-sm text-muted-foreground line-through">
+                      ৳{Number(book.original_price).toLocaleString("bn-BD")}
+                    </span>
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">
+                      {Math.round((1 - Number(book.price) / Number(book.original_price)) * 100)}% ছাড়
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Short description */}
+              {book.description && (
+                <p className="mb-3 text-sm leading-relaxed text-foreground/80">{book.description}</p>
+              )}
+            </div>
           </div>
-        ) : (
-          <>
-            <section className="px-4 py-8 md:px-8 md:py-10">
-              <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="overflow-hidden rounded-[2rem] border border-white/80 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-                  <div className="relative aspect-3/4 overflow-hidden rounded-[1.5rem] bg-slate-100">
-                    <Image src={book.cover_url} alt={book.title} fill className="object-cover" sizes="(min-width: 1024px) 35vw, 100vw" priority />
-                  </div>
+
+          {/* Details section — full width below */}
+          {book.details && (
+            <div className="mt-8 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+              <h3 className="mb-3 text-base font-bold text-foreground">বইয়ের বিস্তারিত</h3>
+              <div className="whitespace-pre-line text-sm leading-7 text-foreground/80">{book.details}</div>
+            </div>
+          )}
+
+          {/* CTA Button — after details */}
+          <div className="mt-6">
+            {!showOrderForm && (
+              <Button
+                size="lg"
+                className="w-full rounded-full bg-sky-600 px-8 font-semibold shadow-[0_10px_24px_rgba(2,132,199,0.26)] hover:bg-sky-700"
+                onClick={() => setShowOrderForm(true)}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                {isPDF ? "PDF কিনুন" : "অর্ডার করুন"}
+              </Button>
+            )}
+          </div>
+
+          {/* Order form — full width below */}
+          {showOrderForm && (
+            <div className="mt-6 overflow-hidden rounded-2xl border bg-card shadow-sm">
+              <div className="border-b bg-sky-50 px-5 py-3">
+                <h3 className="font-bold text-foreground">
+                  {isPDF ? "PDF বই কিনুন" : "হার্ডকপি অর্ডার করুন"}
+                </h3>
+                <p className="text-xs text-muted-foreground">পেমেন্ট করে তথ্য দিন। অ্যাডমিন অ্যাপ্রুভ করলে অ্যাক্সেস পাবেন।</p>
+              </div>
+              <form onSubmit={handleHardcopyOrder} className="space-y-3 p-5">
+                {/* Payment info */}
+                <div className="rounded-lg bg-sky-50 p-3 text-sm">
+                  <p className="mb-1 font-semibold text-sky-700">পেমেন্ট নির্দেশনা:</p>
+                  <p className="text-xs text-muted-foreground">
+                    বিকাশ/নগদ/রকেটে ৳{Number(book.price).toLocaleString("bn-BD")} পাঠান এবং ট্রানজেকশন আইডি নিচে দিন।
+                  </p>
                 </div>
 
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:p-8">
-                  <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1.5 text-sm font-semibold text-sky-700">
-                    <BookOpen className="h-4 w-4" />বইয়ের বিস্তারিত
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>পূর্ণ নাম *</Label>
+                    <Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
                   </div>
-                  <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">{book.title}</h1>
-                  <p className="mt-3 text-base font-medium text-slate-600">লেখক: {book.author || "—"}</p>
-                  <div className="mt-4 flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} className={`h-5 w-5 ${index < Number(book.rating) ? "fill-yellow-400 text-yellow-400" : "text-slate-300"}`} />
-                    ))}
+                  <div>
+                    <Label>মোবাইল নম্বর *</Label>
+                    <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                   </div>
-                  <div className="mt-5 flex flex-wrap items-end gap-3">
-                    <span className="text-3xl font-black text-sky-600">৳{Number(book.price).toLocaleString("bn-BD")}</span>
-                    {book.original_price && Number(book.original_price) > Number(book.price) && (
-                      <span className="pb-1 text-base text-slate-400 line-through">৳{Number(book.original_price).toLocaleString("bn-BD")}</span>
-                    )}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>ট্রানজেকশন আইডি *</Label>
+                    <Input required value={form.transaction_id} onChange={(e) => setForm({ ...form, transaction_id: e.target.value })} placeholder="বিকাশ/নগদ ট্রানজেকশন আইডি" />
                   </div>
-                  <p className="mt-6 text-base leading-8 text-slate-700">{book.description}</p>
-                  <div className="mt-6 rounded-2xl bg-slate-50 p-5">
-                    <h2 className="mb-3 text-lg font-bold text-slate-900">বইয়ের বিস্তারিত</h2>
-                    <p className="whitespace-pre-line leading-8 text-slate-700">{book.details || "অতিরিক্ত বিস্তারিত এখানে দেখানো হবে।"}</p>
+                  <div>
+                    <Label>ইমেইল</Label>
+                    <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  </div>
+                </div>
+                {!isPDF && (
+                  <div>
+                    <Label>ডেলিভারি ঠিকানা *</Label>
+                    <Input required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                  </div>
+                )}
+                <div>
+                  <Label>বার্তা (ঐচ্ছিক)</Label>
+                  <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={2} />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button type="submit" disabled={submitting} className="flex-1 rounded-full bg-sky-600 hover:bg-sky-700">
+                    {submitting ? "অর্ডার হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
+                  </Button>
+                  <Button type="button" variant="outline" className="rounded-full" onClick={() => setShowOrderForm(false)}>বাতিল</Button>
+                </div>
+              </form>
+            </div>
+          )}
+          {/* Invoice display after successful order */}
+          {invoice && (
+            <div className="mt-6">
+              {/* Success message - hidden in print */}
+              <div className="mb-4 flex items-center justify-between rounded-xl border border-green-200 bg-green-50 p-4 print:hidden">
+                <div>
+                  <h3 className="font-bold text-green-800">✅ অর্ডার সফল হয়েছে!</h3>
+                  <p className="text-xs text-green-700">ইনভয়েস নিচে দেখুন ও ডাউনলোড করুন</p>
+                </div>
+                <Button size="sm" onClick={() => {
+                  const printContent = document.getElementById("invoice-content")?.innerHTML;
+                  if (!printContent) return;
+                  const win = window.open("", "_blank");
+                  if (!win) return;
+                  win.document.write(`
+                    <html>
+                    <head>
+                      <title>Invoice - ${invoice.number}</title>
+                      <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1a1a1a; }
+                        .invoice-box { max-width: 700px; margin: auto; border: 2px solid #0284c7; border-radius: 12px; overflow: hidden; }
+                        .invoice-header { background: linear-gradient(135deg, #0284c7, #0369a1); color: white; padding: 30px; }
+                        .invoice-header h1 { font-size: 24px; font-weight: 800; }
+                        .invoice-header p { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+                        .invoice-meta { display: flex; justify-content: space-between; padding: 20px 30px; background: #f0f9ff; border-bottom: 1px solid #e0f2fe; }
+                        .invoice-meta .left, .invoice-meta .right { }
+                        .invoice-meta .label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+                        .invoice-meta .value { font-size: 14px; font-weight: 600; margin-top: 2px; }
+                        .invoice-body { padding: 30px; }
+                        .section-title { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 600; }
+                        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+                        .info-item .label { font-size: 11px; color: #94a3b8; }
+                        .info-item .value { font-size: 14px; font-weight: 500; margin-top: 2px; }
+                        .book-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 16px; }
+                        .book-name { font-size: 16px; font-weight: 700; }
+                        .book-price { font-size: 22px; font-weight: 800; color: #0284c7; }
+                        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-top: 2px solid #e2e8f0; margin-top: 16px; }
+                        .total-label { font-size: 14px; font-weight: 600; }
+                        .total-value { font-size: 24px; font-weight: 800; color: #0284c7; }
+                        .footer { text-align: center; padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; }
+                        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #fef9c3; color: #a16207; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="invoice-box">
+                        <div class="invoice-header">
+                          <h1>Zero Space Architect</h1>
+                          <p>বই অর্ডার ইনভয়েস</p>
+                        </div>
+                        <div class="invoice-meta">
+                          <div class="left">
+                            <div class="label">ইনভয়েস নং</div>
+                            <div class="value">${invoice.number}</div>
+                          </div>
+                          <div class="right" style="text-align:right">
+                            <div class="label">তারিখ</div>
+                            <div class="value">${invoice.date}</div>
+                          </div>
+                        </div>
+                        <div class="invoice-body">
+                          <div class="info-grid">
+                            <div>
+                              <div class="section-title">গ্রাহক তথ্য</div>
+                              <div class="info-item"><div class="label">নাম</div><div class="value">${invoice.customerName}</div></div>
+                              <div class="info-item" style="margin-top:8px"><div class="label">ফোন</div><div class="value">${invoice.phone}</div></div>
+                              ${invoice.address ? `<div class="info-item" style="margin-top:8px"><div class="label">ঠিকানা</div><div class="value">${invoice.address}</div></div>` : ""}
+                            </div>
+                            <div>
+                              <div class="section-title">পেমেন্ট তথ্য</div>
+                              <div class="info-item"><div class="label">ট্রানজেকশন আইডি</div><div class="value">${invoice.transactionId}</div></div>
+                              <div class="info-item" style="margin-top:8px"><div class="label">স্ট্যাটাস</div><div class="value"><span class="status-badge">পেন্ডিং</span></div></div>
+                            </div>
+                          </div>
+                          <div class="section-title">অর্ডার আইটেম</div>
+                          <div class="book-row">
+                            <div class="book-name">${invoice.bookTitle}</div>
+                            <div class="book-price">৳${invoice.price.toLocaleString("bn-BD")}</div>
+                          </div>
+                          <div class="total-row">
+                            <div class="total-label">সর্বমোট</div>
+                            <div class="total-value">৳${invoice.price.toLocaleString("bn-BD")}</div>
+                          </div>
+                        </div>
+                        <div class="footer">
+                          ধন্যবাদ আপনার অর্ডারের জন্য! অ্যাডমিন যাচাই করে অ্যাপ্রুভ করবে।
+                        </div>
+                      </div>
+                    </body>
+                    </html>
+                  `);
+                  win.document.close();
+                  win.print();
+                }}>
+                  <Download className="mr-1 h-3 w-3" />ইনভয়েস প্রিন্ট
+                </Button>
+              </div>
+
+              {/* Inline invoice preview */}
+              <div id="invoice-content" className="overflow-hidden rounded-2xl border shadow-sm">
+                <div className="bg-gradient-to-r from-sky-600 to-sky-700 px-6 py-5 text-white">
+                  <h2 className="text-xl font-bold">Zero Space Architect</h2>
+                  <p className="text-xs text-sky-100">বই অর্ডার ইনভয়েস</p>
+                </div>
+                <div className="flex items-center justify-between border-b bg-sky-50 px-6 py-3 text-sm">
+                  <div>
+                    <span className="text-xs text-muted-foreground">ইনভয়েস নং: </span>
+                    <span className="font-mono font-bold">{invoice.number}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">তারিখ: </span>
+                    <span className="font-medium">{invoice.date}</span>
+                  </div>
+                </div>
+                <div className="p-6 space-y-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1">গ্রাহক তথ্য</p>
+                      <p className="font-semibold text-sm">{invoice.customerName}</p>
+                      <p className="text-xs text-muted-foreground">{invoice.phone}</p>
+                      {invoice.address && <p className="text-xs text-muted-foreground">{invoice.address}</p>}
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1">পেমেন্ট</p>
+                      <p className="text-xs text-muted-foreground">ট্রানজেকশন: <span className="font-mono font-medium text-foreground">{invoice.transactionId}</span></p>
+                      <Badge className="mt-1 bg-yellow-100 text-yellow-800">পেন্ডিং</Badge>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border bg-muted/30 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">বই</p>
+                        <p className="font-bold text-foreground">{invoice.bookTitle}</p>
+                      </div>
+                      <p className="text-2xl font-extrabold text-sky-600">৳{invoice.price.toLocaleString("bn-BD")}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-3">
+                    <span className="font-semibold text-sm">সর্বমোট</span>
+                    <span className="text-xl font-extrabold text-sky-600">৳{invoice.price.toLocaleString("bn-BD")}</span>
                   </div>
                 </div>
               </div>
-            </section>
-
-            <section className="px-4 pb-14 md:px-8">
-              <div className="mx-auto max-w-7xl">
-                <Card className="overflow-hidden border-slate-200 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-                  <CardHeader>
-                    <CardTitle className="text-xl">এই বই অর্ডার করুন</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleOrder} className="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <Label htmlFor="full_name">পূর্ণ নাম *</Label>
-                        <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">মোবাইল নম্বর *</Label>
-                        <Input id="phone" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                      </div>
-                      <div>
-                        <Label htmlFor="email">ইমেইল</Label>
-                        <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                      </div>
-                      <div>
-                        <Label htmlFor="project_location">ডেলিভারি ঠিকানা</Label>
-                        <Input id="project_location" value={form.project_location} onChange={(e) => setForm({ ...form, project_location: e.target.value })} />
-                      </div>
-                      <div className="md:col-span-2">
-                        <Label htmlFor="message">বার্তা</Label>
-                        <Textarea id="message" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={4} />
-                      </div>
-                      <div className="md:col-span-2">
-                        <Button type="submit" disabled={submitting} className="rounded-full bg-sky-600 px-6 font-semibold text-white shadow-[0_10px_24px_rgba(2,132,199,0.26)] hover:bg-sky-700">
-                          <ShoppingCart className="mr-2 h-4 w-4" />{submitting ? "অর্ডার হচ্ছে..." : "অর্ডার করুন"}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
-            </section>
-          </>
-        )}
+            </div>
+          )}
+        </div>
       </main>
       <Footer />
     </div>

@@ -39,6 +39,13 @@ export default function CourseDetailPage({
 
   useEffect(() => {
     const fetchCourse = async () => {
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(courseId)) {
+        setLoading(false);
+        return;
+      }
+
       const { data: courseData, error } = await supabase
         .from("courses")
         .select("*, categories(name)")

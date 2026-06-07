@@ -67,6 +67,14 @@ export default function QuizPage({
         selected: answers[q.id],
       })),
     });
+
+    // Auto-mark quiz lesson as completed
+    await supabase.from("lesson_progress").upsert({
+      user_id: userId,
+      lesson_id: lessonId,
+      completed: true,
+      completed_at: new Date().toISOString(),
+    });
   };
 
   if (!lesson)

@@ -1,8 +1,14 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 
 export function FloatingButtons() {
+  const pathname = usePathname();
+
+  // Hide on admin pages
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <>
       {/* Live Chat - bottom left */}

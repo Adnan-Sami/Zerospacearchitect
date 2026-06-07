@@ -16,7 +16,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Navbar } from "@/components/Navbar";
+import { DashboardNavbar } from "@/components/DashboardNavbar";
 import { Footer } from "@/components/Footer";
+import { OrderStatusCard } from "@/components/OrderStatusCard";
+import { BookOrdersCard } from "@/components/BookOrdersCard";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function StudentDashboard() {
@@ -98,7 +101,7 @@ export default function StudentDashboard() {
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col">
-        <Navbar />
+        <DashboardNavbar />
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           লোড হচ্ছে...
         </div>
@@ -116,7 +119,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
+      <DashboardNavbar />
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -190,6 +193,10 @@ export default function StudentDashboard() {
             </p>
           </CardContent>
         </Card>
+
+        <OrderStatusCard />
+
+        <BookOrdersCard />
 
         <Card>
           <CardHeader>

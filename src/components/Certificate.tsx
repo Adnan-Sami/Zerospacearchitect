@@ -21,7 +21,7 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
       courseName,
       certificateNumber,
       issuedDate,
-      siteName = "শিক্ষা",
+      siteName = "Zero Space Architect",
       title,
       body,
       signature,
@@ -55,22 +55,22 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
           <h3 className="mb-6 text-lg font-semibold text-foreground md:text-2xl">
             {courseName}
           </h3>
-          <div className="flex w-full justify-between px-8 text-xs text-muted-foreground">
+          <div className="flex w-full items-start justify-between px-6 text-xs text-muted-foreground md:px-8">
             <div className="text-left">
-              <p className="font-semibold text-foreground">{issuedDate}</p>
               <p>ইস্যু তারিখ</p>
+              <p className="mt-1 font-semibold text-foreground">{issuedDate}</p>
             </div>
             <div className="text-center">
-              <p className="font-bold text-primary">{siteName}</p>
+              <p className="text-base font-bold text-primary">{siteName}</p>
               {signature && (
                 <p className="mt-1 text-[10px] text-foreground">{signature}</p>
               )}
             </div>
             <div className="text-right">
-              <p className="font-mono font-semibold text-foreground">
+              <p>সার্টিফিকেট নং</p>
+              <p className="mt-1 font-mono text-[11px] font-semibold text-foreground">
                 {certificateNumber}
               </p>
-              <p>সার্টিফিকেট নং</p>
             </div>
           </div>
         </div>

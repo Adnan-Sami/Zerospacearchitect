@@ -52,13 +52,14 @@ export default function CoursesPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
-        <h1 className="mb-6 text-2xl font-bold text-foreground">{pageTitle}</h1>
+        <h1 className="mb-6 text-2xl font-bold text-foreground">{pageTitle || "সকল কোর্স"}</h1>
 
-        <div className="mb-6 flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
+        {/* Filter Section */}
+        <div className="mb-6 space-y-4 rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder={searchPlaceholder}
+              placeholder={searchPlaceholder || "কোর্স খুঁজুন..."}
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -68,15 +69,17 @@ export default function CoursesPage() {
             <Button
               variant={selectedCategory === "" ? "default" : "outline"}
               size="sm"
+              className={selectedCategory === "" ? "bg-sky-600 hover:bg-sky-700" : ""}
               onClick={() => setSelectedCategory("")}
             >
-              {allLabel}
+              {allLabel || "সব"}
             </Button>
             {categories.map((cat) => (
               <Button
                 key={cat.id}
                 variant={selectedCategory === cat.id ? "default" : "outline"}
                 size="sm"
+                className={selectedCategory === cat.id ? "bg-sky-600 hover:bg-sky-700" : ""}
                 onClick={() => setSelectedCategory(cat.id)}
               >
                 {cat.name}
@@ -85,12 +88,15 @@ export default function CoursesPage() {
           </div>
         </div>
 
+        {/* Results */}
+        <p className="mb-4 text-sm text-muted-foreground">{courses.length} টি কোর্স পাওয়া গেছে</p>
+
         {loading ? (
           <div className="py-12 text-center text-muted-foreground">
             লোড হচ্ছে...
           </div>
         ) : courses.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
               <CourseCard
                 key={course.id}

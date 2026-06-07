@@ -52,6 +52,8 @@ export default function AdminBooks() {
       rating: Number(editing.rating) || 5,
       sort_order: Number(editing.sort_order) || 0,
       is_published: editing.is_published ?? true,
+      book_type: editing.book_type ?? "hardcopy",
+      pdf_url: editing.pdf_url?.trim() ?? "",
     };
     const { error } = editing.id
       ? await supabase.from("books").update(payload).eq("id", editing.id)
@@ -114,7 +116,56 @@ export default function AdminBooks() {
                 <Label>লেখক</Label>
                 <Input value={editing.author ?? ""} onChange={(e) => setEditing({ ...editing, author: e.target.value })} />
               </div>
+              <div>
+                <Label>বইয়ের ধরন</Label>
+                <select
+                  value={editing.book_type ?? "hardcopy"}
+                  onChange={(e) => setEditing({ ...editing, book_type: e.target.value })}
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="hardcopy">হার্ডকপি (ডেলিভারি)</option>
+                  <option value="pdf">PDF (ডিজিটাল)</option>
+                </select>
+              </div>
             </div>
+
+            {/* PDF Upload - only show when book_type is pdf */}
+            {(editing.book_type === "pdf") && (
+              <div>
+                <Label>PDF ফাইল আপলোড</Label>
+                {editing.pdf_url ? (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+                    <span className="flex-1 text-xs break-all text-muted-foreground">{editing.pdf_url}</span>
+                    <Button size="sm" variant="ghost" className="h-7 text-destructive" onClick={() => setEditing({ ...editing, pdf_url: "" })}>মুছুন</Button>
+                  </div>
+                ) : (
+                  <div className="mt-2">
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (!file.name.endsWith(".pdf")) { toast.error("শুধু PDF ফাইল আপলোড করুন"); return; }
+                        const path = `books-pdf/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+                        const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
+                        if (error) { toast.error(error.message); return; }
+                        const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
+                        setEditing({ ...editing, pdf_url: data.publicUrl });
+                        toast.success("PDF আপলোড হয়েছে");
+                      }}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">অথবা URL দিন:</p>
+                    <Input
+                      placeholder="PDF URL পেস্ট করুন"
+                      value={editing.pdf_url ?? ""}
+                      onChange={(e) => setEditing({ ...editing, pdf_url: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <Label>দাম</Label>

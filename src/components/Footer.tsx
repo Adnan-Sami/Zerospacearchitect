@@ -10,7 +10,7 @@ const usefulLinks = [
   { label: "স্কলারশিপ", href: "/" },
   { label: "আমাদের প্রশিক্ষক", href: "/" },
   { label: "শিক্ষক হিসেবে যোগ দিন", href: "/register" },
-  { label: "সার্টিফিকেট চেক করুন", href: "/" },
+  { label: "সার্টিফিকেট চেক করুন", href: "/verify" },
 ];
 
 const aboutLinks = [

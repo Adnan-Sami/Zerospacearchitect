@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/use-site-settings";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const navItems = [
   { href: "/admin", label: "ড্যাশবোর্ড", icon: LayoutDashboard, exact: true },
@@ -97,6 +98,7 @@ export default function AdminLayout({
           </Link>
 
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 md:flex">
               <User className="h-4 w-4 text-slate-500" />
               <span className="max-w-60 truncate">লগইন: {userEmail || "অ্যাডমিন"}</span>
