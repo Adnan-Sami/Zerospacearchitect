@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,82 +33,13 @@ type Book = {
   title: string;
   author: string;
   price: number;
-  originalPrice?: number;
+  original_price?: number | null;
   rating: number;
-  cover: string;
+  slug: string;
+  cover_url: string;
   description: string;
+  details: string;
 };
-
-const books: Book[] = [
-  {
-    id: "b1",
-    title: "আর্কিটেকচারাল ডিজাইন বেসিকস",
-    author: "ইঞ্জি. রফিকুল ইসলাম",
-    price: 650,
-    originalPrice: 850,
-    rating: 5,
-    cover:
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-    description:
-      "আর্কিটেকচারাল ডিজাইনের মৌলিক ধারণা, স্কেচ এবং প্ল্যানিং নিয়ে বিস্তারিত গাইডবুক।",
-  },
-  {
-    id: "b2",
-    title: "ইন্টেরিয়র ডিজাইন গাইড",
-    author: "স্থপতি নুসরাত জাহান",
-    price: 550,
-    originalPrice: 700,
-    rating: 4,
-    cover:
-      "https://images.unsplash.com/photo-1535905557558-afc4877a26fc?w=400&h=600&fit=crop",
-    description: "আধুনিক ইন্টেরিয়র ডিজাইনের কৌশল, কালার থিওরি এবং স্পেস প্ল্যানিং।",
-  },
-  {
-    id: "b3",
-    title: "স্ট্রাকচারাল ইঞ্জিনিয়ারিং হ্যান্ডবুক",
-    author: "প্রফেসর কামরুল হাসান",
-    price: 950,
-    originalPrice: 1200,
-    rating: 5,
-    cover:
-      "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop",
-    description:
-      "RCC, স্টিল স্ট্রাকচার এবং ফাউন্ডেশন ডিজাইন সম্পর্কিত সম্পূর্ণ রেফারেন্স।",
-  },
-  {
-    id: "b4",
-    title: "অটোক্যাড মাস্টারক্লাস",
-    author: "ইঞ্জি. সাজ্জাদ হোসেন",
-    price: 450,
-    originalPrice: 600,
-    rating: 4,
-    cover:
-      "https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14?w=400&h=600&fit=crop",
-    description: "অটোক্যাড 2D এবং 3D ডিজাইনের সম্পূর্ণ বাংলা টিউটোরিয়াল বই।",
-  },
-  {
-    id: "b5",
-    title: "গ্রিন বিল্ডিং ডিজাইন",
-    author: "স্থপতি তানভীর আহমেদ",
-    price: 750,
-    rating: 5,
-    cover:
-      "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
-    description: "পরিবেশবান্ধব ও টেকসই ভবন নির্মাণের আধুনিক পদ্ধতি।",
-  },
-  {
-    id: "b6",
-    title: "ল্যান্ডস্কেপ ডিজাইন প্রিন্সিপলস",
-    author: "ইঞ্জি. মাহফুজা আক্তার",
-    price: 600,
-    originalPrice: 800,
-    rating: 4,
-    cover:
-      "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400&h=600&fit=crop",
-    description:
-      "আউটডোর স্পেস, বাগান ও পার্ক ডিজাইনের কৌশল ও আইডিয়া।",
-  },
-];
 
 export default function BooksPage() {
   const heroTitle = useSiteContent("books.hero.title");
@@ -115,8 +47,10 @@ export default function BooksPage() {
   const orderCta = useSiteContent("books.order.cta");
   const orderTitle = useSiteContent("books.order.title");
   const orderSubmit = useSiteContent("books.order.submit");
+  const [books, setBooks] = useState<Book[]>([]);
   const [selected, setSelected] = useState<Book | null>(null);
   const [loading, setLoading] = useState(false);
+  const [booksLoading, setBooksLoading] = useState(true);
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
@@ -124,6 +58,21 @@ export default function BooksPage() {
     project_location: "",
     message: "",
   });
+
+  useEffect(() => {
+    const loadBooks = async () => {
+      const { data } = await supabase
+        .from("books")
+        .select("*")
+        .eq("is_published", true)
+        .order("sort_order")
+        .order("created_at", { ascending: false });
+      setBooks((data ?? []) as Book[]);
+      setBooksLoading(false);
+    };
+
+    loadBooks();
+  }, []);
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,7 +108,7 @@ export default function BooksPage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        <section className="bg-gradient-to-b from-primary/10 to-background py-16">
+        <section className="bg-linear-to-b from-primary/10 to-background py-16">
           <div className="container mx-auto px-4 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <BookOpen className="h-8 w-8 text-primary" />
@@ -172,66 +121,74 @@ export default function BooksPage() {
         </section>
 
         <section className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {books.map((book) => (
-              <Card
-                key={book.id}
-                className="flex flex-col overflow-hidden transition-shadow hover:shadow-lg"
-              >
-                <div className="aspect-[3/4] overflow-hidden bg-muted">
-                  <Image
-                    src={book.cover}
-                    alt={book.title}
-                    width={400}
-                    height={600}
-                    className="h-full w-full object-cover transition-transform hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
-                <CardHeader>
-                  <CardTitle className="line-clamp-2 text-lg">
-                    {book.title}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    লেখক: {book.author}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < book.rating
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-muted-foreground"
-                        }`}
+          {booksLoading ? (
+            <p className="py-16 text-center text-muted-foreground">লোড হচ্ছে...</p>
+          ) : books.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {books.map((book) => (
+                <Card
+                  key={book.id}
+                  className="flex flex-col overflow-hidden transition-shadow hover:shadow-lg"
+                >
+                  <Link href={`/books/${book.slug}`} className="block">
+                    <div className="aspect-3/4 overflow-hidden bg-muted">
+                      <Image
+                        src={book.cover_url}
+                        alt={book.title}
+                        width={400}
+                        height={600}
+                        className="h-full w-full object-cover transition-transform hover:scale-105"
+                        loading="lazy"
                       />
-                    ))}
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <p className="line-clamp-3 text-sm text-muted-foreground">
-                    {book.description}
-                  </p>
-                </CardContent>
-                <CardFooter className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xl font-bold text-primary">
-                      ৳{book.price}
-                    </span>
-                    {book.originalPrice && (
-                      <span className="ml-2 text-sm text-muted-foreground line-through">
-                        ৳{book.originalPrice}
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="line-clamp-2 text-lg">
+                        {book.title}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        লেখক: {book.author}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < book.rating
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                      <p className="line-clamp-3 text-sm text-muted-foreground">
+                        {book.description}
+                      </p>
+                    </CardContent>
+                  </Link>
+                  <CardFooter className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xl font-bold text-primary">
+                        ৳{Number(book.price).toLocaleString("bn-BD")}
                       </span>
-                    )}
-                  </div>
-                  <Button onClick={() => setSelected(book)} size="sm">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    {orderCta}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                      {book.original_price && (
+                        <span className="ml-2 text-sm text-muted-foreground line-through">
+                          ৳{Number(book.original_price).toLocaleString("bn-BD")}
+                        </span>
+                      )}
+                    </div>
+                    <Button onClick={() => setSelected(book)} size="sm">
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      {orderCta}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="py-16 text-center text-muted-foreground">এখনও কোনো বই যোগ করা হয়নি।</p>
+          )}
         </section>
       </main>
 
@@ -240,9 +197,23 @@ export default function BooksPage() {
           <DialogHeader>
             <DialogTitle>{orderTitle}</DialogTitle>
             <DialogDescription>
-              {selected && `${selected.title} - ৳${selected.price}`}
+              {selected && `${selected.title} - ৳${Number(selected.price).toLocaleString("bn-BD")}`}
             </DialogDescription>
           </DialogHeader>
+          {selected && (
+            <div className="mb-4 rounded-2xl border bg-muted/40 p-4">
+              <div className="grid gap-4 md:grid-cols-[140px_1fr] md:items-start">
+                <div className="overflow-hidden rounded-xl bg-muted">
+                  <Image src={selected.cover_url} alt={selected.title} width={280} height={360} className="h-full w-full object-cover" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">লেখক: {selected.author || "—"}</p>
+                  <p className="mt-2 text-sm leading-7 text-foreground">{selected.description}</p>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-7 text-muted-foreground">{selected.details}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleOrder} className="space-y-4">
             <div>
               <Label htmlFor="full_name">পূর্ণ নাম *</Label>

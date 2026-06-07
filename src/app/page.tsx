@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   BookOpen,
   Code,
   Palette,
   TrendingUp,
-  Briefcase,
   Award,
   Star,
   Clock,
@@ -18,13 +17,31 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CourseCard } from "@/components/CourseCard";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteContent } from "@/hooks/use-site-content";
 
-const CATEGORY_ICONS = [Code, Palette, TrendingUp, Briefcase, BookOpen, Award];
+const STATS = [
+  {
+    icon: "🎓",
+    target: 18022,
+    label: "নিবন্ধিত শিক্ষার্থী",
+    gradient: "from-sky-400 to-sky-500",
+  },
+  {
+    icon: "👁️",
+    target: 115889,
+    label: "মোট ভিজিটর",
+    gradient: "from-blue-400 to-blue-500",
+  },
+  {
+    icon: "👨‍🏫",
+    target: 16,
+    label: "নিবন্ধিত শিক্ষক",
+    gradient: "from-blue-500 to-indigo-600",
+  },
+] as const;
 
 export default function HomePage() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -32,6 +49,9 @@ export default function HomePage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const [animatedStats, setAnimatedStats] = useState([0, 0, 0]);
+  const statsSectionRef = useRef<HTMLElement | null>(null);
+  const statsAnimationStartedRef = useRef(false);
 
   const heroTitle = useSiteContent("home.hero.title");
   const heroSubtitle = useSiteContent("home.hero.subtitle");
@@ -42,12 +62,6 @@ export default function HomePage() {
   const latestSubtitle = useSiteContent("home.latest.subtitle");
   const bestsellerTitle = useSiteContent("home.bestseller.title");
   const bestsellerSubtitle = useSiteContent("home.bestseller.subtitle");
-  const stat1v = useSiteContent("home.stats.1.value");
-  const stat1l = useSiteContent("home.stats.1.label");
-  const stat2v = useSiteContent("home.stats.2.value");
-  const stat2l = useSiteContent("home.stats.2.label");
-  const stat3v = useSiteContent("home.stats.3.value");
-  const stat3l = useSiteContent("home.stats.3.label");
   const whyTitle = useSiteContent("home.why.title");
   const whySubtitle = useSiteContent("home.why.subtitle");
   const why1t = useSiteContent("home.why.1.title");
@@ -103,8 +117,63 @@ export default function HomePage() {
     });
   }, []);
 
-  const heroImgSrc = heroImage || "/hero-instructors.jpg";
+  const heroImgSrc = heroImage || "/Hero.png";
   const instImgSrc = instImage || "/instructor-cta.png";
+  const marqueeBanners = [...banners, ...banners];
+
+  useEffect(() => {
+    const section = statsSectionRef.current;
+
+    if (!section || statsAnimationStartedRef.current) {
+      return;
+    }
+
+    let animationFrame = 0;
+
+    const startAnimation = () => {
+      if (statsAnimationStartedRef.current) {
+        return;
+      }
+
+      statsAnimationStartedRef.current = true;
+      const duration = 2000;
+      const startTime = performance.now();
+
+      const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
+
+      const tick = (now: number) => {
+        const elapsed = Math.min((now - startTime) / duration, 1);
+        const eased = easeOutCubic(elapsed);
+
+        setAnimatedStats(STATS.map((stat) => Math.round(stat.target * eased)));
+
+        if (elapsed < 1) {
+          animationFrame = window.requestAnimationFrame(tick);
+        }
+      };
+
+      animationFrame = window.requestAnimationFrame(tick);
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startAnimation();
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.35,
+      }
+    );
+
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -112,19 +181,19 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="px-4 py-6 md:px-8 md:py-10">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 via-background to-blue-50 px-6 py-10 shadow-sm md:px-12 md:py-14">
-          <div className="grid items-center gap-10 md:grid-cols-2">
-            <div className="relative z-10">
-              <h1 className="mb-4 text-4xl font-extrabold leading-tight text-foreground md:text-5xl lg:text-6xl">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border-2 border-blue-500 bg-[#f4f8ff] px-6 py-8 shadow-[0_14px_40px_rgba(59,130,246,0.08)] md:px-10 md:py-10 lg:px-12">
+          <div className="grid items-center gap-10 md:grid-cols-[1.05fr_0.95fr]">
+            <div className="relative z-10 max-w-xl py-4 md:py-10">
+              <h1 className="mb-4 text-4xl font-black leading-[1.05] tracking-tight text-foreground md:text-5xl lg:text-6xl">
                 {heroTitle}
               </h1>
-              <p className="mb-8 text-base font-medium text-muted-foreground md:text-lg">
+              <p className="mb-8 max-w-lg text-base font-semibold text-foreground/85 md:text-lg">
                 {heroSubtitle}
               </p>
               <Link href="/courses">
                 <Button
                   size="lg"
-                  className="rounded-full bg-sky-500 px-8 text-base font-semibold shadow-lg hover:bg-sky-600"
+                  className="rounded-full bg-sky-500 px-6 text-base font-semibold shadow-lg shadow-sky-500/20 hover:bg-sky-600"
                 >
                   {heroCta}
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -132,7 +201,7 @@ export default function HomePage() {
               </Link>
 
               <svg
-                className="absolute -bottom-6 left-56 hidden h-20 w-48 text-sky-300 md:block"
+                className="pointer-events-none absolute -bottom-8 left-40 hidden h-24 w-72 text-sky-200 md:block lg:left-52"
                 viewBox="0 0 200 80"
                 fill="none"
                 aria-hidden="true"
@@ -157,20 +226,15 @@ export default function HomePage() {
             </div>
 
             <div className="relative">
-              <div className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-sky-100">
+              <div className="relative aspect-[1.02/1] overflow-hidden rounded-[1.4rem] bg-sky-100 p-3 shadow-[0_16px_50px_rgba(37,99,235,0.18)] ring-1 ring-blue-500/20 md:aspect-[1.03/0.88] md:p-4">
                 <Image
                   src={heroImgSrc}
                   alt="ইন্ডাস্ট্রি এক্সপার্টদের সাথে শিখুন"
-                  width={1024}
-                  height={768}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-contain object-center"
                   priority
                 />
-                <div className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-sky-600/50 via-sky-500/20 to-transparent p-6 text-center">
-                  <p className="whitespace-pre-line text-xl font-bold text-white drop-shadow-lg md:text-2xl">
-                    {heroOverlay}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -180,28 +244,44 @@ export default function HomePage() {
       {/* Promo Banners */}
       {banners.length > 0 && (
         <section className="px-4 py-6 md:px-8">
-          <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {banners.map((b) => {
-              const inner = (
-                <div className="group overflow-hidden rounded-2xl shadow-md transition-all hover:shadow-xl">
-                  <Image
-                    src={b.image_url}
-                    alt={b.title ?? ""}
-                    width={600}
-                    height={200}
-                    loading="lazy"
-                    className="h-32 w-full object-cover transition-transform group-hover:scale-105 md:h-36"
-                  />
-                </div>
-              );
-              return b.link_url ? (
-                <a key={b.id} href={b.link_url}>
-                  {inner}
-                </a>
-              ) : (
-                <div key={b.id}>{inner}</div>
-              );
-            })}
+          <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/60 py-3 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+            <div
+              className="promo-marquee-mask"
+              style={{
+                ["--marquee-duration" as string]: `${Math.max(18, banners.length * 8)}s`,
+              }}
+            >
+              <div className="promo-marquee-track">
+                {marqueeBanners.map((b, index) => {
+                  const inner = (
+                    <div className="group h-full overflow-hidden rounded-[1.5rem] shadow-md transition-transform duration-500 hover:-translate-y-0.5 hover:shadow-xl">
+                      <Image
+                        src={b.image_url}
+                        alt={b.title ?? ""}
+                        width={600}
+                        height={200}
+                        loading="lazy"
+                        className="h-32 w-105 rounded-[1.5rem] object-cover transition-transform duration-500 group-hover:scale-[1.03] md:h-36 md:w-110"
+                      />
+                    </div>
+                  );
+
+                  return b.link_url ? (
+                    <a
+                      key={`${b.id}-${index}`}
+                      href={b.link_url}
+                      className="shrink-0"
+                    >
+                      {inner}
+                    </a>
+                  ) : (
+                    <div key={`${b.id}-${index}`} className="shrink-0">
+                      {inner}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -256,7 +336,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="p-5">
-                    <h3 className="mb-5 min-h-[3.5rem] text-center text-base font-bold text-foreground">
+                    <h3 className="mb-5 min-h-14 text-center text-base font-bold text-foreground">
                       {c.title}
                     </h3>
                     <div className="flex items-center justify-between border-t pt-4">
@@ -282,7 +362,7 @@ export default function HomePage() {
               <Link href="/courses">
                 <Button
                   size="lg"
-                  className="rounded-full bg-gradient-to-r from-sky-500 to-blue-500 px-10 text-base font-semibold shadow-lg hover:from-sky-600 hover:to-blue-600"
+                  className="rounded-full bg-linear-to-r from-sky-500 to-blue-500 px-10 text-base font-semibold shadow-lg hover:from-sky-600 hover:to-blue-600"
                 >
                   সকল কোর্স <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
@@ -342,7 +422,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="p-5">
-                    <h3 className="mb-5 min-h-[3.5rem] text-center text-base font-bold text-foreground">
+                    <h3 className="mb-5 min-h-14 text-center text-base font-bold text-foreground">
                       {c.title}
                     </h3>
                     <div className="flex items-center justify-between border-t pt-4">
@@ -368,7 +448,7 @@ export default function HomePage() {
               <Link href="/courses">
                 <Button
                   size="lg"
-                  className="rounded-full bg-gradient-to-r from-sky-500 to-blue-500 px-10 text-base font-semibold shadow-lg hover:from-sky-600 hover:to-blue-600"
+                  className="rounded-full bg-linear-to-r from-sky-500 to-blue-500 px-10 text-base font-semibold shadow-lg hover:from-sky-600 hover:to-blue-600"
                 >
                   সকল কোর্স <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
@@ -379,38 +459,20 @@ export default function HomePage() {
       )}
 
       {/* Stats Section */}
-      <section className="px-4 py-12 md:px-8">
+      <section ref={statsSectionRef} className="px-4 py-12 md:px-8">
         <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              icon: "🎓",
-              value: stat1v,
-              label: stat1l,
-              gradient: "from-sky-400 to-sky-500",
-            },
-            {
-              icon: "👁️",
-              value: stat2v,
-              label: stat2l,
-              gradient: "from-blue-400 to-blue-500",
-            },
-            {
-              icon: "👨‍🏫",
-              value: stat3v,
-              label: stat3l,
-              gradient: "from-blue-500 to-indigo-600",
-            },
-          ].map((s) => (
+          {STATS.map((s, index) => (
             <div
               key={s.label}
-              className={`flex items-center gap-5 rounded-2xl bg-gradient-to-r ${s.gradient} px-6 py-6 shadow-lg`}
+              className={`flex items-center gap-5 rounded-2xl bg-linear-to-r ${s.gradient} px-6 py-6 shadow-lg`}
             >
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white text-4xl shadow-md">
                 {s.icon}
               </div>
               <div className="text-white">
                 <p className="text-3xl font-extrabold leading-tight md:text-4xl">
-                  {s.value}
+                  {new Intl.NumberFormat("en-US").format(animatedStats[index])}
+                  {animatedStats[index] >= s.target ? "+" : ""}
                 </p>
                 <p className="mt-1 text-base font-medium opacity-95">{s.label}</p>
               </div>

@@ -67,6 +67,57 @@ export type Database = {
           },
         ]
       }
+      books: {
+        Row: {
+          author: string
+          created_at: string
+          cover_url: string
+          description: string
+          details: string
+          id: string
+          is_published: boolean
+          original_price: number | null
+          price: number
+          rating: number
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          created_at?: string
+          cover_url?: string
+          description?: string
+          details?: string
+          id?: string
+          is_published?: boolean
+          original_price?: number | null
+          price?: number
+          rating?: number
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          cover_url?: string
+          description?: string
+          details?: string
+          id?: string
+          is_published?: boolean
+          original_price?: number | null
+          price?: number
+          rating?: number
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           category_id: string | null

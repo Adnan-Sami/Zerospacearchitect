@@ -127,3 +127,46 @@
     color: var(--color-foreground);
   }
 }
+
+@layer utilities {
+  .promo-marquee-mask {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 6%,
+      black 94%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 6%,
+      black 94%,
+      transparent
+    );
+  }
+
+  .promo-marquee-track {
+    display: flex;
+    width: max-content;
+    gap: 1rem;
+    padding-inline: 1rem;
+    will-change: transform;
+    animation: promo-marquee var(--marquee-duration, 28s) linear infinite;
+  }
+
+  .promo-marquee-track > * {
+    flex: 0 0 auto;
+  }
+}
+
+@keyframes promo-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}

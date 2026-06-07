@@ -26,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn">
-      <body>
+    <html lang="bn" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         {children}
         <FloatingButtons />
         <Toaster richColors />
