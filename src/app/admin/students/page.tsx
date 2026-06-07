@@ -257,7 +257,16 @@ export default function AdminStudents() {
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {s.phone || "ফোন নেই"} · যোগদান: {new Date(s.created_at).toLocaleDateString("bn-BD")}
+                      {s.device_info && <span className="ml-2 text-xs">📱 {s.device_info}</span>}
                     </p>
+                    {s.last_ip && (
+                      <p className="text-xs text-muted-foreground">🌐 IP: {s.last_ip}</p>
+                    )}
+                    {s.is_banned && (
+                      <p className="mt-1 text-xs text-red-600 bg-red-50 rounded px-2 py-0.5 inline-block">
+                        ⚠️ ব্যান কারণ: ভিন্ন ডিভাইস থেকে লগইন চেষ্টা
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -269,6 +278,33 @@ export default function AdminStudents() {
                     {expandedStudent === s.user_id ? <ChevronUp className="mr-1 h-3 w-3" /> : <ChevronDown className="mr-1 h-3 w-3" />}
                     বিস্তারিত
                   </Button>
+                  {s.device_fingerprint && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={async () => {
+                        await supabase.from("profiles").update({ device_fingerprint: null, device_info: null }).eq("id", s.id);
+                        toast.success("ডিভাইস রিসেট হয়েছে");
+                        load();
+                      }}
+                    >
+                      🔄 ডিভাইস রিসেট
+                    </Button>
+                  )}
+                  {s.last_ip && s.is_banned && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={async () => {
+                        await supabase.from("banned_ips").delete().eq("ip_address", s.last_ip);
+                        toast.success("IP আনব্যান হয়েছে");
+                      }}
+                    >
+                      🌐 IP আনব্যান
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant={s.is_banned ? "outline" : "destructive"}

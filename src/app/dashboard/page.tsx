@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Navbar } from "@/components/Navbar";
 import { DashboardNavbar } from "@/components/DashboardNavbar";
+import { DeviceGuard } from "@/components/DeviceGuard";
 import { Footer } from "@/components/Footer";
 import { OrderStatusCard } from "@/components/OrderStatusCard";
 import { BookOrdersCard } from "@/components/BookOrdersCard";
@@ -118,6 +119,7 @@ export default function StudentDashboard() {
   ];
 
   return (
+    <DeviceGuard>
     <div className="flex min-h-screen flex-col">
       <DashboardNavbar />
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
@@ -264,5 +266,6 @@ export default function StudentDashboard() {
       </div>
       <Footer />
     </div>
+    </DeviceGuard>
   );
 }
