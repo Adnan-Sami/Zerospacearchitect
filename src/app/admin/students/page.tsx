@@ -23,6 +23,7 @@ export default function AdminStudents() {
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
   const [studentDetail, setStudentDetail] = useState<any>(null);
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
+  const [ipUnbannedIds, setIpUnbannedIds] = useState<Set<string>>(new Set());
   const [editName, setEditName] = useState("");
 
   const load = async () => {
@@ -38,8 +39,9 @@ export default function AdminStudents() {
   const toggleBan = async (s: any) => {
     const next = !s.is_banned;
     const { error } = await supabase.from("profiles").update({ is_banned: next }).eq("id", s.id);
-    if (error) toast.error(error.message);
-    else { toast.success(next ? "ব্যান করা হয়েছে" : "আনব্যান করা হয়েছে"); load(); }
+    if (error) { toast.error(error.message); return; }
+    toast.success(next ? "ব্যান করা হয়েছে" : "আনব্যান করা হয়েছে");
+    load();
   };
 
   const loadStudentDetail = async (userId: string) => {
@@ -292,14 +294,15 @@ export default function AdminStudents() {
                       🔄 ডিভাইস রিসেট
                     </Button>
                   )}
-                  {s.last_ip && s.is_banned && (
+                  {s.last_ip && s.is_banned && !ipUnbannedIds.has(s.id) && (
                     <Button
                       size="sm"
                       variant="ghost"
                       className="h-7 text-xs"
                       onClick={async () => {
                         await supabase.from("banned_ips").delete().eq("ip_address", s.last_ip);
-                        toast.success("IP আনব্যান হয়েছে");
+                        setIpUnbannedIds((prev) => new Set([...prev, s.id]));
+                        toast.success("IP আনব্যান হয়েছে — এখন অ্যাকাউন্ট আনব্যান করুন");
                       }}
                     >
                       🌐 IP আনব্যান
@@ -308,6 +311,7 @@ export default function AdminStudents() {
                   <Button
                     size="sm"
                     variant={s.is_banned ? "outline" : "destructive"}
+                    disabled={s.is_banned && s.last_ip && !ipUnbannedIds.has(s.id)}
                     onClick={() => toggleBan(s)}
                   >
                     {s.is_banned ? <><CheckCircle className="mr-1 h-4 w-4" />আনব্যান</> : <><Ban className="mr-1 h-4 w-4" />ব্যান</>}

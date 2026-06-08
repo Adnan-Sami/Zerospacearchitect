@@ -578,17 +578,17 @@ export default function HomePage() {
             <h3 className="text-center text-lg font-bold text-white md:text-left md:text-xl">
               {newsletterTitle}
             </h3>
-            <div className="flex w-full max-w-xl items-center rounded-full bg-white p-1.5 shadow-md">
+            <div className="flex w-full max-w-xl flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:rounded-full sm:bg-white sm:p-1.5 sm:shadow-md">
               <input
                 type="email"
                 required
                 maxLength={255}
                 placeholder={newsletterPlaceholder}
-                className="flex-1 bg-transparent px-5 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                className="flex-1 rounded-full bg-white px-5 py-3 text-sm text-foreground shadow-md outline-none placeholder:text-muted-foreground sm:rounded-none sm:bg-transparent sm:py-2 sm:shadow-none"
               />
               <Button
                 type="submit"
-                className="rounded-full bg-blue-600 px-6 font-semibold hover:bg-blue-700"
+                className="w-full rounded-full bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700 sm:w-auto sm:py-2"
               >
                 {newsletterCta}
               </Button>

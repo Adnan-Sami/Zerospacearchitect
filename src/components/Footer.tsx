@@ -22,9 +22,9 @@ export function Footer() {
   return (
     <footer className="bg-gradient-to-b from-[#0b1623] to-[#060d16] text-gray-300">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
+        <div className="grid gap-8 grid-cols-2 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
           {/* Brand & Contact */}
-          <div>
+          <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <Image
               src="/logo-footer.png"
               alt={settings.site_name || "ZeroSpace Architect"}
@@ -88,7 +88,7 @@ export function Footer() {
           </div>
 
           {/* Locations */}
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Our Offices</h4>
             <div className="space-y-4">
               <div className="flex gap-2.5 text-sm">

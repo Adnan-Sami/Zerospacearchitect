@@ -69,7 +69,7 @@ export default function ServicesPage() {
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm backdrop-blur">
               <CheckCircle className="h-4 w-4 text-sky-400" />১০০+ সফল প্রজেক্ট
             </div>
-            <h1 className="mb-5 text-4xl font-black leading-tight md:text-5xl lg:text-6xl">
+            <h1 className="mb-5 text-3xl font-black leading-tight md:text-5xl lg:text-6xl">
               ডিজাইন ও<br /><span className="text-sky-400">কনসালটেন্সি সার্ভিস</span>
             </h1>
             <p className="mx-auto mb-8 max-w-2xl text-base text-white/70 md:text-lg">
@@ -144,7 +144,7 @@ export default function ServicesPage() {
       {/* Service Detail Modal */}
       {selected && !showBooking && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setSelected(null)}>
-          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <button className="absolute right-4 top-4 z-10 rounded-full bg-muted p-1" onClick={() => setSelected(null)}><X className="h-5 w-5" /></button>
             {selected.image_url && (
               <div className="h-52 overflow-hidden rounded-t-2xl">
@@ -169,7 +169,7 @@ export default function ServicesPage() {
       {/* Booking Modal */}
       {showBooking && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setShowBooking(false)}>
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <button className="absolute right-4 top-4 z-10 rounded-full bg-muted p-1" onClick={() => setShowBooking(false)}><X className="h-5 w-5" /></button>
             <div className="bg-gradient-to-r from-sky-600 to-blue-700 px-6 py-5 text-white">
               <h3 className="text-lg font-bold">কনসালটেন্সি বুকিং</h3>
@@ -231,7 +231,7 @@ function GallerySection() {
 
   if (images.length === 0) return null;
 
-  // Show 5 images at a time with seamless looping
+  // Show images based on screen - 3 on mobile, 5 on desktop
   const getVisibleImages = () => {
     const result = [];
     for (let i = 0; i < 5; i++) {
@@ -250,11 +250,11 @@ function GallerySection() {
 
       {/* 5-column full-width grid — one rotates at a time */}
       <div className="mx-auto w-full">
-        <div className="grid h-[300px] grid-cols-3 gap-0.5 sm:h-[380px] sm:grid-cols-5 md:h-[450px]">
+        <div className="grid h-[200px] grid-cols-3 gap-0.5 sm:h-[380px] sm:grid-cols-5 md:h-[450px]">
           {visible.map((img, i) => (
             <div
               key={`pos-${i}`}
-              className="group relative cursor-pointer overflow-hidden"
+              className={`group relative cursor-pointer overflow-hidden ${i >= 3 ? "hidden sm:block" : ""}`}
               onClick={() => setLightbox(img.image_url)}
             >
               <Image

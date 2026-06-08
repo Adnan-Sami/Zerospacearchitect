@@ -163,10 +163,10 @@ export default function InstructorDetailPage() {
                   alt={instructor.name}
                   width={280}
                   height={280}
-                  className="h-64 w-64 rounded-2xl object-cover shadow-2xl ring-2 ring-white/10"
+                  className="h-48 w-48 rounded-2xl object-cover shadow-2xl ring-2 ring-white/10 lg:h-64 lg:w-64"
                 />
               ) : (
-                <div className="flex h-64 w-64 items-center justify-center rounded-2xl bg-sky-800 text-6xl font-bold text-white/30">
+                <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-sky-800 text-5xl font-bold text-white/30 lg:h-64 lg:w-64 lg:text-6xl">
                   {instructor.name?.charAt(0)}
                 </div>
               )}
@@ -178,14 +178,14 @@ export default function InstructorDetailPage() {
       {/* Bio Section */}
       {instructor.bio && (
         <section className="mx-auto max-w-6xl px-4 py-10">
-          <div className="flex gap-5 rounded-2xl border bg-slate-50 p-6">
+          <div className="flex flex-col gap-4 rounded-2xl border bg-slate-50 p-4 sm:flex-row sm:gap-5 sm:p-6">
             {instructor.image_url && (
               <Image
                 src={instructor.image_url}
                 alt={instructor.name}
                 width={80}
                 height={80}
-                className="h-16 w-16 shrink-0 rounded-full object-cover shadow-md"
+                className="h-16 w-16 shrink-0 self-center rounded-full object-cover shadow-md sm:self-start"
               />
             )}
             <p className="whitespace-pre-line text-sm leading-relaxed text-gray-700 md:text-base">

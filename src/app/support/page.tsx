@@ -56,7 +56,7 @@ export default function SupportPage() {
                   <img
                     src={agentImg}
                     alt="Support Agent"
-                    className="h-[320px] w-[360px] rounded-2xl object-cover shadow-2xl shadow-black/30 ring-1 ring-white/10"
+                    className="h-[280px] w-[300px] rounded-2xl object-cover shadow-2xl shadow-black/30 ring-1 ring-white/10 lg:h-[320px] lg:w-[360px]"
                   />
                 )}
                 {/* Floating badge */}

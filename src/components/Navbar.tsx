@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   Menu, X, User, LogOut, BookOpen, Heart, Search,
-  Home, Book, FileText, Headphones, Building2,
+  Home, Book, FileText, Headphones, Building2, LayoutDashboard, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,21 +221,43 @@ export function Navbar() {
           <div className="flex flex-col gap-1 pt-3">
             {navLinks.map((l) => (
               <Link key={l.href} href={l.href} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                <l.icon className="h-4 w-4" />{l.label}
+                <l.icon className="h-4 w-4 text-slate-500" />{l.label}
               </Link>
             ))}
-            {user && <Link href="/dashboard" className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>ড্যাশবোর্ড</Link>}
-            {user && <Link href="/my-courses" className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>আমার কোর্স</Link>}
-            {user && <Link href="/wishlist" className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>উইশলিস্ট</Link>}
-            {isAdmin && <Link href="/admin" className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>অ্যাডমিন</Link>}
-            <hr className="my-1" />
-            {user ? (
+
+            {user && (
               <>
-                <Link href="/profile" className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>প্রোফাইল</Link>
-                <button className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-slate-100" onClick={() => { handleLogout(); setMobileOpen(false); }}>লগ আউট</button>
+                <hr className="my-2" />
+                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">আমার অ্যাকাউন্ট</p>
+                <Link href="/dashboard" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                  <LayoutDashboard className="h-4 w-4 text-slate-500" />ড্যাশবোর্ড
+                </Link>
+                <Link href="/my-courses" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                  <BookOpen className="h-4 w-4 text-slate-500" />আমার কোর্স
+                </Link>
+                <Link href="/wishlist" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                  <Heart className="h-4 w-4 text-slate-500" />উইশলিস্ট
+                </Link>
+                <Link href="/profile" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                  <User className="h-4 w-4 text-slate-500" />প্রোফাইল
+                </Link>
+                {isAdmin && (
+                  <Link href="/admin" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                    <Shield className="h-4 w-4 text-slate-500" />অ্যাডমিন
+                  </Link>
+                )}
+                <hr className="my-2" />
+                <button className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-red-50" onClick={() => { handleLogout(); setMobileOpen(false); }}>
+                  <LogOut className="h-4 w-4" />লগ আউট
+                </button>
               </>
-            ) : (
-              <Link href="/login" className="rounded-full bg-sky-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(2,132,199,0.26)]" onClick={() => setMobileOpen(false)}>লগ-ইন</Link>
+            )}
+
+            {!user && (
+              <>
+                <hr className="my-2" />
+                <Link href="/login" className="rounded-full bg-sky-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-lg" onClick={() => setMobileOpen(false)}>লগ-ইন</Link>
+              </>
             )}
           </div>
         </div>

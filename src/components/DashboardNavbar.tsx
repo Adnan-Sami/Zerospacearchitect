@@ -78,11 +78,11 @@ export function DashboardNavbar() {
           </div>
           <Button
             variant="outline"
-            className="rounded-full border-slate-200 px-4 text-slate-700 hover:bg-slate-50"
+            className="rounded-full border-slate-200 px-3 text-slate-700 hover:bg-slate-50 md:px-4"
             onClick={handleLogout}
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            লগ আউট
+            <LogOut className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">লগ আউট</span>
           </Button>
         </div>
       </div>
@@ -181,11 +181,11 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
             </div>
             <Button
               variant="outline"
-              className="rounded-full border-slate-200 px-4 text-slate-700 hover:bg-slate-50"
+              className="rounded-full border-slate-200 px-3 text-slate-700 hover:bg-slate-50 md:px-4"
               onClick={handleLogout}
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              লগ আউট
+              <LogOut className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">লগ আউট</span>
             </Button>
           </div>
         </div>

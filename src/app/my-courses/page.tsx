@@ -69,8 +69,8 @@ export default function MyCoursesPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {enrollments.map((e) => (
               <Card key={e.id}>
-                <CardContent className="flex gap-4 p-4">
-                  <div className="h-20 w-32 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:gap-4">
+                  <div className="h-32 w-full flex-shrink-0 overflow-hidden rounded-md bg-muted sm:h-20 sm:w-32">
                     {e.courses?.thumbnail_url ? (
                       <Image
                         src={e.courses.thumbnail_url}
@@ -85,13 +85,13 @@ export default function MyCoursesPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="mb-1 font-semibold">{e.courses?.title}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="mb-1 font-semibold text-sm line-clamp-2">{e.courses?.title}</h3>
                     <p className="mb-2 text-xs text-muted-foreground">
                       {e.courses?.instructor_name}
                     </p>
                     <Progress value={e.progress} className="mb-2 h-2" />
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-xs text-muted-foreground">
                         {e.progress}% সম্পন্ন
                       </span>
@@ -100,13 +100,13 @@ export default function MyCoursesPage() {
                           <Link
                             href={`/certificate/${e.courses?.id}`}
                           >
-                            <Button size="sm" variant="default">
+                            <Button size="sm" variant="default" className="text-xs">
                               <Award className="mr-1 h-3 w-3" />সার্টিফিকেট
                             </Button>
                           </Link>
                         )}
                         <Link href={`/learn/${e.courses?.id}`}>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" className="text-xs">
                             চালিয়ে যান
                           </Button>
                         </Link>
