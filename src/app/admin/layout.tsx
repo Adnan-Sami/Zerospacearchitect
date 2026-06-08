@@ -77,10 +77,14 @@ export default function AdminLayout({
   const [userName, setUserName] = useState<string>("");
   const [badges, setBadges] = useState<Record<string, number>>({});
 
+  // Skip layout for login page
+  const isLoginPage = pathname === "/admin/login";
+
   useEffect(() => {
+    if (isLoginPage) { setIsAdmin(true); return; }
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
-        router.push("/login");
+        router.push("/admin/login");
         return;
       }
       setUserName(session.user.email ?? "অ্যাডমিন");
@@ -126,8 +130,10 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/admin/login");
   };
+
+  if (isLoginPage) return <>{children}</>;
 
   if (isAdmin === null)
     return (

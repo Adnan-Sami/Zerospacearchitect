@@ -39,7 +39,7 @@ export function DashboardNavbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/");
+    router.push("/login");
   };
 
   const isActive = (href: string, exact?: boolean) => {
@@ -140,7 +140,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/");
+    router.push("/login");
   };
 
   const isActive = (href: string, exact?: boolean) => {

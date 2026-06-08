@@ -5,8 +5,16 @@ import { usePathname } from "next/navigation";
 export function FloatingButtons() {
   const pathname = usePathname();
 
-  // Hide on admin and dashboard pages
-  if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard") || pathname.startsWith("/learn") || pathname.startsWith("/my-courses") || pathname.startsWith("/profile")) return null;
+  // Hide on admin, dashboard, instructor auth, and learn pages
+  if (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/learn") ||
+    pathname.startsWith("/my-courses") ||
+    pathname.startsWith("/profile") ||
+    pathname === "/instructor/login" ||
+    pathname === "/instructor/register"
+  ) return null;
 
   return (
     <>

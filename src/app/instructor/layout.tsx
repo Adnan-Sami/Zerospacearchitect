@@ -74,7 +74,7 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
               <User className="h-4 w-4 text-slate-500" />
               <span className="max-w-40 truncate">{name || "ইন্সট্রাক্টর"}</span>
             </div>
-            <Button variant="outline" size="sm" className="rounded-full" onClick={async () => { await supabase.auth.signOut(); router.push("/"); }}>
+            <Button variant="outline" size="sm" className="rounded-full" onClick={async () => { await supabase.auth.signOut(); router.push("/instructor/login"); }}>
               <LogOut className="mr-1 h-4 w-4" />লগ আউট
             </Button>
           </div>
