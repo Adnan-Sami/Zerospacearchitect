@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -178,6 +179,9 @@ export default function LearnPage({
           } hidden md:block`}
         >
           <div className="p-4">
+            <Link href="/dashboard" className="mb-4 flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-accent">
+              <LayoutDashboard className="h-4 w-4" />ড্যাশবোর্ড
+            </Link>
             <h2 className="mb-1 text-sm font-bold">{course.title}</h2>
             <p className="mb-4 text-xs text-muted-foreground">
               {completedCount}/{totalLessons} সম্পন্ন
