@@ -13,6 +13,7 @@ export default function InstructorDashboard() {
   const [courses, setCourses] = useState<any[]>([]);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [instructorName, setInstructorName] = useState("");
+  const [profileImage, setProfileImage] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -21,13 +22,15 @@ export default function InstructorDashboard() {
       // Check if instructor has submitted profile
       const { data: profileData } = await supabase
         .from("instructor_profile_details")
-        .select("id")
+        .select("id, image_url")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
       // Show popup only if no profile submitted yet
       if (!profileData) {
         setShowProfilePopup(true);
+      } else if (profileData.image_url) {
+        setProfileImage(profileData.image_url);
       }
 
       // Get instructor name
@@ -64,8 +67,12 @@ export default function InstructorDashboard() {
   return (
     <div>
       <div className="mb-6 flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-          <UserCircle className="h-7 w-7 text-purple-600" />
+        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-purple-100">
+          {profileImage ? (
+            <img src={profileImage} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <UserCircle className="h-7 w-7 text-purple-600" />
+          )}
         </div>
         <div>
           <h1 className="text-xl font-bold">স্বাগতম, {instructorName || "ইন্সট্রাক্টর"}!</h1>

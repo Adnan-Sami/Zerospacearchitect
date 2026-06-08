@@ -61,7 +61,8 @@ const navSections = [
       { href: "/admin/content", label: "সাইট কন্টেন্ট", icon: Type },
       { href: "/admin/refund-policy", label: "রিফান্ড পলিসি", icon: FileText },
       { href: "/admin/subscribers", label: "সাবস্ক্রাইবার", icon: Users },
-      { href: "/admin/settings", label: "সাইট সেটিংস", icon: Settings },
+      { href: "/admin/coupons", label: "কুপন কোড", icon: Type },
+      { href: "/admin/settings", label: "পেমেন্ট সেটিংস", icon: Settings },
     ],
   },
 ];

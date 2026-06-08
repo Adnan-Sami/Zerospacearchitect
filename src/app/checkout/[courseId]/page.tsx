@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,7 @@ export default function CheckoutPage({
 }) {
   const { courseId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const siteSettings = useSiteSettings();
   const [course, setCourse] = useState<any>(null);
   const [paymentPhone, setPaymentPhone] = useState("");
@@ -33,6 +34,10 @@ export default function CheckoutPage({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] = useState<any>(null);
+  const [couponError, setCouponError] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -62,6 +67,77 @@ export default function CheckoutPage({
     });
   }, [courseId, router]);
 
+  // Auto-apply coupon from URL
+  useEffect(() => {
+    const couponParam = searchParams.get("coupon");
+    if (couponParam && !couponApplied) {
+      setCouponCode(couponParam.toUpperCase());
+      // Auto-apply after a short delay
+      setTimeout(async () => {
+        const { data } = await supabase
+          .from("coupons")
+          .select("*")
+          .eq("code", couponParam.toUpperCase())
+          .eq("is_active", true)
+          .maybeSingle();
+        if (data) {
+          if (data.expires_at && new Date(data.expires_at) < new Date()) return;
+          if (data.max_uses && data.used_count >= data.max_uses) return;
+          setCouponApplied(data);
+        }
+      }, 500);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Calculate final price with coupon
+  const originalPrice = Number(course?.price ?? 0);
+  const discount = couponApplied
+    ? couponApplied.discount_type === "percent"
+      ? Math.round(originalPrice * (couponApplied.discount_value / 100))
+      : Math.min(couponApplied.discount_value, originalPrice)
+    : 0;
+  const finalPrice = Math.max(originalPrice - discount, 0);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError("");
+    setApplyingCoupon(true);
+
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", couponCode.trim().toUpperCase())
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (error || !data) {
+      setCouponError("এই কুপন কোড বৈধ নয়।");
+      setCouponApplied(null);
+      setApplyingCoupon(false);
+      return;
+    }
+
+    // Check expiry
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      setCouponError("এই কুপনের মেয়াদ শেষ হয়ে গেছে।");
+      setCouponApplied(null);
+      setApplyingCoupon(false);
+      return;
+    }
+
+    // Check usage limit
+    if (data.max_uses && data.used_count >= data.max_uses) {
+      setCouponError("এই কুপনের ব্যবহার সীমা শেষ হয়ে গেছে।");
+      setCouponApplied(null);
+      setApplyingCoupon(false);
+      return;
+    }
+
+    setCouponApplied(data);
+    setApplyingCoupon(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -78,7 +154,7 @@ export default function CheckoutPage({
     const { error: orderError } = await supabase.from("orders").insert({
       user_id: user.id,
       course_id: courseId,
-      amount: Number(course.price),
+      amount: finalPrice,
       payment_phone: paymentPhone,
       transaction_id: transactionId,
       payment_method: paymentMethod,
@@ -87,6 +163,13 @@ export default function CheckoutPage({
     if (orderError) {
       setError("অর্ডার সাবমিট করতে সমস্যা হয়েছে।");
     } else {
+      // Increment coupon usage if applied
+      if (couponApplied) {
+        await supabase
+          .from("coupons")
+          .update({ used_count: (couponApplied.used_count || 0) + 1 })
+          .eq("id", couponApplied.id);
+      }
       // Notify user + admins via server API (bypasses RLS)
       await fetch("/api/notify-admins", {
         method: "POST",
@@ -124,23 +207,41 @@ export default function CheckoutPage({
       <Navbar />
       <div className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
         {success ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <div className="mb-4 text-4xl">✅</div>
-              <h2 className="mb-2 text-xl font-bold">অর্ডার সাবমিট হয়েছে!</h2>
-              <p className="mb-4 text-muted-foreground">
-                অ্যাডমিন আপনার পেমেন্ট যাচাই করে অ্যাপ্রুভ করবে। অ্যাপ্রুভ হলে কোর্স
-                অ্যাক্সেস পাবেন।
+          <Card className="overflow-hidden">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 px-8 py-10 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 shadow-lg shadow-green-200/50">
+                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="mb-2 text-2xl font-black text-gray-900">অর্ডার সাবমিট হয়েছে! 🎉</h2>
+              <p className="text-sm text-gray-600">
+                অ্যাডমিন আপনার পেমেন্ট যাচাই করে অ্যাপ্রুভ করবে।<br />অ্যাপ্রুভ হলে কোর্স অ্যাক্সেস পাবেন।
               </p>
-              <Button onClick={() => router.push("/")}>হোমে ফিরে যান</Button>
-            </CardContent>
+            </div>
+            <div className="px-8 py-6 text-center">
+              <div className="mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+                <p className="text-sm font-medium text-sky-800">
+                  📋 অর্ডার স্ট্যাটাস ট্র্যাক করতে ড্যাশবোর্ড ভিজিট করুন
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <Button size="lg" className="rounded-full bg-sky-600 px-8 font-bold shadow-lg hover:bg-sky-700" onClick={() => router.push("/dashboard")}>
+                  ড্যাশবোর্ডে যান
+                </Button>
+                <Button size="lg" variant="outline" className="rounded-full px-8" onClick={() => router.push("/")}>
+                  হোমে ফিরে যান
+                </Button>
+              </div>
+            </div>
           </Card>
         ) : (
           <Card className="overflow-hidden">
             <CardHeader className="border-b bg-muted/30 text-center">
               <CardTitle className="text-xl">পেমেন্ট করুন</CardTitle>
               <CardDescription>
-                {course.title} — <span className="font-bold text-sky-600">৳{Number(course.price).toLocaleString("bn-BD")}</span>
+                {course.title} — <span className="font-bold text-sky-600">৳{finalPrice.toLocaleString("bn-BD")}</span>
+                {discount > 0 && <span className="ml-2 text-xs text-green-600">(৳{discount} ছাড়)</span>}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
@@ -148,8 +249,8 @@ export default function CheckoutPage({
               <div className="mb-6 rounded-xl bg-sky-50 p-4">
                 <h3 className="mb-2 text-sm font-bold text-sky-700">পেমেন্ট নির্দেশনা:</h3>
                 <ol className="list-inside list-decimal space-y-1 text-sm text-muted-foreground">
-                  <li>নিচের যেকোনো নম্বরে <strong className="text-foreground">৳{Number(course.price).toLocaleString("bn-BD")}</strong> পাঠান</li>
-                  <li>ট্রানজেকশন আইডি ও ফোন নম্বর নিচে সাবমিট করুন</li>
+                  <li>নিচের যেকোনো নম্বরে <strong className="text-foreground">৳{finalPrice.toLocaleString("bn-BD")}</strong> পাঠান</li>
+                  <li>আপনার ফোন নম্বর ও পেমেন্ট নম্বরের শেষ ৪ ডিজিট নিচে সাবমিট করুন</li>
                 </ol>
               </div>
 
@@ -195,7 +296,7 @@ export default function CheckoutPage({
                   </p>
                 </div>
 
-                {/* Phone & Transaction ID */}
+                {/* Phone & Last 4 digits */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label>আপনার ফোন নম্বর *</Label>
@@ -207,17 +308,19 @@ export default function CheckoutPage({
                   />
                 </div>
                 <div>
-                  <Label>ট্রানজেকশন আইডি *</Label>
+                  <Label>{paymentMethod === "bkash" ? "বিকাশ" : paymentMethod === "nagad" ? "নগদ" : "রকেট"} নম্বরের শেষ ৪ ডিজিট *</Label>
                   <Input
-                    placeholder="ট্রানজেকশন আইডি লিখুন"
+                    placeholder="যেমন: 1234"
                     value={transactionId}
                     onChange={(e) => setTransactionId(e.target.value)}
                     required
+                    maxLength={4}
                   />
                 </div>
                 </div>
+
                 <Button type="submit" className="w-full rounded-full bg-sky-600 py-3 text-base font-semibold shadow-lg hover:bg-sky-700" disabled={loading}>
-                  {loading ? "সাবমিট হচ্ছে..." : "অর্ডার সাবমিট করুন"}
+                  {loading ? "সাবমিট হচ্ছে..." : `অর্ডার সাবমিট করুন — ৳${finalPrice.toLocaleString("bn-BD")}`}
                 </Button>
               </form>
             </CardContent>

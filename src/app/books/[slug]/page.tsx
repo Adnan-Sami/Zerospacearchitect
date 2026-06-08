@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 import { toast } from "sonner";
 
 export default function BookDetailsPage() {
@@ -24,7 +25,35 @@ export default function BookDetailsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [invoice, setInvoice] = useState<any>(null);
-  const [form, setForm] = useState({ full_name: "", phone: "", email: "", address: "", message: "", transaction_id: "" });
+  const [form, setForm] = useState({ full_name: "", phone: "", email: "", address: "", message: "", transaction_id: "", payment_method: "bkash" });
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] = useState<any>(null);
+  const [couponError, setCouponError] = useState("");
+  const siteSettings = useSiteSettings();
+
+  // Coupon calculation
+  const originalPrice = Number(book?.price ?? 0);
+  const discount = couponApplied
+    ? couponApplied.discount_type === "percent"
+      ? Math.round(originalPrice * (couponApplied.discount_value / 100))
+      : Math.min(Number(couponApplied.discount_value), originalPrice)
+    : 0;
+  const finalPrice = Math.max(originalPrice - discount, 0);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError("");
+    const { data } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", couponCode.trim().toUpperCase())
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!data) { setCouponError("এই কুপন কোড বৈধ নয়।"); setCouponApplied(null); return; }
+    if (data.expires_at && new Date(data.expires_at) < new Date()) { setCouponError("কুপনের মেয়াদ শেষ।"); setCouponApplied(null); return; }
+    if (data.max_uses && data.used_count >= data.max_uses) { setCouponError("কুপনের সীমা শেষ।"); setCouponApplied(null); return; }
+    setCouponApplied(data);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -70,9 +99,10 @@ export default function BookDetailsPage() {
     const { error } = await supabase.from("book_orders").insert({
       user_id: session?.user?.id || null,
       book_id: book.id,
-      amount: Number(book.price),
+      amount: finalPrice,
       payment_phone: form.phone,
       transaction_id: form.transaction_id,
+      payment_method: form.payment_method,
       customer_name: form.full_name,
       customer_phone: form.phone,
       customer_email: form.email || null,
@@ -82,6 +112,10 @@ export default function BookDetailsPage() {
     });
 
     if (!error) {
+      // Increment coupon usage
+      if (couponApplied) {
+        await supabase.from("coupons").update({ used_count: (couponApplied.used_count || 0) + 1 }).eq("id", couponApplied.id);
+      }
       // Notify via server API
       await fetch("/api/notify-admins", {
         method: "POST",
@@ -103,7 +137,7 @@ export default function BookDetailsPage() {
         number: invoiceNumber,
         date: new Date().toLocaleDateString("bn-BD"),
         bookTitle: book.title,
-        price: Number(book.price),
+        price: finalPrice,
         customerName: form.full_name,
         phone: form.phone,
         address: form.address,
@@ -238,15 +272,39 @@ export default function BookDetailsPage() {
                 </h3>
                 <p className="text-xs text-muted-foreground">পেমেন্ট করে তথ্য দিন। অ্যাডমিন অ্যাপ্রুভ করলে অ্যাক্সেস পাবেন।</p>
               </div>
-              <form onSubmit={handleHardcopyOrder} className="space-y-3 p-5">
-                {/* Payment info */}
-                <div className="rounded-lg bg-sky-50 p-3 text-sm">
-                  <p className="mb-1 font-semibold text-sky-700">পেমেন্ট নির্দেশনা:</p>
-                  <p className="text-xs text-muted-foreground">
-                    বিকাশ/নগদ/রকেটে ৳{Number(book.price).toLocaleString("bn-BD")} পাঠান এবং ট্রানজেকশন আইডি নিচে দিন।
+              <form onSubmit={handleHardcopyOrder} className="space-y-4 p-5">
+                {/* Payment method selection */}
+                <div>
+                  <Label className="mb-2 block">পেমেন্ট মাধ্যম নির্বাচন করুন</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: "bkash", label: "বিকাশ", logo: "/bkash_logo_0.webp", color: "border-pink-400 bg-pink-50" },
+                      { id: "nagad", label: "নগদ", logo: "/nagad.webp", color: "border-orange-400 bg-orange-50" },
+                      { id: "rocket", label: "রকেট", logo: "/unnamed (1).png", color: "border-purple-400 bg-purple-50" },
+                    ].map((m) => (
+                      <button key={m.id} type="button" onClick={() => setForm({ ...form, payment_method: m.id })}
+                        className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all ${form.payment_method === m.id ? m.color + " shadow-md scale-[1.02]" : "border-border hover:border-muted-foreground/30"}`}>
+                        <img src={m.logo} alt={m.label} className="h-8 w-auto object-contain" />
+                        <span className={`text-xs font-semibold ${form.payment_method === m.id ? "text-foreground" : "text-muted-foreground"}`}>{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Payment number display */}
+                <div className="rounded-xl border-2 border-dashed border-sky-300 bg-sky-50 p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">এই নম্বরে ৳{finalPrice.toLocaleString("bn-BD")} পাঠান:</p>
+                  <p className="text-xl font-bold text-foreground">
+                    {form.payment_method === "bkash" && (siteSettings.bkash_number || "নম্বর সেট করা হয়নি")}
+                    {form.payment_method === "nagad" && (siteSettings.nagad_number || "নম্বর সেট করা হয়নি")}
+                    {form.payment_method === "rocket" && (siteSettings.rocket_number || "নম্বর সেট করা হয়নি")}
+                  </p>
+                  <p className="mt-1 text-xs text-sky-600 font-medium">
+                    {form.payment_method === "bkash" ? "বিকাশ" : form.payment_method === "nagad" ? "নগদ" : "রকেট"} পার্সোনাল নম্বর
                   </p>
                 </div>
 
+                {/* Personal info */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <Label>পূর্ণ নাম *</Label>
@@ -254,32 +312,48 @@ export default function BookDetailsPage() {
                   </div>
                   <div>
                     <Label>মোবাইল নম্বর *</Label>
-                    <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                    <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="০১XXXXXXXXX" />
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <Label>ট্রানজেকশন আইডি *</Label>
-                    <Input required value={form.transaction_id} onChange={(e) => setForm({ ...form, transaction_id: e.target.value })} placeholder="বিকাশ/নগদ ট্রানজেকশন আইডি" />
+                    <Label>{form.payment_method === "bkash" ? "বিকাশ" : form.payment_method === "nagad" ? "নগদ" : "রকেট"} নম্বরের শেষ ৪ ডিজিট *</Label>
+                    <Input required value={form.transaction_id} onChange={(e) => setForm({ ...form, transaction_id: e.target.value })} placeholder="যেমন: 1234" maxLength={4} />
                   </div>
                   <div>
                     <Label>ইমেইল</Label>
                     <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                   </div>
                 </div>
-                {!isPDF && (
-                  <div>
-                    <Label>ডেলিভারি ঠিকানা *</Label>
-                    <Input required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-                  </div>
-                )}
+                <div>
+                  <Label>ডেলিভারি ঠিকানা {!isPDF && "*"}</Label>
+                  <Input required={!isPDF} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="সম্পূর্ণ ঠিকানা লিখুন" />
+                </div>
                 <div>
                   <Label>বার্তা (ঐচ্ছিক)</Label>
                   <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={2} />
                 </div>
+
+                {/* Coupon */}
+                <div>
+                  <Label>কুপন কোড (ঐচ্ছিক)</Label>
+                  <div className="mt-1.5 flex gap-2">
+                    <Input placeholder="কুপন কোড" value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }} disabled={!!couponApplied} className="flex-1" />
+                    {couponApplied ? (
+                      <Button type="button" variant="outline" className="shrink-0 text-red-600" onClick={() => { setCouponApplied(null); setCouponCode(""); }}>সরান</Button>
+                    ) : (
+                      <Button type="button" variant="outline" className="shrink-0" onClick={applyCoupon} disabled={!couponCode.trim()}>প্রয়োগ</Button>
+                    )}
+                  </div>
+                  {couponError && <p className="mt-1 text-xs text-red-500">{couponError}</p>}
+                  {couponApplied && (
+                    <p className="mt-1 text-xs text-green-600">✅ কুপন প্রয়োগ হয়েছে! ডিসকাউন্ট: ৳{discount} — মোট: ৳{finalPrice}</p>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <Button type="submit" disabled={submitting} className="flex-1 rounded-full bg-sky-600 hover:bg-sky-700">
-                    {submitting ? "অর্ডার হচ্ছে..." : "অর্ডার কনফার্ম করুন"}
+                    {submitting ? "অর্ডার হচ্ছে..." : `অর্ডার কনফার্ম করুন — ৳${finalPrice.toLocaleString("bn-BD")}`}
                   </Button>
                   <Button type="button" variant="outline" className="rounded-full" onClick={() => setShowOrderForm(false)}>বাতিল</Button>
                 </div>

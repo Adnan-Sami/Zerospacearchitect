@@ -14,6 +14,8 @@ export default function AdminInstructorCourses() {
   const [applications, setApplications] = useState<any[]>([]);
   const [filter, setFilter] = useState("pending");
   const [tab, setTab] = useState<"applications" | "courses">("applications");
+  const [pendingApps, setPendingApps] = useState(0);
+  const [pendingCourses, setPendingCourses] = useState(0);
 
   const load = async () => {
     // Load course submissions
@@ -37,6 +39,14 @@ export default function AdminInstructorCourses() {
       .eq("service_type", "instructor_application")
       .order("created_at", { ascending: false });
     setApplications(apps ?? []);
+    
+    // Count pending items
+    setPendingApps((apps ?? []).filter((a: any) => a.status === "new").length);
+    const { count: pendingCoursesCount } = await supabase
+      .from("instructor_courses")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+    setPendingCourses(pendingCoursesCount ?? 0);
   };
 
   useEffect(() => { load(); }, [filter]);
@@ -86,13 +96,13 @@ export default function AdminInstructorCourses() {
             className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${tab === "applications" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => setTab("applications")}
           >
-            📋 আবেদনসমূহ ({applications.length})
+            📋 আবেদনসমূহ {pendingApps > 0 && <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">{pendingApps}</span>}
           </button>
           <button
             className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${tab === "courses" ? "bg-purple-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => setTab("courses")}
           >
-            📚 কোর্স সাবমিশন
+            📚 কোর্স সাবমিশন {pendingCourses > 0 && <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">{pendingCourses}</span>}
           </button>
         </div>
 

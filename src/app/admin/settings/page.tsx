@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Upload } from "lucide-react";
+import { Save, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<any>(null);
-  const [uploading, setUploading] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
@@ -26,63 +25,29 @@ export default function AdminSettings() {
     load();
   }, []);
 
-  const persist = async (next: any) => {
-    // Build update payload — only include payment fields if the columns exist
+  const save = async () => {
+    if (!settings) return;
+    setSaved(false);
+
     const payload: Record<string, any> = {
-      logo_url: next.logo_url ?? "",
-      site_name: next.site_name,
-      footer_text: next.footer_text ?? "",
+      site_name: settings.site_name?.trim() || "ZeroSpace Architect",
+      bkash_number: settings.bkash_number?.trim() ?? "",
+      nagad_number: settings.nagad_number?.trim() ?? "",
+      rocket_number: settings.rocket_number?.trim() ?? "",
       updated_at: new Date().toISOString(),
     };
-    if (next.bkash_number !== undefined) payload.bkash_number = next.bkash_number ?? "";
-    if (next.nagad_number !== undefined) payload.nagad_number = next.nagad_number ?? "";
-    if (next.rocket_number !== undefined) payload.rocket_number = next.rocket_number ?? "";
 
     const { error } = await supabase
       .from("site_settings")
       .update(payload)
-      .eq("id", next.id)
-      .select()
-      .maybeSingle();
+      .eq("id", settings.id);
+
     if (error) {
       toast.error(error.message);
-      return false;
-    }
-    return true;
-  };
-
-  const save = async () => {
-    if (!settings) return;
-    if (!settings.site_name?.trim()) {
-      toast.error("সাইটের নাম খালি রাখা যাবে না");
       return;
     }
-    const ok = await persist({
-      ...settings,
-      site_name: settings.site_name.trim(),
-    });
-    if (ok) toast.success("সেভ হয়েছে — পেজ রিফ্রেশ করলে পরিবর্তন দেখবেন");
-  };
-
-  const uploadLogo = async (file: File) => {
-    if (!settings) return;
-    setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `logo-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("logos")
-      .upload(path, file, { upsert: true });
-    if (error) {
-      toast.error(error.message);
-      setUploading(false);
-      return;
-    }
-    const { data } = supabase.storage.from("logos").getPublicUrl(path);
-    const updated = { ...settings, logo_url: data.publicUrl };
-    setSettings(updated);
-    const ok = await persist(updated);
-    setUploading(false);
-    if (ok) toast.success("লোগো আপলোড ও সেভ হয়েছে");
+    toast.success("সেভ হয়েছে!");
+    setSaved(true);
   };
 
   if (!settings)
@@ -90,99 +55,50 @@ export default function AdminSettings() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold">সাইট সেটিংস</h1>
+      <h1 className="mb-6 text-2xl font-bold">পেমেন্ট সেটিংস</h1>
       <Card>
         <CardHeader>
-          <CardTitle>সাধারণ তথ্য</CardTitle>
+          <CardTitle>পেমেন্ট নম্বর সেটিংস</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label>সাইটের নাম</Label>
             <Input
-              value={settings.site_name}
-              onChange={(e) =>
-                setSettings({ ...settings, site_name: e.target.value })
-              }
+              value={settings.site_name ?? ""}
+              onChange={(e) => { setSettings({ ...settings, site_name: e.target.value }); setSaved(false); }}
             />
           </div>
           <div>
-            <Label>লোগো</Label>
-            {settings.logo_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={settings.logo_url}
-                alt="logo"
-                className="my-2 h-16 rounded border bg-muted p-2"
-              />
-            )}
-            <div className="flex gap-2">
-              <Input
-                value={settings.logo_url}
-                onChange={(e) =>
-                  setSettings({ ...settings, logo_url: e.target.value })
-                }
-                placeholder="লোগো URL"
-              />
-              <label className="inline-flex">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) =>
-                    e.target.files?.[0] && uploadLogo(e.target.files[0])
-                  }
-                />
-                <Button asChild variant="outline" disabled={uploading}>
-                  <span>
-                    <Upload className="mr-1 h-4 w-4" />
-                    {uploading ? "..." : "আপলোড"}
-                  </span>
-                </Button>
-              </label>
-            </div>
-          </div>
-          <div>
-            <Label>ফুটার টেক্সট</Label>
-            <Textarea
-              value={settings.footer_text ?? ""}
-              onChange={(e) =>
-                setSettings({ ...settings, footer_text: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <Label>বিকাশ নম্বর</Label>
+            <Label>বিকাশ পার্সোনাল নম্বর</Label>
             <Input
               value={settings.bkash_number ?? ""}
-              onChange={(e) =>
-                setSettings({ ...settings, bkash_number: e.target.value })
-              }
+              onChange={(e) => { setSettings({ ...settings, bkash_number: e.target.value }); setSaved(false); }}
               placeholder="০১XXXXXXXXX"
             />
           </div>
           <div>
-            <Label>নগদ নম্বর</Label>
+            <Label>নগদ পার্সোনাল নম্বর</Label>
             <Input
               value={settings.nagad_number ?? ""}
-              onChange={(e) =>
-                setSettings({ ...settings, nagad_number: e.target.value })
-              }
+              onChange={(e) => { setSettings({ ...settings, nagad_number: e.target.value }); setSaved(false); }}
               placeholder="০১XXXXXXXXX"
             />
           </div>
           <div>
-            <Label>রকেট নম্বর</Label>
+            <Label>রকেট পার্সোনাল নম্বর</Label>
             <Input
               value={settings.rocket_number ?? ""}
-              onChange={(e) =>
-                setSettings({ ...settings, rocket_number: e.target.value })
-              }
+              onChange={(e) => { setSettings({ ...settings, rocket_number: e.target.value }); setSaved(false); }}
               placeholder="০১XXXXXXXXX"
             />
           </div>
-          <Button onClick={save}>
-            <Save className="mr-1 h-4 w-4" />সেভ করুন
-          </Button>
+          <div className="flex items-center gap-3 pt-2">
+            <Button onClick={save} className={saved ? "bg-green-600 hover:bg-green-700" : ""}>
+              {saved ? <CheckCircle className="mr-1 h-4 w-4" /> : <Save className="mr-1 h-4 w-4" />}
+              {saved ? "সেভ হয়েছে ✓" : "সেভ করুন"}
+            </Button>
+            {saved && <p className="text-sm text-green-600">✅ সফলভাবে সেভ হয়েছে</p>}
+          </div>
         </CardContent>
       </Card>
     </div>

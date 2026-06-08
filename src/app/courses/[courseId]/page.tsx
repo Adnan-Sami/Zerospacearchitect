@@ -132,7 +132,7 @@ export default function CourseDetailPage({
 
       {/* ── Hero Banner ── */}
       <div className="bg-[#f0f7ff]">
-        <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
+        <div className="mx-auto w-full max-w-7xl px-4 py-10 md:px-8">
           <div className="flex items-start gap-8">
             {/* Left hero content */}
             <div className="min-w-0 flex-1">
@@ -143,7 +143,7 @@ export default function CourseDetailPage({
                 {course.title}
               </h1>
               {course.description && (
-                <p className="mb-6 max-w-2xl text-base leading-relaxed text-foreground/80">
+                <p className="mb-6 text-base leading-relaxed text-foreground/80">
                   {course.description}
                 </p>
               )}
@@ -199,14 +199,14 @@ export default function CourseDetailPage({
             </div>
 
             {/* Sidebar width placeholder */}
-            <div className="hidden w-80 shrink-0 lg:block" />
+            <div className="hidden w-80 shrink-0 lg:block" aria-hidden="true" />
           </div>
         </div>
       </div>
 
       {/* ── Body ── */}
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
           <div className="flex items-start gap-8">
 
             {/* LEFT */}
@@ -453,6 +453,36 @@ function SidebarCard({
   course: any; courseId: string; enrolled: boolean;
   user: User | null; totalLessons: number; totalDuration: number;
 }) {
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] = useState<any>(null);
+  const [couponError, setCouponError] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+
+  const originalPrice = Number(course.price);
+  const discount = couponApplied
+    ? couponApplied.discount_type === "percent"
+      ? Math.round(originalPrice * (couponApplied.discount_value / 100))
+      : Math.min(Number(couponApplied.discount_value), originalPrice)
+    : 0;
+  const finalPrice = Math.max(originalPrice - discount, 0);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError("");
+    setApplyingCoupon(true);
+    const { data } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", couponCode.trim().toUpperCase())
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!data) { setCouponError("এই কুপন কোড বৈধ নয়।"); setCouponApplied(null); setApplyingCoupon(false); return; }
+    if (data.expires_at && new Date(data.expires_at) < new Date()) { setCouponError("কুপনের মেয়াদ শেষ।"); setCouponApplied(null); setApplyingCoupon(false); return; }
+    if (data.max_uses && data.used_count >= data.max_uses) { setCouponError("কুপনের সীমা শেষ।"); setCouponApplied(null); setApplyingCoupon(false); return; }
+    setCouponApplied(data);
+    setApplyingCoupon(false);
+  };
+
   return (
     <div className="overflow-hidden rounded-2xl border bg-card shadow-[0_8px_30px_rgba(15,23,42,0.08)]">
       {/* Thumbnail */}
@@ -470,11 +500,16 @@ function SidebarCard({
 
       <div className="p-5">
         {/* Price */}
-        <div className="mb-4 flex flex-wrap items-end gap-2">
+        <div className="mb-3 flex flex-wrap items-end gap-2">
           <span className="text-3xl font-extrabold text-sky-600">
-            ৳{Number(course.price).toLocaleString("bn-BD")}
+            ৳{finalPrice.toLocaleString("bn-BD")}
           </span>
-          {course.original_price && Number(course.original_price) > Number(course.price) && (
+          {discount > 0 && (
+            <span className="pb-0.5 text-sm text-muted-foreground line-through">
+              ৳{originalPrice.toLocaleString("bn-BD")}
+            </span>
+          )}
+          {!discount && course.original_price && Number(course.original_price) > Number(course.price) && (
             <>
               <span className="pb-0.5 text-sm text-muted-foreground line-through">
                 ৳{Number(course.original_price).toLocaleString("bn-BD")}
@@ -484,7 +519,36 @@ function SidebarCard({
               </span>
             </>
           )}
+          {discount > 0 && (
+            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-600">
+              ৳{discount} ছাড়
+            </span>
+          )}
         </div>
+
+        {/* Coupon Input */}
+        {!enrolled && Number(course.price) > 0 && (
+          <div className="mb-4 rounded-lg border border-dashed border-sky-200 bg-sky-50/50 p-3">
+            <p className="mb-2 text-xs font-semibold text-sky-700">🎟️ কুপন কোড আছে?</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="কুপন কোড লিখুন"
+                value={couponCode}
+                onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
+                disabled={!!couponApplied}
+                className="flex-1 rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-sky-500"
+              />
+              {couponApplied ? (
+                <button type="button" onClick={() => { setCouponApplied(null); setCouponCode(""); }} className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">সরান</button>
+              ) : (
+                <button type="button" onClick={applyCoupon} disabled={applyingCoupon || !couponCode.trim()} className="shrink-0 rounded-lg bg-sky-600 px-4 py-2 text-xs font-medium text-white hover:bg-sky-700 disabled:opacity-50">{applyingCoupon ? "..." : "প্রয়োগ"}</button>
+              )}
+            </div>
+            {couponError && <p className="mt-1.5 text-[11px] text-red-500">{couponError}</p>}
+            {couponApplied && <p className="mt-1.5 text-[11px] font-medium text-green-600">✅ কুপন প্রয়োগ হয়েছে! ৳{discount} ছাড়</p>}
+          </div>
+        )}
 
         {/* CTA */}
         {enrolled ? (
@@ -494,7 +558,7 @@ function SidebarCard({
             </Button>
           </Link>
         ) : user ? (
-          <Link href={`/checkout/${courseId}`}>
+          <Link href={`/checkout/${courseId}${couponApplied ? `?coupon=${couponApplied.code}` : ""}`}>
             <Button className="w-full rounded-full bg-sky-600 shadow-[0_10px_24px_rgba(2,132,199,0.26)] hover:bg-sky-700" size="lg">
               এখনই ভর্তি হন
             </Button>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { FileText, Film, CheckCircle, Send, Users, TrendingUp, Award, Zap } from "lucide-react";
+import { FileText, Film, CheckCircle, Send, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,10 +90,10 @@ export default function BecomeInstructorPage() {
         {/* Stats */}
         <section className="border-b bg-card px-4 py-10">
           <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 md:grid-cols-4">
-            <AnimatedStat icon={Users} target={100} suffix="+" label="ইন্সট্রাক্টর" />
-            <AnimatedStat icon={TrendingUp} target={40} suffix="%" label="কমিশন" />
-            <AnimatedStat icon={Award} target={18000} suffix="+" label="শিক্ষার্থী" />
-            <AnimatedStat icon={Film} target={50} suffix="+" label="কোর্স" />
+            <AnimatedStat emoji="👨‍🏫" target={100} suffix="+" label="ইন্সট্রাক্টর" />
+            <AnimatedStat emoji="💰" target={40} suffix="%" label="কমিশন" />
+            <AnimatedStat emoji="🎓" target={18000} suffix="+" label="শিক্ষার্থী" />
+            <AnimatedStat emoji="📚" target={50} suffix="+" label="কোর্স" />
           </div>
         </section>
 
@@ -118,17 +118,17 @@ export default function BecomeInstructorPage() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "আপনি পাবেন", value: "40%", color: "from-blue-500 to-blue-600" },
-                  { label: "Zero Space", value: "40%", color: "from-sky-500 to-sky-600" },
-                  { label: "মার্কেটিং", value: "20%", color: "from-slate-500 to-slate-600" },
+                  { label: "আপনি পাবেন", value: "৪০%", color: "from-blue-500 to-indigo-600", ring: "ring-blue-200" },
+                  { label: "Zero Space", value: "৪০%", color: "from-sky-500 to-cyan-600", ring: "ring-sky-200" },
+                  { label: "মার্কেটিং", value: "২০%", color: "from-slate-600 to-slate-800", ring: "ring-slate-200" },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-2xl border bg-card p-4 text-center shadow-sm">
-                    <div className={`mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br ${item.color}`}>
-                      <span className="text-xl font-black text-white">{item.value}</span>
+                  <div key={item.label} className="group rounded-2xl border bg-white p-5 text-center shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                    <div className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${item.color} shadow-lg ring-4 ${item.ring} transition-transform duration-300 group-hover:scale-110`}>
+                      <span className="text-2xl font-black text-white">{item.value}</span>
                     </div>
-                    <p className="text-xs font-semibold text-muted-foreground">{item.label}</p>
+                    <p className="text-sm font-bold text-gray-800">{item.label}</p>
                   </div>
                 ))}
               </div>
@@ -217,15 +217,34 @@ export default function BecomeInstructorPage() {
                   </div>
                   <div>
                     <Label>ফোন নম্বর *</Label>
-                    <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="০১XXXXXXXXX" />
+                    <div className="relative mt-1.5">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <svg width="20" height="14" viewBox="0 0 20 14" className="shrink-0"><rect width="20" height="14" fill="#006a4e"/><circle cx="9" cy="7" r="4" fill="#f42a41"/></svg>
+                        +88
+                      </span>
+                      <Input
+                        required
+                        value={form.phone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+                          setForm({ ...form, phone: val });
+                        }}
+                        placeholder="01XXXXXXXXX"
+                        className="pl-[72px]"
+                        maxLength={11}
+                        minLength={11}
+                        pattern="01[3-9][0-9]{8}"
+                        title="সঠিক ১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন (01 দিয়ে শুরু)"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <Label>ইমেইল</Label>
-                    <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="your@email.com" />
+                    <Label>ইমেইল *</Label>
+                    <Input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="your@email.com" />
                   </div>
                   <div>
-                    <Label>আপনার সম্পর্কে / বিষয়</Label>
-                    <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="আপনি কোন বিষয়ে কোর্স করাতে চান..." rows={3} />
+                    <Label>আপনার সম্পর্কে / বিষয় *</Label>
+                    <Textarea required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="আপনি কোন বিষয়ে কোর্স করাতে চান..." rows={3} />
                   </div>
                   <Button type="submit" disabled={submitting} className="w-full rounded-full bg-sky-600 py-3 text-base font-semibold hover:bg-sky-700">
                     <Send className="mr-2 h-4 w-4" />
@@ -244,7 +263,7 @@ export default function BecomeInstructorPage() {
 }
 
 /* Animated counting stat */
-function AnimatedStat({ icon: Icon, target, suffix, label }: { icon: any; target: number; suffix: string; label: string }) {
+function AnimatedStat({ emoji, target, suffix, label }: { emoji: string; target: number; suffix: string; label: string }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const started = useRef(false);
@@ -274,11 +293,9 @@ function AnimatedStat({ icon: Icon, target, suffix, label }: { icon: any; target
 
   return (
     <div ref={ref} className="text-center">
-      <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100">
-        <Icon className="h-6 w-6 text-sky-600" />
-      </div>
+      <div className="mb-2 text-3xl">{emoji}</div>
       <p className="text-2xl font-black text-foreground">
-        {count.toLocaleString()}{suffix}
+        {count.toLocaleString("bn-BD")}{suffix}
       </p>
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>

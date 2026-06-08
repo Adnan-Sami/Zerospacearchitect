@@ -13,7 +13,9 @@ export default function AdminOrders() {
   const [filter, setFilter] = useState<string>("pending");
   const [tab, setTab] = useState<"course" | "book">("course");
   const [page, setPage] = useState(0);
-  const PAGE_SIZE = 4;
+  const [pendingCourseCount, setPendingCourseCount] = useState(0);
+  const [pendingBookCount, setPendingBookCount] = useState(0);
+  const PAGE_SIZE = 3;
 
   const loadOrders = async () => {
     let query = supabase
@@ -50,8 +52,13 @@ export default function AdminOrders() {
       .from("book_orders")
       .select("*, books(title, book_type)")
       .order("created_at", { ascending: false });
-    if (filter !== "all")
-      query = query.eq("status", filter);
+    if (filter === "dispatched") {
+      query = query.eq("delivery_status", "dispatched");
+    } else if (filter === "delivered") {
+      query = query.eq("delivery_status", "delivered");
+    } else if (filter !== "all") {
+      query = query.eq("status", filter as "pending" | "approved" | "rejected");
+    }
     const { data, error } = await query;
     if (error) {
       setBookOrders([]);
@@ -75,6 +82,9 @@ export default function AdminOrders() {
   useEffect(() => {
     if (tab === "course") loadOrders();
     else loadBookOrders();
+    // Fetch pending counts
+    supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending").then(({ count }) => setPendingCourseCount(count ?? 0));
+    supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending").then(({ count }) => setPendingBookCount(count ?? 0));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, tab]);
 
@@ -202,13 +212,13 @@ export default function AdminOrders() {
             className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${tab === "course" ? "bg-sky-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => { setTab("course"); setFilter("pending"); setPage(0); }}
           >
-            📚 কোর্স অর্ডার
+            📚 কোর্স অর্ডার {pendingCourseCount > 0 && <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">{pendingCourseCount}</span>}
           </button>
           <button
             className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${tab === "book" ? "bg-sky-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => { setTab("book"); setFilter("pending"); setPage(0); }}
           >
-            📖 বই অর্ডার
+            📖 বই অর্ডার {pendingBookCount > 0 && <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">{pendingBookCount}</span>}
           </button>
         </div>
 
@@ -229,6 +239,12 @@ export default function AdminOrders() {
             {f.l}
           </Button>
         ))}
+        {tab === "book" && (
+          <>
+            <Button variant={filter === "dispatched" ? "default" : "outline"} size="sm" onClick={() => { setFilter("dispatched"); setPage(0); }}>🚚 ডিসপ্যাচড</Button>
+            <Button variant={filter === "delivered" ? "default" : "outline"} size="sm" onClick={() => { setFilter("delivered"); setPage(0); }}>📦 ডেলিভার্ড</Button>
+          </>
+        )}
         </div>
       </div>
 
@@ -246,12 +262,12 @@ export default function AdminOrders() {
                       {order.profiles?.phone}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      পেমেন্ট ফোন: {order.payment_phone} · ট্রান্স. আইডি:{" "}
+                      পেমেন্ট ফোন: {order.payment_phone} · শেষ ৪ ডিজিট:{" "}
                       {order.transaction_id}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       মাধ্যম: {order.payment_method} · পরিমাণ: ৳
-                      {Number(order.amount)}
+                      {Number(order.amount)} · তারিখ: {new Date(order.created_at).toLocaleDateString("bn-BD")}
                     </p>
                     <div className="mt-1">{statusBadge(order.status)}</div>
                   </div>
@@ -330,11 +346,14 @@ export default function AdminOrders() {
                       <p className="text-sm text-muted-foreground">ঠিকানা: {order.delivery_address}</p>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      পেমেন্ট ফোন: {order.payment_phone} · ট্রান্স. আইডি: {order.transaction_id}
+                      পেমেন্ট ফোন: {order.payment_phone} · শেষ ৪ ডিজিট: {order.transaction_id} · মাধ্যম: {order.payment_method || "—"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      ধরন: {order.books?.book_type === "pdf" ? "PDF" : "হার্ডকপি"} · পরিমাণ: ৳{Number(order.amount)}
+                      ধরন: {order.books?.book_type === "pdf" ? "PDF" : "হার্ডকপি"} · পরিমাণ: ৳{Number(order.amount)} · তারিখ: {new Date(order.created_at).toLocaleDateString("bn-BD")}
                     </p>
+                    {order.order_note && (
+                      <p className="text-sm text-muted-foreground">বার্তা: {order.order_note}</p>
+                    )}
                     {order.invoice_number && (
                       <p className="text-xs text-muted-foreground">ইনভয়েস: <span className="font-mono">{order.invoice_number}</span></p>
                     )}
