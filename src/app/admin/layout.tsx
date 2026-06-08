@@ -40,6 +40,7 @@ const navSections = [
     items: [
       { href: "/admin/courses", label: "কোর্স", icon: BookOpen },
       { href: "/admin/books", label: "বই", icon: BookOpen },
+      { href: "/admin/public-instructors", label: "প্রশিক্ষক প্রোফাইল", icon: Users },
       { href: "/admin/slides", label: "হিরো স্লাইডার", icon: ImageIcon },
       { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },
       { href: "/admin/testimonials", label: "টেস্টিমোনিয়াল", icon: MessageSquare },
@@ -51,6 +52,7 @@ const navSections = [
     items: [
       { href: "/admin/instructor-courses", label: "কোর্স রিভিউ", icon: BookOpen },
       { href: "/admin/instructors", label: "তালিকা ও আয়", icon: Users },
+      { href: "/admin/instructor-profiles", label: "প্রোফাইল সাবমিশন", icon: Users },
     ],
   },
   {
@@ -105,6 +107,7 @@ export default function AdminLayout({
         { count: pendingInstructorApps },
         { count: pendingBookingsNew },
         { count: pendingBookingsNull },
+        { count: unseenProfiles },
       ] = await Promise.all([
         supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -112,11 +115,13 @@ export default function AdminLayout({
         supabase.from("service_requests").select("*", { count: "exact", head: true }).eq("service_type", "instructor_application").eq("status", "new"),
         supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").eq("status", "new"),
         supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").is("status", null),
+        supabase.from("instructor_profile_details").select("*", { count: "exact", head: true }).eq("is_seen", false),
       ]);
       setBadges({
         "/admin/orders": (pendingOrders ?? 0) + (pendingBookOrders ?? 0),
         "/admin/instructor-courses": (pendingInstructorCourses ?? 0) + (pendingInstructorApps ?? 0),
         "/admin/bookings": (pendingBookingsNew ?? 0) + (pendingBookingsNull ?? 0),
+        "/admin/instructor-profiles": unseenProfiles ?? 0,
       });
     });
   }, [router]);

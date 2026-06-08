@@ -12,6 +12,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 
 const navItems = [
   { href: "/instructor", label: "ড্যাশবোর্ড", icon: LayoutDashboard, exact: true },
+  { href: "/instructor/profile", label: "আমার প্রোফাইল", icon: User },
   { href: "/instructor/courses", label: "আমার কোর্স", icon: BookOpen },
   { href: "/instructor/upload", label: "নতুন কোর্স আপলোড", icon: Upload },
   { href: "/instructor/earnings", label: "আয়", icon: DollarSign },

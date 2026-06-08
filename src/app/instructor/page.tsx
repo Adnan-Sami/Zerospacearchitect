@@ -1,18 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, DollarSign, Eye, Clock } from "lucide-react";
+import Link from "next/link";
+import { BookOpen, DollarSign, Eye, Clock, UserCircle, ArrowRight, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function InstructorDashboard() {
   const [stats, setStats] = useState({ total: 0, published: 0, pending: 0, earnings: 0 });
   const [courses, setCourses] = useState<any[]>([]);
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
+
+      // Check if instructor has submitted profile
+      const { data: profileData } = await supabase
+        .from("instructor_profile_details")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      // Show popup only if no profile submitted yet
+      if (!profileData) {
+        setShowProfilePopup(true);
+      }
+
       const { data } = await supabase
         .from("instructor_courses")
         .select("course_id, course_title, status")
@@ -87,6 +103,47 @@ export default function InstructorDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Profile Submit Popup */}
+      {showProfilePopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <button
+              className="absolute right-3 top-3 rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              onClick={() => setShowProfilePopup(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 px-6 py-8 text-center text-white">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <UserCircle className="h-9 w-9 text-white" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">আপনার প্রোফাইল সাবমিট করুন!</h3>
+              <p className="text-sm text-white/80">
+                মূল সাইটে ইন্সট্রাক্টর হিসেবে প্রদর্শিত হতে আপনার প্রোফাইল তথ্য জমা দিন।
+              </p>
+            </div>
+
+            <div className="px-6 py-5">
+              <p className="mb-4 text-sm text-gray-600">
+                আপনার নাম, ছবি, বায়ো, সোশ্যাল লিংক সহ পূর্ণ প্রোফাইল দিন। অ্যাডমিন রিভিউ করে আপনাকে পাবলিক &quot;আমাদের প্রশিক্ষক&quot; পেজে যোগ করবেন।
+              </p>
+              <Link href="/instructor/profile">
+                <Button className="w-full rounded-full bg-purple-600 font-semibold hover:bg-purple-700">
+                  প্রোফাইল সাবমিট করুন <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <button
+                className="mt-3 w-full text-center text-xs text-gray-400 hover:text-gray-600"
+                onClick={() => setShowProfilePopup(false)}
+              >
+                পরে করব
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

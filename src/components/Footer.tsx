@@ -8,8 +8,8 @@ import { useSiteSettings } from "@/hooks/use-site-settings";
 const usefulLinks = [
   { label: "আমাদের ব্লগ", href: "/" },
   { label: "স্কলারশিপ", href: "/" },
-  { label: "আমাদের প্রশিক্ষক", href: "/" },
-  { label: "শিক্ষক হিসেবে যোগ দিন", href: "/register" },
+  { label: "আমাদের প্রশিক্ষক", href: "/instructors" },
+  { label: "শিক্ষক হিসেবে যোগ দিন", href: "/become-instructor" },
   { label: "সার্টিফিকেট চেক করুন", href: "/verify" },
 ];
 
@@ -62,7 +62,7 @@ export function Footer() {
             <ul className="space-y-3">
               {usefulLinks.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="flex items-center gap-2 text-sm text-gray-300 transition-colors hover:text-sky-400">
+                  <Link href={l.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-300 transition-colors hover:text-sky-400">
                     <ExternalLink className="h-4 w-4 text-sky-400" />
                     {l.label}
                   </Link>
@@ -77,7 +77,7 @@ export function Footer() {
             <ul className="space-y-3">
               {aboutLinks.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="flex items-center gap-2 text-sm text-gray-300 transition-colors hover:text-sky-400">
+                  <Link href={l.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-300 transition-colors hover:text-sky-400">
                     <ExternalLink className="h-4 w-4 text-sky-400" />
                     {l.label}
                   </Link>
