@@ -44,6 +44,7 @@ const navSections = [
       { href: "/admin/slides", label: "হিরো স্লাইডার", icon: ImageIcon },
       { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },
       { href: "/admin/testimonials", label: "টেস্টিমোনিয়াল", icon: MessageSquare },
+      { href: "/admin/seminars", label: "সেমিনার", icon: BookOpen },
       { href: "/admin/services", label: "ডিজাইন ও কনসালটেন্সি", icon: BookOpen },
     ],
   },

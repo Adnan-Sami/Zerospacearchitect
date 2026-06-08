@@ -6,8 +6,6 @@ import { BookOpen, ExternalLink, Facebook, Youtube } from "lucide-react";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 
 const usefulLinks = [
-  { label: "আমাদের ব্লগ", href: "/" },
-  { label: "স্কলারশিপ", href: "/" },
   { label: "আমাদের প্রশিক্ষক", href: "/instructors" },
   { label: "শিক্ষক হিসেবে যোগ দিন", href: "/become-instructor" },
   { label: "সার্টিফিকেট চেক করুন", href: "/verify" },
@@ -17,7 +15,7 @@ const aboutLinks = [
   { label: "যোগাযোগ করুন", href: "/" },
   { label: "এফিলিয়েট", href: "/" },
   { label: "রিফান্ড পলিসি", href: "/" },
-  { label: "সেমিনারে যোগ দিন", href: "/" },
+  { label: "সেমিনারে যোগ দিন", href: "/seminars" },
 ];
 
 export function Footer() {
