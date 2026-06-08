@@ -18,6 +18,7 @@ import {
   Type,
   LogOut,
   User,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +31,7 @@ const navSections = [
     items: [
       { href: "/admin", label: "ড্যাশবোর্ড", icon: LayoutDashboard, exact: true },
       { href: "/admin/orders", label: "অর্ডার", icon: ShoppingCart },
+      { href: "/admin/bookings", label: "কনসালটেন্সি বুকিং", icon: CalendarCheck },
       { href: "/admin/students", label: "শিক্ষার্থী", icon: Users },
     ],
   },
@@ -101,15 +103,20 @@ export default function AdminLayout({
         { count: pendingBookOrders },
         { count: pendingInstructorCourses },
         { count: pendingInstructorApps },
+        { count: pendingBookingsNew },
+        { count: pendingBookingsNull },
       ] = await Promise.all([
         supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("instructor_courses").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("service_requests").select("*", { count: "exact", head: true }).eq("service_type", "instructor_application").eq("status", "new"),
+        supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").eq("status", "new"),
+        supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").is("status", null),
       ]);
       setBadges({
         "/admin/orders": (pendingOrders ?? 0) + (pendingBookOrders ?? 0),
         "/admin/instructor-courses": (pendingInstructorCourses ?? 0) + (pendingInstructorApps ?? 0),
+        "/admin/bookings": (pendingBookingsNew ?? 0) + (pendingBookingsNull ?? 0),
       });
     });
   }, [router]);

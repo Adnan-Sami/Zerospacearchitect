@@ -37,6 +37,7 @@ export default function ServicesPage() {
       project_location: form.location || null,
       service_type: `ডিজাইন কনসালটেন্সি: ${selected?.title || "সাধারণ"}`,
       message: form.message || null,
+      status: "new",
     });
     await fetch("/api/notify-admins", {
       method: "POST",
@@ -176,9 +177,18 @@ export default function ServicesPage() {
             </div>
             {submitted ? (
               <div className="p-8 text-center">
-                <CheckCircle className="mx-auto mb-3 h-12 w-12 text-green-500" />
-                <h3 className="mb-2 text-lg font-bold">বুকিং সফল! 🎉</h3>
-                <p className="text-sm text-muted-foreground">আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।</p>
+                <CheckCircle className="mx-auto mb-4 h-14 w-14 text-green-500" />
+                <h3 className="mb-2 text-xl font-bold text-green-700">ধন্যবাদ! আপনার বুকিং সফলভাবে জমা হয়েছে 🎉</h3>
+                <p className="mb-3 text-sm text-muted-foreground">
+                  আমাদের টিম আপনার তথ্য পেয়েছে। খুব শীঘ্রই আমরা আপনার সাথে ফোন/ইমেইলে যোগাযোগ করব এবং আপনার প্রজেক্ট নিয়ে বিস্তারিত আলোচনা করব।
+                </p>
+                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                  <p className="font-medium">📞 জরুরি প্রয়োজনে কল করুন:</p>
+                  <a href="tel:+8801521113539" className="mt-1 inline-block font-bold text-sky-600 hover:underline">+880 1521-113539</a>
+                </div>
+                <Button className="mt-5 rounded-full bg-sky-600 hover:bg-sky-700" onClick={() => setShowBooking(false)}>
+                  বন্ধ করুন
+                </Button>
               </div>
             ) : (
               <form onSubmit={handleBooking} className="space-y-3 p-6">
