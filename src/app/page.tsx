@@ -118,7 +118,7 @@ export default function HomePage() {
     });
   }, []);
 
-  const heroImgSrc = heroImage || "/Hero.png";
+  const heroImgSrc = "/Gemini_Generated_Image_fornqhfornqhforn.png";
   const instImgSrc = instImage || "/instructor-cta.png";
   const marqueeBanners = [...banners, ...banners];
 
@@ -227,13 +227,14 @@ export default function HomePage() {
             </div>
 
             <div className="relative">
-              <div className="relative aspect-[1.02/1] overflow-hidden rounded-[1.4rem] bg-sky-100 p-3 shadow-[0_16px_50px_rgba(37,99,235,0.18)] ring-1 ring-blue-500/20 md:aspect-[1.03/0.88] md:p-4">
+              <div className="relative overflow-hidden rounded-[1.4rem] shadow-[0_16px_50px_rgba(37,99,235,0.18)] ring-1 ring-blue-500/20">
                 <Image
                   src={heroImgSrc}
                   alt="ইন্ডাস্ট্রি এক্সপার্টদের সাথে শিখুন"
-                  fill
+                  width={800}
+                  height={600}
                   sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-contain object-center"
+                  className="h-auto w-full"
                   priority
                 />
               </div>

@@ -67,7 +67,7 @@ export default function InstructorProfilePage() {
             ...prev,
             name: profile.full_name || "",
             phone: profile.phone || "",
-            email: session.user.email || "",
+            email: "",
           }));
         }
       }
@@ -77,10 +77,13 @@ export default function InstructorProfilePage() {
 
   const handleSave = async () => {
     if (!userId) return;
-    if (!form.name.trim()) {
-      toast.error("নাম অবশ্যই দিতে হবে");
-      return;
-    }
+    if (!form.name.trim()) { toast.error("নাম অবশ্যই দিতে হবে"); return; }
+    if (!form.title.trim()) { toast.error("পদবী / টাইটেল দিতে হবে"); return; }
+    if (!form.designation.trim()) { toast.error("ডেজিগনেশন / প্রতিষ্ঠান দিতে হবে"); return; }
+    if (!form.bio.trim()) { toast.error("বায়ো / পরিচিতি দিতে হবে"); return; }
+    if (!form.phone.trim()) { toast.error("ফোন নম্বর দিতে হবে"); return; }
+    if (!form.email.trim()) { toast.error("ইমেইল দিতে হবে"); return; }
+    if (!form.facebook_url.trim()) { toast.error("Facebook URL দিতে হবে"); return; }
 
     setSaving(true);
     const payload = {
@@ -176,14 +179,16 @@ export default function InstructorProfilePage() {
             <div>
               <Label>পূর্ণ নাম *</Label>
               <Input
+                required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="যেমন: Professor Dr. Jahangir Alam"
               />
             </div>
             <div>
-              <Label>পদবী / টাইটেল</Label>
+              <Label>পদবী / টাইটেল *</Label>
               <Input
+                required
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="যেমন: Founder of Qlearn"
@@ -192,8 +197,9 @@ export default function InstructorProfilePage() {
           </div>
 
           <div>
-            <Label>ডেজিগনেশন / প্রতিষ্ঠান</Label>
+            <Label>ডেজিগনেশন / প্রতিষ্ঠান *</Label>
             <Input
+              required
               value={form.designation}
               onChange={(e) => setForm({ ...form, designation: e.target.value })}
               placeholder="যেমন: Professor of Civil Engineering, BUET, Dhaka"
@@ -201,8 +207,9 @@ export default function InstructorProfilePage() {
           </div>
 
           <div>
-            <Label>বায়ো / পরিচিতি</Label>
+            <Label>বায়ো / পরিচিতি *</Label>
             <Textarea
+              required
               rows={5}
               value={form.bio}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
@@ -212,16 +219,18 @@ export default function InstructorProfilePage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>ফোন নম্বর</Label>
+              <Label>ফোন নম্বর *</Label>
               <Input
+                required
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="০১XXXXXXXXX"
               />
             </div>
             <div>
-              <Label>ইমেইল</Label>
+              <Label>ইমেইল *</Label>
               <Input
+                required
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -232,8 +241,9 @@ export default function InstructorProfilePage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>Facebook URL</Label>
+              <Label>Facebook URL *</Label>
               <Input
+                required
                 value={form.facebook_url}
                 onChange={(e) => setForm({ ...form, facebook_url: e.target.value })}
                 placeholder="https://facebook.com/yourpage"

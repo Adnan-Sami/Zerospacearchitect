@@ -29,6 +29,17 @@ export default function AdminPublicInstructors() {
       .select("*")
       .order("sort_order");
     setItems(data ?? []);
+
+    // Mark unseen instructors as seen
+    if (data && data.length > 0) {
+      const unseenIds = data.filter((p: any) => p.is_seen === false).map((p: any) => p.id);
+      if (unseenIds.length > 0) {
+        await supabase
+          .from("public_instructors")
+          .update({ is_seen: true })
+          .in("id", unseenIds);
+      }
+    }
   };
 
   useEffect(() => {

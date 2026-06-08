@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Period = "all" | "month" | "year";
 
+// Helper to convert English digits to Bengali
+const toBengaliNumber = (num: number | string): string => {
+  const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+  return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
+};
+
 export default function AdminDashboard() {
   const [period, setPeriod] = useState<Period>("all");
   const [courseStats, setCourseStats] = useState({ orders: 0, approved: 0, revenue: 0 });
@@ -176,7 +182,7 @@ export default function AdminDashboard() {
             <ShoppingCart className="h-5 w-5 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{totalOrders}</p>
+            <p className="text-2xl font-bold">{toBengaliNumber(totalOrders)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -185,7 +191,7 @@ export default function AdminDashboard() {
             <Users className="h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{generalStats.students}</p>
+            <p className="text-2xl font-bold">{toBengaliNumber(generalStats.students)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -194,74 +200,43 @@ export default function AdminDashboard() {
             <BookOpen className="h-5 w-5 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{generalStats.courses} / {generalStats.books}</p>
+            <p className="text-2xl font-bold">{toBengaliNumber(generalStats.courses)} / {toBengaliNumber(generalStats.books)}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Pending Tasks Reminder */}
-      {(pendingTasks.length > 0 || pendingCourseOrders > 0 || pendingBookOrders > 0) && (
-        <Card className="mb-6 border-amber-200 bg-amber-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base text-amber-800">
-              <AlertTriangle className="h-4 w-4" />
-              পেন্ডিং কাজ
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {pendingTasks.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-amber-700">🎓 অ্যাপ্রুভড কোর্স — পাবলিশ বাকি ({pendingTasks.length})</p>
-                {pendingTasks.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2">
-                    <div>
-                      <p className="text-sm font-medium">{t.course_title}</p>
-                      <p className="text-xs text-muted-foreground">ইন্সট্রাক্টর: {t.instructor_name || "—"} · {new Date(t.created_at).toLocaleDateString("bn-BD")}</p>
-                    </div>
-                    <Link href="/admin/courses">
-                      <Button size="sm" variant="outline" className="h-7 text-xs">কোর্স তৈরি করুন</Button>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            )}
-            {pendingCourseOrders > 0 && (
-              <Link href="/admin/orders" className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2">
-                <p className="text-sm">📚 <span className="font-medium">{pendingCourseOrders}</span> টি কোর্স অর্ডার পেন্ডিং</p>
-                <span className="text-xs text-sky-600">দেখুন →</span>
-              </Link>
-            )}
-            {pendingBookOrders > 0 && (
-              <Link href="/admin/orders" className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2">
-                <p className="text-sm">📖 <span className="font-medium">{pendingBookOrders}</span> টি বই অর্ডার পেন্ডিং</p>
-                <span className="text-xs text-sky-600">দেখুন →</span>
-              </Link>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       {/* Course Analytics */}
       <Card className="mb-6">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <TrendingUp className="h-4 w-4 text-sky-500" />
               কোর্স অর্ডার বিশ্লেষণ ({periodLabel})
             </CardTitle>
-            <Button size="sm" variant="outline" onClick={() => exportCSV("course")}>
-              <Download className="mr-1 h-3 w-3" />CSV ডাউনলোড
-            </Button>
+            <div className="flex items-center gap-2">
+              <select
+                value={period === "all" ? "all" : period === "month" ? "month" : "year"}
+                onChange={(e) => setPeriod(e.target.value as Period)}
+                className="rounded-md border bg-background px-2 py-1 text-xs"
+              >
+                <option value="all">সর্বমোট</option>
+                <option value="month">এই মাস</option>
+                <option value="year">এই বছর</option>
+              </select>
+              <Button size="sm" variant="outline" onClick={() => exportCSV("course")}>
+                <Download className="mr-1 h-3 w-3" />CSV
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="mb-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border bg-sky-50 p-3 text-center">
-              <p className="text-2xl font-bold text-sky-600">{courseStats.orders}</p>
+              <p className="text-2xl font-bold text-sky-600">{toBengaliNumber(courseStats.orders)}</p>
               <p className="text-xs text-muted-foreground">মোট অর্ডার</p>
             </div>
             <div className="rounded-lg border bg-green-50 p-3 text-center">
-              <p className="text-2xl font-bold text-green-600">{courseStats.approved}</p>
+              <p className="text-2xl font-bold text-green-600">{toBengaliNumber(courseStats.approved)}</p>
               <p className="text-xs text-muted-foreground">অ্যাপ্রুভড</p>
             </div>
             <div className="rounded-lg border bg-emerald-50 p-3 text-center">
@@ -304,24 +279,35 @@ export default function AdminDashboard() {
       {/* Book Analytics */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-red-500" />
               বই অর্ডার বিশ্লেষণ ({periodLabel})
             </CardTitle>
-            <Button size="sm" variant="outline" onClick={() => exportCSV("book")}>
-              <Download className="mr-1 h-3 w-3" />CSV ডাউনলোড
-            </Button>
+            <div className="flex items-center gap-2">
+              <select
+                value={period === "all" ? "all" : period === "month" ? "month" : "year"}
+                onChange={(e) => setPeriod(e.target.value as Period)}
+                className="rounded-md border bg-background px-2 py-1 text-xs"
+              >
+                <option value="all">সর্বমোট</option>
+                <option value="month">এই মাস</option>
+                <option value="year">এই বছর</option>
+              </select>
+              <Button size="sm" variant="outline" onClick={() => exportCSV("book")}>
+                <Download className="mr-1 h-3 w-3" />CSV
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="mb-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border bg-red-50 p-3 text-center">
-              <p className="text-2xl font-bold text-red-600">{bookStats.orders}</p>
+              <p className="text-2xl font-bold text-red-600">{toBengaliNumber(bookStats.orders)}</p>
               <p className="text-xs text-muted-foreground">মোট অর্ডার</p>
             </div>
             <div className="rounded-lg border bg-green-50 p-3 text-center">
-              <p className="text-2xl font-bold text-green-600">{bookStats.approved}</p>
+              <p className="text-2xl font-bold text-green-600">{toBengaliNumber(bookStats.approved)}</p>
               <p className="text-xs text-muted-foreground">অ্যাপ্রুভড</p>
             </div>
             <div className="rounded-lg border bg-emerald-50 p-3 text-center">

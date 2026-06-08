@@ -83,6 +83,23 @@ export default function CheckoutPage({
         if (data) {
           if (data.expires_at && new Date(data.expires_at) < new Date()) return;
           if (data.max_uses && data.used_count >= data.max_uses) return;
+          // Check per-user limit
+          if (data.per_user_limit) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { count: courseUses } = await supabase
+                .from("orders")
+                .select("*", { count: "exact", head: true })
+                .eq("user_id", user.id)
+                .eq("coupon_code", data.code);
+              const { count: bookUses } = await supabase
+                .from("book_orders")
+                .select("*", { count: "exact", head: true })
+                .eq("user_id", user.id)
+                .eq("coupon_code", data.code);
+              if ((courseUses ?? 0) + (bookUses ?? 0) >= data.per_user_limit) return;
+            }
+          }
           setCouponApplied(data);
         }
       }, 500);
@@ -134,6 +151,30 @@ export default function CheckoutPage({
       return;
     }
 
+    // Check per-user limit
+    if (data.per_user_limit) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count: courseUses } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("coupon_code", data.code);
+        const { count: bookUses } = await supabase
+          .from("book_orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("coupon_code", data.code);
+        const totalUserUses = (courseUses ?? 0) + (bookUses ?? 0);
+        if (totalUserUses >= data.per_user_limit) {
+          setCouponError("আপনি এই কুপনটি সর্বোচ্চ সীমায় ব্যবহার করেছেন।");
+          setCouponApplied(null);
+          setApplyingCoupon(false);
+          return;
+        }
+      }
+    }
+
     setCouponApplied(data);
     setApplyingCoupon(false);
   };
@@ -158,6 +199,7 @@ export default function CheckoutPage({
       payment_phone: paymentPhone,
       transaction_id: transactionId,
       payment_method: paymentMethod,
+      coupon_code: couponApplied?.code || null,
     });
 
     if (orderError) {
@@ -165,10 +207,11 @@ export default function CheckoutPage({
     } else {
       // Increment coupon usage if applied
       if (couponApplied) {
-        await supabase
-          .from("coupons")
-          .update({ used_count: (couponApplied.used_count || 0) + 1 })
-          .eq("id", couponApplied.id);
+        await fetch("/api/coupon-used", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ couponId: couponApplied.id }),
+        });
       }
       // Notify user + admins via server API (bypasses RLS)
       await fetch("/api/notify-admins", {
@@ -300,23 +343,52 @@ export default function CheckoutPage({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label>আপনার ফোন নম্বর *</Label>
+                    <div className="flex">
+                      <div className="flex items-center gap-1.5 rounded-l-md border border-r-0 bg-muted px-3 text-sm text-muted-foreground">
+                        <svg width="20" height="14" viewBox="0 0 20 14" className="shrink-0">
+                          <rect width="20" height="14" fill="#006a4e"/>
+                          <circle cx="9" cy="7" r="4" fill="#f42a41"/>
+                        </svg>
+                        <span>+88</span>
+                      </div>
+                      <Input
+                        placeholder="01XXXXXXXXX"
+                        value={paymentPhone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+                          setPaymentPhone(val);
+                        }}
+                        required
+                        maxLength={11}
+                        minLength={11}
+                        pattern="[0-9]{11}"
+                        title="১১ ডিজিটের মোবাইল নম্বর দিন"
+                        className="rounded-l-none"
+                      />
+                    </div>
+                    {paymentPhone && paymentPhone.length < 11 && (
+                      <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({paymentPhone.length}/১১)</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>{paymentMethod === "bkash" ? "বিকাশ" : paymentMethod === "nagad" ? "নগদ" : "রকেট"} নম্বরের শেষ ৪ ডিজিট *</Label>
                     <Input
-                      placeholder="০১XXXXXXXXX"
-                      value={paymentPhone}
-                      onChange={(e) => setPaymentPhone(e.target.value)}
+                      placeholder="যেমন: 1234"
+                      value={transactionId}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 4);
+                        setTransactionId(val);
+                      }}
                       required
-                  />
-                </div>
-                <div>
-                  <Label>{paymentMethod === "bkash" ? "বিকাশ" : paymentMethod === "nagad" ? "নগদ" : "রকেট"} নম্বরের শেষ ৪ ডিজিট *</Label>
-                  <Input
-                    placeholder="যেমন: 1234"
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                    required
-                    maxLength={4}
-                  />
-                </div>
+                      maxLength={4}
+                      minLength={4}
+                      pattern="[0-9]{4}"
+                      title="৪ ডিজিট দিন"
+                    />
+                    {transactionId && transactionId.length < 4 && (
+                      <p className="mt-1 text-xs text-amber-600">৪ ডিজিট প্রয়োজন ({transactionId.length}/৪)</p>
+                    )}
+                  </div>
                 </div>
 
                 <Button type="submit" className="w-full rounded-full bg-sky-600 py-3 text-base font-semibold shadow-lg hover:bg-sky-700" disabled={loading}>

@@ -40,7 +40,14 @@ export default function AdminCourses() {
 
   const loadCourses = async () => {
     const { data } = await supabase.from("courses").select("*, categories(name)").order("created_at", { ascending: false });
-    setCourses(data ?? []);
+    // Filter out instructor drafts that haven't been submitted for approval
+    const { data: instructorDrafts } = await supabase
+      .from("instructor_courses")
+      .select("course_id")
+      .eq("status", "draft");
+    const draftCourseIds = new Set((instructorDrafts ?? []).map((d: any) => d.course_id).filter(Boolean));
+    const filtered = (data ?? []).filter((c: any) => !draftCourseIds.has(c.id));
+    setCourses(filtered);
   };
   const loadCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("name");

@@ -10,6 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function AdminInstructors() {
+  // Helper to convert English digits to Bengali
+  const toBengaliNumber = (num: number | string): string => {
+    const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
+  };
+
   const [instructors, setInstructors] = useState<any[]>([]);
   const [totalCommission, setTotalCommission] = useState(0);
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -137,7 +143,7 @@ export default function AdminInstructors() {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">ইন্সট্রাক্টর তালিকা ({instructors.length})</h1>
+        <h1 className="text-2xl font-bold">ইন্সট্রাক্টর তালিকা ({toBengaliNumber(instructors.length)})</h1>
         <Button size="sm" variant="outline" onClick={exportCSV}>
           <Download className="mr-1 h-3 w-3" />CSV ডাউনলোড
         </Button>
@@ -170,25 +176,25 @@ export default function AdminInstructors() {
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">মোট ইন্সট্রাক্টর</p>
-            <p className="mt-1 text-2xl font-bold">{instructors.length}</p>
+            <p className="mt-1 text-2xl font-bold">{toBengaliNumber(instructors.length)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">মোট কমিশন</p>
-            <p className="mt-1 text-2xl font-bold text-purple-600">৳{instructors.reduce((s, i) => s + i.commission, 0).toLocaleString()}</p>
+            <p className="mt-1 text-2xl font-bold text-purple-600">৳{toBengaliNumber(instructors.reduce((s, i) => s + i.commission, 0).toLocaleString())}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-muted-foreground">মোট পেইড</p>
-            <p className="mt-1 text-2xl font-bold text-green-600">৳{instructors.reduce((s, i) => s + i.paid, 0).toLocaleString()}</p>
+            <p className="mt-1 text-2xl font-bold text-green-600">৳{toBengaliNumber(instructors.reduce((s, i) => s + i.paid, 0).toLocaleString())}</p>
           </CardContent>
         </Card>
         <Card className="border-amber-200">
           <CardContent className="p-5">
             <p className="text-xs text-amber-700">বকেয়া (দিতে হবে)</p>
-            <p className="mt-1 text-2xl font-bold text-amber-700">৳{totalCommission.toLocaleString()}</p>
+            <p className="mt-1 text-2xl font-bold text-amber-700">৳{toBengaliNumber(totalCommission.toLocaleString())}</p>
           </CardContent>
         </Card>
       </div>
@@ -232,17 +238,17 @@ export default function AdminInstructors() {
                     </div>
                   )}
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Badge className="bg-purple-100 text-purple-800">{inst.totalCourses} কোর্স</Badge>
-                    <Badge className="bg-green-100 text-green-800">{inst.approvedCourses} লাইভ</Badge>
-                    {inst.pendingCourses > 0 && <Badge className="bg-yellow-100 text-yellow-800">{inst.pendingCourses} পেন্ডিং</Badge>}
-                    <Badge className="bg-sky-100 text-sky-800">{inst.totalSales} সেল</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">{toBengaliNumber(inst.totalCourses)} কোর্স</Badge>
+                    <Badge className="bg-green-100 text-green-800">{toBengaliNumber(inst.approvedCourses)} লাইভ</Badge>
+                    {inst.pendingCourses > 0 && <Badge className="bg-yellow-100 text-yellow-800">{toBengaliNumber(inst.pendingCourses)} পেন্ডিং</Badge>}
+                    <Badge className="bg-sky-100 text-sky-800">{toBengaliNumber(inst.totalSales)} সেল</Badge>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">কমিশন (৪০%)</p>
-                  <p className="text-2xl font-black text-purple-600">৳{inst.commission.toLocaleString()}</p>
-                  <p className="text-xs text-green-600">পেইড: ৳{inst.paid.toLocaleString()}</p>
-                  {inst.balance > 0 && <p className="text-xs font-semibold text-amber-600">বকেয়া: ৳{inst.balance.toLocaleString()}</p>}
+                  <p className="text-2xl font-black text-purple-600">৳{toBengaliNumber(inst.commission.toLocaleString())}</p>
+                  <p className="text-xs text-green-600">পেইড: ৳{toBengaliNumber(inst.paid.toLocaleString())}</p>
+                  {inst.balance > 0 && <p className="text-xs font-semibold text-amber-600">বকেয়া: ৳{toBengaliNumber(inst.balance.toLocaleString())}</p>}
                   {inst.balance > 0 && (
                     <Button size="sm" className="mt-2 h-7 bg-green-600 text-xs hover:bg-green-700" onClick={() => { setPayingId(inst.user_id); setPayAmount(String(inst.balance)); setPayNote(""); }}>
                       <CreditCard className="mr-1 h-3 w-3" />পেমেন্ট করুন
@@ -259,7 +265,7 @@ export default function AdminInstructors() {
                     {inst.courseDetails.map((c: any, i: number) => (
                       <div key={i} className="flex flex-col gap-0.5 text-xs sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-foreground truncate">{c.title}</span>
-                        <span className="shrink-0 text-muted-foreground">{c.sales} সেল · ৳{c.revenue} → <span className="font-semibold text-purple-600">৳{c.commission}</span></span>
+                        <span className="shrink-0 text-muted-foreground">{toBengaliNumber(c.sales)} সেল · ৳{toBengaliNumber(c.revenue)} → <span className="font-semibold text-purple-600">৳{toBengaliNumber(c.commission)}</span></span>
                       </div>
                     ))}
                   </div>

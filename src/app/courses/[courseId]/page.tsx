@@ -479,6 +479,29 @@ function SidebarCard({
     if (!data) { setCouponError("এই কুপন কোড বৈধ নয়।"); setCouponApplied(null); setApplyingCoupon(false); return; }
     if (data.expires_at && new Date(data.expires_at) < new Date()) { setCouponError("কুপনের মেয়াদ শেষ।"); setCouponApplied(null); setApplyingCoupon(false); return; }
     if (data.max_uses && data.used_count >= data.max_uses) { setCouponError("কুপনের সীমা শেষ।"); setCouponApplied(null); setApplyingCoupon(false); return; }
+    // Check per-user limit
+    if (data.per_user_limit) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count: courseUses } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("coupon_code", data.code);
+        const { count: bookUses } = await supabase
+          .from("book_orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("coupon_code", data.code);
+        const totalUserUses = (courseUses ?? 0) + (bookUses ?? 0);
+        if (totalUserUses >= data.per_user_limit) {
+          setCouponError("আপনি এই কুপনটি সর্বোচ্চ সীমায় ব্যবহার করেছেন।");
+          setCouponApplied(null);
+          setApplyingCoupon(false);
+          return;
+        }
+      }
+    }
     setCouponApplied(data);
     setApplyingCoupon(false);
   };

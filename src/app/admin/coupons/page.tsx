@@ -31,6 +31,7 @@ export default function AdminCoupons() {
       discount_type: editing.discount_type || "fixed",
       discount_value: Number(editing.discount_value),
       max_uses: editing.max_uses ? Number(editing.max_uses) : null,
+      per_user_limit: editing.per_user_limit ? Number(editing.per_user_limit) : null,
       expires_at: editing.expires_at || null,
       is_active: editing.is_active ?? true,
     };
@@ -59,7 +60,7 @@ export default function AdminCoupons() {
           <h1 className="text-2xl font-bold">কুপন ম্যানেজমেন্ট</h1>
           <p className="text-sm text-muted-foreground">প্রোমো কোড যোগ/এডিট করুন</p>
         </div>
-        <Button onClick={() => setEditing({ is_active: true, discount_type: "fixed", discount_value: "", code: "", max_uses: "", expires_at: "" })}>
+        <Button onClick={() => setEditing({ is_active: true, discount_type: "fixed", discount_value: "", code: "", max_uses: "", per_user_limit: "", expires_at: "" })}>
           <Plus className="mr-1 h-4 w-4" />নতুন কুপন
         </Button>
       </div>
@@ -89,7 +90,7 @@ export default function AdminCoupons() {
                 </select>
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-4">
               <div>
                 <Label>ডিসকাউন্ট মান *</Label>
                 <Input
@@ -105,6 +106,15 @@ export default function AdminCoupons() {
                   type="number"
                   value={editing.max_uses ?? ""}
                   onChange={(e) => setEditing({ ...editing, max_uses: e.target.value })}
+                  placeholder="খালি = সীমাহীন"
+                />
+              </div>
+              <div>
+                <Label>প্রতি ইউজার সীমা (ঐচ্ছিক)</Label>
+                <Input
+                  type="number"
+                  value={editing.per_user_limit ?? ""}
+                  onChange={(e) => setEditing({ ...editing, per_user_limit: e.target.value })}
                   placeholder="খালি = সীমাহীন"
                 />
               </div>
@@ -138,6 +148,7 @@ export default function AdminCoupons() {
                 <p className="text-xs text-muted-foreground">
                   {c.discount_type === "percent" ? `${c.discount_value}% ছাড়` : `৳${c.discount_value} ছাড়`}
                   {c.max_uses ? ` · সীমা: ${c.used_count || 0}/${c.max_uses}` : ` · ব্যবহার: ${c.used_count || 0}`}
+                  {c.per_user_limit && ` · প্রতি ইউজার: ${c.per_user_limit} বার`}
                   {c.expires_at && ` · মেয়াদ: ${new Date(c.expires_at).toLocaleDateString("bn-BD")}`}
                 </p>
               </div>

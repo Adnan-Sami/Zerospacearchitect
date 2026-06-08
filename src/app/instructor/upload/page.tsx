@@ -78,6 +78,7 @@ export default function InstructorUpload() {
       price: Number(form.price) || 0,
       original_price: form.original_price ? Number(form.original_price) : null,
       duration_text: form.duration_text.trim(),
+      duration_minutes: parseInt(form.duration_text) || 0,
       thumbnail_url: form.thumbnail_url,
       intro_video_url: form.intro_video_url.trim(),
       what_will_learn: form.what_will_learn.trim(),
@@ -116,12 +117,31 @@ export default function InstructorUpload() {
     setSaving(false);
   };
 
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+
   // Submit for approval
   const submitForApproval = async () => {
     if (!courseId) { toast.error("আগে কোর্স সেভ করুন"); return; }
+    if (!form.title.trim()) { toast.error("কোর্সের নাম দিন"); return; }
+    if (!form.description.trim()) { toast.error("বিবরণ দিন"); return; }
+    if (!form.price || Number(form.price) <= 0) { toast.error("মূল্য দিন"); return; }
+    if (!form.duration_text.trim()) { toast.error("সময়কাল দিন"); return; }
+    if (!form.thumbnail_url) { toast.error("কভার ইমেজ আপলোড করুন"); return; }
+    if (!form.what_will_learn.trim()) { toast.error("কী শিখবেন তথ্য দিন"); return; }
+    if (!form.certificate_title.trim()) { toast.error("সার্টিফিকেট শিরোনাম দিন"); return; }
+    if (!form.certificate_body.trim()) { toast.error("সার্টিফিকেট বডি টেক্সট দিন"); return; }
+    if (!form.certificate_signature.trim()) { toast.error("স্বাক্ষর দিন"); return; }
     if (!form.instructor_name.trim() || !form.instructor_bio.trim() || !form.instructor_avatar) {
       toast.error("ইন্সট্রাক্টর নাম, পরিচিতি ও ছবি আবশ্যক"); return;
     }
+    if (modules.length === 0) { toast.error("কমপক্ষে একটি কারিকুলাম টপিক যোগ করুন"); return; }
+
+    // Show confirmation popup
+    setShowConfirmPopup(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirmPopup(false);
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -254,12 +274,17 @@ export default function InstructorUpload() {
             <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase">বেসিক তথ্য</CardTitle></CardHeader>
             <CardContent className="space-y-4 pt-0">
               <div><Label>কোর্সের নাম *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="কোর্সের নাম" /></div>
-              <div><Label>বিবরণ</Label><Textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="কোর্সের বিবরণ" /></div>
+              <div><Label>বিবরণ *</Label><Textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="কোর্সের বিবরণ" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>মূল্য (৳)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
+                <div><Label>মূল্য (৳) *</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
                 <div><Label>পূর্বের মূল্য (৳)</Label><Input type="number" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} placeholder="ঐচ্ছিক" /></div>
               </div>
-              <div><Label>সময়কাল</Label><Input value={form.duration_text} onChange={(e) => setForm({ ...form, duration_text: e.target.value })} placeholder="যেমন: ৪০ ঘণ্টা" /></div>
+              <div><Label>সময়কাল (মিনিট) *</Label>
+                <div className="relative mt-1.5">
+                  <Input type="number" min="1" value={form.duration_text} onChange={(e) => setForm({ ...form, duration_text: e.target.value })} placeholder="যেমন: 120" className="pr-14" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">মিনিট</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -281,9 +306,7 @@ export default function InstructorUpload() {
           <Card>
             <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase">ওভারভিউ</CardTitle></CardHeader>
             <CardContent className="space-y-3 pt-0">
-              <div><Label>কী শিখবেন (প্রতি লাইনে একটি)</Label><Textarea rows={3} value={form.what_will_learn} onChange={(e) => setForm({ ...form, what_will_learn: e.target.value })} /></div>
-              <div><Label>পূর্বশর্ত</Label><Textarea rows={2} value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} /></div>
-              <div><Label>টার্গেট অডিয়েন্স</Label><Textarea rows={2} value={form.target_audience} onChange={(e) => setForm({ ...form, target_audience: e.target.value })} /></div>
+              <div><Label>কী শিখবেন (প্রতি লাইনে একটি) *</Label><Textarea rows={3} value={form.what_will_learn} onChange={(e) => setForm({ ...form, what_will_learn: e.target.value })} /></div>
               <div><Label>উপকরণ (Materials Included)</Label><Textarea rows={2} value={form.materials_included} onChange={(e) => setForm({ ...form, materials_included: e.target.value })} placeholder="কী কী উপকরণ পাবেন" /></div>
             </CardContent>
           </Card>
@@ -292,9 +315,9 @@ export default function InstructorUpload() {
           <Card>
             <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase">সার্টিফিকেট</CardTitle></CardHeader>
             <CardContent className="space-y-3 pt-0">
-              <div><Label>সার্টিফিকেট শিরোনাম</Label><Input value={form.certificate_title} onChange={(e) => setForm({ ...form, certificate_title: e.target.value })} placeholder="কোর্স সমাপ্তি সার্টিফিকেট" /></div>
-              <div><Label>বডি টেক্সট</Label><Textarea rows={2} value={form.certificate_body} onChange={(e) => setForm({ ...form, certificate_body: e.target.value })} placeholder="সফলভাবে কোর্সটি সম্পন্ন করার জন্য" /></div>
-              <div><Label>স্বাক্ষর</Label><Input value={form.certificate_signature} onChange={(e) => setForm({ ...form, certificate_signature: e.target.value })} placeholder="Engr. Name, Designation" /></div>
+              <div><Label>সার্টিফিকেট শিরোনাম *</Label><Input value={form.certificate_title} onChange={(e) => setForm({ ...form, certificate_title: e.target.value })} placeholder="কোর্স সমাপ্তি সার্টিফিকেট" /></div>
+              <div><Label>বডি টেক্সট *</Label><Textarea rows={2} value={form.certificate_body} onChange={(e) => setForm({ ...form, certificate_body: e.target.value })} placeholder="সফলভাবে কোর্সটি সম্পন্ন করার জন্য" /></div>
+              <div><Label>স্বাক্ষর *</Label><Input value={form.certificate_signature} onChange={(e) => setForm({ ...form, certificate_signature: e.target.value })} placeholder="Engr. Name, Designation" /></div>
               {/* Live Preview */}
               <div>
                 <p className="mb-2 text-xs font-semibold text-muted-foreground">লাইভ প্রিভিউ</p>
@@ -447,7 +470,7 @@ export default function InstructorUpload() {
         {/* Right */}
         <div className="space-y-4">
           <Card>
-            <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase">কভার ইমেজ</CardTitle></CardHeader>
+            <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase">কভার ইমেজ *</CardTitle></CardHeader>
             <CardContent className="pt-0 space-y-2">
               {form.thumbnail_url ? (
                 <div className="relative">
@@ -484,6 +507,41 @@ export default function InstructorUpload() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Popup */}
+      {showConfirmPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-5 text-center text-white">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <h3 className="text-lg font-bold">গুরুত্বপূর্ণ সতর্কতা!</h3>
+            </div>
+            <div className="px-6 py-5">
+              <div className="space-y-3 text-sm text-gray-700">
+                <p className="font-medium text-red-600">
+                  ❌ একবার অ্যাপ্রুভ হয়ে গেলে আপনি আর কোর্সে কোনো পরিবর্তন করতে পারবেন না।
+                </p>
+                <p>
+                  ✅ অনুগ্রহ করে সব তথ্য, কারিকুলাম, ভিডিও লিংক ও সার্টিফিকেট তথ্য ভালোভাবে যাচাই করুন।
+                </p>
+                <p className="font-semibold text-gray-900">
+                  আপনি কি নিশ্চিত যে সাবমিট করতে চান?
+                </p>
+              </div>
+              <div className="mt-5 flex gap-3">
+                <Button className="flex-1 bg-purple-600 hover:bg-purple-700" onClick={confirmSubmit} disabled={saving}>
+                  {saving ? "সাবমিট হচ্ছে..." : "হ্যাঁ, সাবমিট করুন"}
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => setShowConfirmPopup(false)}>
+                  বাতিল
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

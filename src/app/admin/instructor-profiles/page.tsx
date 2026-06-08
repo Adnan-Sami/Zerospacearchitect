@@ -100,6 +100,7 @@ export default function AdminInstructorProfiles() {
         total_students: 0,
         sort_order: 0,
         is_active: true,
+        is_seen: false,
       });
 
       if (error) {
@@ -245,10 +246,10 @@ export default function AdminInstructorProfiles() {
               )}
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 border-t pt-4">
+              <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center">
                 {!selected.is_approved ? (
                   <Button
-                    className="bg-green-600 hover:bg-green-700"
+                    className="w-full bg-green-600 hover:bg-green-700 sm:w-auto"
                     disabled={approving}
                     onClick={() => approveProfile(selected)}
                   >
@@ -262,7 +263,7 @@ export default function AdminInstructorProfiles() {
                 ) : (
                   <Badge className="bg-green-100 px-4 py-2 text-green-700">✅ অ্যাপ্রুভড — পাবলিক পেজে লাইভ আছে</Badge>
                 )}
-                <Button variant="outline" onClick={() => setSelected(null)}>বন্ধ করুন</Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => setSelected(null)}>বন্ধ করুন</Button>
               </div>
             </CardContent>
           </Card>

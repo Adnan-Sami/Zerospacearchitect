@@ -8,6 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Helper to convert English digits to Bengali
+const toBengaliNumber = (num: number | string): string => {
+  const bengaliDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+  return String(num).replace(/[0-9]/g, (d) => bengaliDigits[parseInt(d)]);
+};
+
 type Booking = {
   id: string;
   full_name: string;
@@ -113,25 +119,25 @@ export default function AdminBookings() {
       <div className="mb-6 grid gap-3 sm:grid-cols-4">
         <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setFilter("all")}>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{stats.total}</p>
+            <p className="text-2xl font-bold">{toBengaliNumber(stats.total)}</p>
             <p className="text-xs text-muted-foreground">মোট বুকিং</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer border-yellow-200 transition-shadow hover:shadow-md" onClick={() => setFilter("new")}>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">{stats.new}</p>
+            <p className="text-2xl font-bold text-yellow-600">{toBengaliNumber(stats.new)}</p>
             <p className="text-xs text-muted-foreground">নতুন (পেন্ডিং)</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer border-blue-200 transition-shadow hover:shadow-md" onClick={() => setFilter("contacted")}>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.contacted}</p>
+            <p className="text-2xl font-bold text-blue-600">{toBengaliNumber(stats.contacted)}</p>
             <p className="text-xs text-muted-foreground">যোগাযোগ করা হয়েছে</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer border-green-200 transition-shadow hover:shadow-md" onClick={() => setFilter("completed")}>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+            <p className="text-2xl font-bold text-green-600">{toBengaliNumber(stats.completed)}</p>
             <p className="text-xs text-muted-foreground">সম্পন্ন</p>
           </CardContent>
         </Card>

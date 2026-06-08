@@ -52,6 +52,28 @@ export default function BookDetailsPage() {
     if (!data) { setCouponError("এই কুপন কোড বৈধ নয়।"); setCouponApplied(null); return; }
     if (data.expires_at && new Date(data.expires_at) < new Date()) { setCouponError("কুপনের মেয়াদ শেষ।"); setCouponApplied(null); return; }
     if (data.max_uses && data.used_count >= data.max_uses) { setCouponError("কুপনের সীমা শেষ।"); setCouponApplied(null); return; }
+    // Check per-user limit
+    if (data.per_user_limit) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count: courseUses } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("coupon_code", data.code);
+        const { count: bookUses } = await supabase
+          .from("book_orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("coupon_code", data.code);
+        const totalUserUses = (courseUses ?? 0) + (bookUses ?? 0);
+        if (totalUserUses >= data.per_user_limit) {
+          setCouponError("আপনি এই কুপনটি সর্বোচ্চ সীমায় ব্যবহার করেছেন।");
+          setCouponApplied(null);
+          return;
+        }
+      }
+    }
     setCouponApplied(data);
   };
 
@@ -109,12 +131,17 @@ export default function BookDetailsPage() {
       delivery_address: form.address || null,
       order_note: form.message || null,
       invoice_number: invoiceNumber,
+      coupon_code: couponApplied?.code || null,
     });
 
     if (!error) {
       // Increment coupon usage
       if (couponApplied) {
-        await supabase.from("coupons").update({ used_count: (couponApplied.used_count || 0) + 1 }).eq("id", couponApplied.id);
+        await fetch("/api/coupon-used", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ couponId: couponApplied.id }),
+        });
       }
       // Notify via server API
       await fetch("/api/notify-admins", {
@@ -312,13 +339,53 @@ export default function BookDetailsPage() {
                   </div>
                   <div>
                     <Label>মোবাইল নম্বর *</Label>
-                    <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="০১XXXXXXXXX" />
+                    <div className="flex">
+                      <div className="flex items-center gap-1.5 rounded-l-md border border-r-0 bg-muted px-3 text-sm text-muted-foreground">
+                        <svg width="20" height="14" viewBox="0 0 20 14" className="shrink-0">
+                          <rect width="20" height="14" fill="#006a4e"/>
+                          <circle cx="9" cy="7" r="4" fill="#f42a41"/>
+                        </svg>
+                        <span>+88</span>
+                      </div>
+                      <Input
+                        required
+                        value={form.phone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+                          setForm({ ...form, phone: val });
+                        }}
+                        placeholder="01XXXXXXXXX"
+                        maxLength={11}
+                        minLength={11}
+                        pattern="[0-9]{11}"
+                        title="১১ ডিজিটের মোবাইল নম্বর দিন"
+                        className="rounded-l-none"
+                      />
+                    </div>
+                    {form.phone && form.phone.length < 11 && (
+                      <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({form.phone.length}/১১)</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <Label>{form.payment_method === "bkash" ? "বিকাশ" : form.payment_method === "nagad" ? "নগদ" : "রকেট"} নম্বরের শেষ ৪ ডিজিট *</Label>
-                    <Input required value={form.transaction_id} onChange={(e) => setForm({ ...form, transaction_id: e.target.value })} placeholder="যেমন: 1234" maxLength={4} />
+                    <Input
+                      required
+                      value={form.transaction_id}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 4);
+                        setForm({ ...form, transaction_id: val });
+                      }}
+                      placeholder="যেমন: 1234"
+                      maxLength={4}
+                      minLength={4}
+                      pattern="[0-9]{4}"
+                      title="৪ ডিজিট দিন"
+                    />
+                    {form.transaction_id && form.transaction_id.length < 4 && (
+                      <p className="mt-1 text-xs text-amber-600">৪ ডিজিট প্রয়োজন ({form.transaction_id.length}/৪)</p>
+                    )}
                   </div>
                   <div>
                     <Label>ইমেইল</Label>

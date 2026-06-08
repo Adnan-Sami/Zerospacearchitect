@@ -113,6 +113,7 @@ export default function AdminLayout({
         { count: pendingBookingsNew },
         { count: pendingBookingsNull },
         { count: unseenProfiles },
+        { count: unseenPublicInstructors },
       ] = await Promise.all([
         supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -121,12 +122,14 @@ export default function AdminLayout({
         supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").eq("status", "new"),
         supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").is("status", null),
         supabase.from("instructor_profile_details").select("*", { count: "exact", head: true }).eq("is_seen", false),
+        supabase.from("public_instructors").select("*", { count: "exact", head: true }).eq("is_seen", false),
       ]);
       setBadges({
         "/admin/orders": (pendingOrders ?? 0) + (pendingBookOrders ?? 0),
         "/admin/instructor-courses": (pendingInstructorCourses ?? 0) + (pendingInstructorApps ?? 0),
         "/admin/bookings": (pendingBookingsNew ?? 0) + (pendingBookingsNull ?? 0),
         "/admin/instructor-profiles": unseenProfiles ?? 0,
+        "/admin/public-instructors": unseenPublicInstructors ?? 0,
       });
     });
   }, [router]);
