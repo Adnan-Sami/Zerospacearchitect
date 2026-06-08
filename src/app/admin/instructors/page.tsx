@@ -257,9 +257,9 @@ export default function AdminInstructors() {
                   <p className="mb-2 text-xs font-semibold text-muted-foreground">কোর্সওয়ারি আয়:</p>
                   <div className="space-y-1.5">
                     {inst.courseDetails.map((c: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between text-xs">
-                        <span className="text-foreground">{c.title}</span>
-                        <span className="text-muted-foreground">{c.sales} সেল · ৳{c.revenue} → <span className="font-semibold text-purple-600">৳{c.commission}</span></span>
+                      <div key={i} className="flex flex-col gap-0.5 text-xs sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-foreground truncate">{c.title}</span>
+                        <span className="shrink-0 text-muted-foreground">{c.sales} সেল · ৳{c.revenue} → <span className="font-semibold text-purple-600">৳{c.commission}</span></span>
                       </div>
                     ))}
                   </div>

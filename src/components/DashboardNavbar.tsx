@@ -89,28 +89,30 @@ export function DashboardNavbar() {
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <div className="border-t bg-white px-4 pb-4 md:hidden">
-          <nav className="flex flex-col gap-1 pt-3">
-            {navLinks.map((item) => {
-              const active = isActive(item.href, item.exact);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    active ? "bg-sky-50 text-sky-700" : "text-slate-700 hover:bg-slate-100"
-                  }`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-            <Link href="/" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-              <Home className="h-4 w-4" />সাইটে যান
-            </Link>
-          </nav>
+        <div className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="max-h-[70vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <nav className="flex flex-col gap-1 pt-3">
+              {navLinks.map((item) => {
+                const active = isActive(item.href, item.exact);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      active ? "bg-sky-50 text-sky-700" : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <Link href="/" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                <Home className="h-4 w-4" />সাইটে যান
+              </Link>
+            </nav>
+          </div>
         </div>
       )}
     </header>
@@ -192,28 +194,30 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <div className="border-t bg-white px-4 pb-4 md:hidden">
-            <nav className="flex flex-col gap-1 pt-3">
-              {navLinks.map((item) => {
-                const active = isActive(item.href, item.exact);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                      active ? "bg-sky-50 text-sky-700" : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-              <Link href="/" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                <Home className="h-4 w-4" />সাইটে যান
-              </Link>
-            </nav>
+          <div className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden" onClick={() => setMobileOpen(false)}>
+            <div className="max-h-[70vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+              <nav className="flex flex-col gap-1 pt-3">
+                {navLinks.map((item) => {
+                  const active = isActive(item.href, item.exact);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                        active ? "bg-sky-50 text-sky-700" : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                <Link href="/" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                  <Home className="h-4 w-4" />সাইটে যান
+                </Link>
+              </nav>
+            </div>
           </div>
         )}
       </header>
@@ -250,7 +254,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 overflow-x-hidden p-3 md:p-6">{children}</main>
       </div>
     </div>
   );

@@ -128,19 +128,19 @@ export default function VerifyPage() {
                     <CardContent className="p-5">
                       <h3 className="mb-3 font-semibold">সার্টিফিকেট তথ্য</h3>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between border-b pb-2">
+                        <div className="flex flex-col gap-1 border-b pb-2 sm:flex-row sm:justify-between">
                           <span className="text-muted-foreground">শিক্ষার্থীর নাম</span>
                           <span className="font-medium">{result.studentName}</span>
                         </div>
-                        <div className="flex justify-between border-b pb-2">
+                        <div className="flex flex-col gap-1 border-b pb-2 sm:flex-row sm:justify-between">
                           <span className="text-muted-foreground">কোর্স</span>
-                          <span className="font-medium">{result.courseName}</span>
+                          <span className="font-medium text-right sm:max-w-[60%]">{result.courseName}</span>
                         </div>
-                        <div className="flex justify-between border-b pb-2">
+                        <div className="flex flex-col gap-1 border-b pb-2 sm:flex-row sm:justify-between">
                           <span className="text-muted-foreground">সার্টিফিকেট নং</span>
                           <span className="font-mono font-medium">{result.certificateNumber}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
                           <span className="text-muted-foreground">ইস্যু তারিখ</span>
                           <span className="font-medium">{result.issuedDate}</span>
                         </div>

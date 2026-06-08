@@ -12,6 +12,7 @@ export default function InstructorDashboard() {
   const [stats, setStats] = useState({ total: 0, published: 0, pending: 0, earnings: 0 });
   const [courses, setCourses] = useState<any[]>([]);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [instructorName, setInstructorName] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -28,6 +29,14 @@ export default function InstructorDashboard() {
       if (!profileData) {
         setShowProfilePopup(true);
       }
+
+      // Get instructor name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", session.user.id)
+        .single();
+      if (profile?.full_name) setInstructorName(profile.full_name);
 
       const { data } = await supabase
         .from("instructor_courses")
@@ -54,7 +63,15 @@ export default function InstructorDashboard() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">ইন্সট্রাক্টর ড্যাশবোর্ড</h1>
+      <div className="mb-6 flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+          <UserCircle className="h-7 w-7 text-purple-600" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold">স্বাগতম, {instructorName || "ইন্সট্রাক্টর"}!</h1>
+          <p className="text-sm text-muted-foreground">আপনার শেখার অগ্রগতি দেখুন</p>
+        </div>
+      </div>
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center justify-between p-5">

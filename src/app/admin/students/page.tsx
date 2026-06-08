@@ -247,19 +247,18 @@ export default function AdminStudents() {
         {filtered.map((s) => (
           <Card key={s.id} className={s.is_banned ? "border-destructive/40 bg-destructive/5" : ""}>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-600">
                     {filtered.indexOf(s) + 1}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-medium">
                       {s.full_name || "নাম নেই"}
                       {s.is_banned && <Badge variant="destructive" className="ml-2">ব্যানড</Badge>}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {s.phone || "ফোন নেই"} · যোগদান: {new Date(s.created_at).toLocaleDateString("bn-BD")}
-                      {s.device_info && <span className="ml-2 text-xs">📱 {s.device_info}</span>}
                     </p>
                     {s.last_ip && (
                       <p className="text-xs text-muted-foreground">🌐 IP: {s.last_ip}</p>
@@ -271,7 +270,7 @@ export default function AdminStudents() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     size="sm"
                     variant="outline"

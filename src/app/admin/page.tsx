@@ -130,7 +130,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">অ্যাডমিন ড্যাশবোর্ড</h1>
+        <h1 className="text-xl font-bold md:text-2xl">অ্যাডমিন ড্যাশবোর্ড</h1>
         <div className="flex gap-2">
           {([
             { v: "all" as Period, l: "সর্বমোট" },
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">মোট আয় ({periodLabel})</CardTitle>
