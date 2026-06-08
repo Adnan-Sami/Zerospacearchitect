@@ -80,7 +80,12 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {/* Services Grid */}
+        {/* Gallery - আমাদের কাজ */}
+        <section className="px-4 py-20">
+          <GallerySection />
+        </section>
+
+        {/* Services Grid - আমাদের সার্ভিসসমূহ */}
         <section className="mx-auto max-w-7xl px-4 py-16">
           <div className="mb-10 text-center">
             <h2 className="mb-3 text-3xl font-black text-foreground">আমাদের সার্ভিসসমূহ</h2>
@@ -116,15 +121,7 @@ export default function ServicesPage() {
           )}
         </section>
 
-        {/* Gallery */}
-        <section className="px-4 py-20">
-          <GallerySection />
-        </section>
-
-        {/* Spacer */}
-        <div className="h-8" />
-
-        {/* CTA */}
+        {/* CTA - আজই কথা বলুন */}
         <section className="bg-gradient-to-r from-sky-600 to-blue-700 px-4 py-14">
           <div className="mx-auto max-w-3xl text-center text-white">
             <h2 className="mb-3 text-3xl font-black">আজই কথা বলুন</h2>
@@ -213,20 +210,26 @@ function GallerySection() {
     supabase.from("design_gallery").select("*").order("sort_order").then(({ data }) => setImages(data ?? []));
   }, []);
 
-  // Auto-rotate every 3 seconds
+  // Auto-rotate every 3 seconds — shift by 1 image
   useEffect(() => {
-    if (images.length <= 4) return;
+    if (images.length <= 5) return;
     const timer = setInterval(() => {
       setOffset((prev) => (prev + 1) % images.length);
-    }, 3000);
+    }, 4000);
     return () => clearInterval(timer);
   }, [images.length]);
 
   if (images.length === 0) return null;
 
-  // Show 4 images at a time, rotating through the list
-  const doubled = [...images, ...images];
-  const visible = doubled.slice(offset, offset + 4);
+  // Show 5 images at a time with seamless looping
+  const getVisibleImages = () => {
+    const result = [];
+    for (let i = 0; i < 5; i++) {
+      result.push(images[(offset + i) % images.length]);
+    }
+    return result;
+  };
+  const visible = getVisibleImages();
 
   return (
     <div>
@@ -235,12 +238,12 @@ function GallerySection() {
         <p className="text-muted-foreground">সফলভাবে সম্পন্ন কিছু প্রজেক্ট</p>
       </div>
 
-      {/* 4-column full-frame grid */}
-      <div className="mx-auto max-w-7xl">
-        <div className="grid h-[350px] grid-cols-2 gap-1 overflow-hidden rounded-xl sm:h-[420px] md:grid-cols-4 md:h-[480px]">
+      {/* 5-column full-width grid — one rotates at a time */}
+      <div className="mx-auto w-full">
+        <div className="grid h-[300px] grid-cols-3 gap-0.5 sm:h-[380px] sm:grid-cols-5 md:h-[450px]">
           {visible.map((img, i) => (
             <div
-              key={`${img.id}-${offset}-${i}`}
+              key={`pos-${i}`}
               className="group relative cursor-pointer overflow-hidden"
               onClick={() => setLightbox(img.image_url)}
             >
@@ -248,8 +251,8 @@ function GallerySection() {
                 src={img.image_url}
                 alt={img.title || ""}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                sizes="(min-width: 768px) 25vw, 50vw"
+                className="object-cover transition-all duration-1000 group-hover:scale-105"
+                sizes="(min-width: 640px) 20vw, 33vw"
               />
               <div className="absolute inset-0 bg-black/5 transition-all group-hover:bg-black/20" />
             </div>
