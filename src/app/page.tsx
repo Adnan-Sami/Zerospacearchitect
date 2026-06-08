@@ -118,7 +118,7 @@ export default function HomePage() {
     });
   }, []);
 
-  const heroImgSrc = "/Gemini_Generated_Image_fornqhfornqhforn.png";
+  const heroImgSrc = heroImage || "/Gemini_Generated_Image_fornqhfornqhforn.png";
   const instImgSrc = instImage || "/instructor-cta.png";
   const marqueeBanners = [...banners, ...banners];
 
