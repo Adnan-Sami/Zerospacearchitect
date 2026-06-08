@@ -51,14 +51,11 @@ export default function SupportPage() {
             {/* Agent Image */}
             <div className="hidden md:block">
               <div className="relative animate-[fadeInRight_0.8s_ease-out]">
-                {agentImg && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={agentImg}
-                    alt="Support Agent"
-                    className="h-[280px] w-[300px] rounded-2xl object-cover shadow-2xl shadow-black/30 ring-1 ring-white/10 lg:h-[320px] lg:w-[360px]"
-                  />
-                )}
+                <img
+                  src="/Contact.png"
+                  alt="Support Agent"
+                  className="h-[280px] w-[300px] rounded-2xl object-cover shadow-2xl shadow-black/30 ring-1 ring-white/10 lg:h-[320px] lg:w-[360px]"
+                />
                 {/* Floating badge */}
                 <div className="absolute -bottom-4 -left-4 flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-xl animate-[bounceIn_1s_ease-out_0.5s_both]">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100">
@@ -126,19 +123,27 @@ export default function SupportPage() {
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: "⚡", title: "দ্রুত সমাধান", desc: "সর্বোচ্চ ৫ মিনিটে প্রথম রেসপন্স" },
-              { icon: "🎯", title: "সঠিক গাইডেন্স", desc: "অভিজ্ঞ টিম সদস্যদের সাপোর্ট" },
-              { icon: "🔄", title: "ফলো-আপ", desc: "সমস্যা সমাধান না হওয়া পর্যন্ত" },
-              { icon: "💯", title: "১০০% সন্তুষ্টি", desc: "আপনার সন্তুষ্টি আমাদের লক্ষ্য" },
+              { color: "from-amber-400 to-orange-500", bg: "bg-amber-50", title: "দ্রুত সমাধান", desc: "সর্বোচ্চ ৫ মিনিটে প্রথম রেসপন্স", iconPath: "M13 10V3L4 14h7v7l9-11h-7z" },
+              { color: "from-sky-400 to-blue-500", bg: "bg-sky-50", title: "সঠিক গাইডেন্স", desc: "অভিজ্ঞ টিম সদস্যদের সাপোর্ট", iconPath: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
+              { color: "from-emerald-400 to-green-500", bg: "bg-emerald-50", title: "ফলো-আপ", desc: "সমস্যা সমাধান না হওয়া পর্যন্ত", iconPath: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" },
+              { color: "from-purple-400 to-indigo-500", bg: "bg-purple-50", title: "১০০% সন্তুষ্টি", desc: "আপনার সন্তুষ্টি আমাদের লক্ষ্য", iconPath: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
             ].map((item, i) => (
               <div
                 key={i}
-                className="group rounded-2xl border bg-white p-5 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 text-center transition-all duration-500 hover:-translate-y-2 hover:shadow-xl"
               >
-                <div className="mb-3 text-3xl transition-transform duration-300 group-hover:scale-110">{item.icon}</div>
-                <h4 className="mb-1 font-bold text-gray-900">{item.title}</h4>
-                <p className="text-sm text-gray-500">{item.desc}</p>
+                {/* Background gradient on hover */}
+                <div className={`absolute inset-0 ${item.bg} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${item.color} shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl`}>
+                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.iconPath} />
+                    </svg>
+                  </div>
+                  <h4 className="mb-1.5 font-bold text-gray-900 transition-colors group-hover:text-gray-800">{item.title}</h4>
+                  <p className="text-sm text-gray-500 transition-all duration-500 max-h-0 overflow-hidden opacity-0 group-hover:max-h-20 group-hover:opacity-100 group-hover:mt-1">{item.desc}</p>
+                </div>
               </div>
             ))}
           </div>
