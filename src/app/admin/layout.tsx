@@ -41,9 +41,7 @@ const navSections = [
       { href: "/admin/courses", label: "কোর্স", icon: BookOpen },
       { href: "/admin/books", label: "বই", icon: BookOpen },
       { href: "/admin/public-instructors", label: "প্রশিক্ষক প্রোফাইল", icon: Users },
-      { href: "/admin/slides", label: "হিরো স্লাইডার", icon: ImageIcon },
       { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },
-      { href: "/admin/testimonials", label: "টেস্টিমোনিয়াল", icon: MessageSquare },
       { href: "/admin/seminars", label: "সেমিনার", icon: BookOpen },
       { href: "/admin/services", label: "ডিজাইন ও কনসালটেন্সি", icon: BookOpen },
     ],
@@ -60,8 +58,7 @@ const navSections = [
     title: "সেটিংস",
     items: [
       { href: "/admin/content", label: "সাইট কন্টেন্ট", icon: Type },
-      { href: "/admin/pages", label: "কাস্টম পেজ", icon: FileText },
-      { href: "/admin/menu", label: "মেনু", icon: MenuIcon },
+      { href: "/admin/refund-policy", label: "রিফান্ড পলিসি", icon: FileText },
       { href: "/admin/subscribers", label: "সাবস্ক্রাইবার", icon: Users },
       { href: "/admin/settings", label: "সাইট সেটিংস", icon: Settings },
     ],
@@ -142,7 +139,7 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
-        <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4 px-4 py-3 md:px-6">
+        <div className="flex items-center justify-between px-4 py-3 md:px-6">
           <Link href="/admin" className="flex shrink-0 items-center gap-2">
             <Image
               src="/logo.png"
@@ -152,6 +149,7 @@ export default function AdminLayout({
               className="h-10 w-auto"
               priority
             />
+            <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Admin</span>
           </Link>
 
           <div className="flex items-center gap-2">

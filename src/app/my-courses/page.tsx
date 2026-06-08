@@ -8,7 +8,7 @@ import { BookOpen, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { DashboardNavbar } from "@/components/DashboardNavbar";
+import { DashboardNavbar, StudentLayout } from "@/components/DashboardNavbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,9 +60,8 @@ export default function MyCoursesPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <DashboardNavbar />
-      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+    <StudentLayout>
+      <div className="w-full">
         <h1 className="mb-6 text-2xl font-bold">আমার কোর্সসমূহ</h1>
         {loading ? (
           <p className="text-muted-foreground">লোড হচ্ছে...</p>
@@ -130,7 +129,6 @@ export default function MyCoursesPage() {
           </div>
         )}
       </div>
-      <Footer />
-    </div>
+    </StudentLayout>
   );
 }

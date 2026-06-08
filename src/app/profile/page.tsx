@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DashboardNavbar } from "@/components/DashboardNavbar";
+import { DashboardNavbar, StudentLayout } from "@/components/DashboardNavbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -127,9 +127,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <DashboardNavbar />
-      <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
+    <StudentLayout>
+      <div className="w-full">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold">প্রোফাইল সেটিংস</h1>
           <Link href="/dashboard">
@@ -244,7 +243,6 @@ export default function ProfilePage() {
           </Card>
         </div>
       </div>
-      <Footer />
-    </div>
+    </StudentLayout>
   );
 }

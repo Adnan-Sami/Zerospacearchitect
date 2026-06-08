@@ -19,19 +19,30 @@ export function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [wishlistCount, setWishlistCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   const settings = useSiteSettings();
 
   useEffect(() => {
+    const fetchWishlistCount = async (userId: string) => {
+      const { count } = await supabase
+        .from("wishlist")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
+      setWishlistCount(count ?? 0);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").then(({ data }) => {
           setIsAdmin(!!data?.length);
         });
+        fetchWishlistCount(session.user.id);
       } else {
         setIsAdmin(false);
+        setWishlistCount(0);
       }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,10 +51,26 @@ export function Navbar() {
         supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").then(({ data }) => {
           setIsAdmin(!!data?.length);
         });
+        fetchWishlistCount(session.user.id);
       }
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Listen for wishlist updates from WishlistButton
+  useEffect(() => {
+    const handleWishlistUpdate = () => {
+      if (user) {
+        supabase
+          .from("wishlist")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .then(({ count }) => setWishlistCount(count ?? 0));
+      }
+    };
+    window.addEventListener("wishlist-updated", handleWishlistUpdate);
+    return () => window.removeEventListener("wishlist-updated", handleWishlistUpdate);
+  }, [user]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -120,7 +147,7 @@ export function Navbar() {
               {user && (
                 <Link
                   href="/wishlist"
-                  className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
+                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
                     pathname === "/wishlist"
                       ? "bg-sky-600 text-white"
                       : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
@@ -128,6 +155,11 @@ export function Navbar() {
                   aria-label="উইশলিস্ট"
                 >
                   <Heart className="h-4 w-4" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                      {wishlistCount > 9 ? "9+" : wishlistCount}
+                    </span>
+                  )}
                 </Link>
               )}
               {isAdmin && (

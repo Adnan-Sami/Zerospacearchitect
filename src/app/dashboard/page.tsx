@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Navbar } from "@/components/Navbar";
-import { DashboardNavbar } from "@/components/DashboardNavbar";
+import { DashboardNavbar, StudentLayout } from "@/components/DashboardNavbar";
 import { DeviceGuard } from "@/components/DeviceGuard";
 import { Footer } from "@/components/Footer";
 import { OrderStatusCard } from "@/components/OrderStatusCard";
@@ -101,13 +101,11 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col">
-        <DashboardNavbar />
+      <StudentLayout>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           লোড হচ্ছে...
         </div>
-        <Footer />
-      </div>
+      </StudentLayout>
     );
   }
 
@@ -120,9 +118,8 @@ export default function StudentDashboard() {
 
   return (
     <DeviceGuard>
-    <div className="flex min-h-screen flex-col">
-      <DashboardNavbar />
-      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+    <StudentLayout>
+      <div className="w-full">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-14 w-14">
@@ -264,8 +261,7 @@ export default function StudentDashboard() {
           </CardContent>
         </Card>
       </div>
-      <Footer />
-    </div>
+    </StudentLayout>
     </DeviceGuard>
   );
 }

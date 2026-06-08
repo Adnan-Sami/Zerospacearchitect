@@ -56,6 +56,8 @@ export function WishlistButton({
       setInWishlist(true);
       toast.success("উইশলিস্টে যোগ হয়েছে");
     }
+    // Dispatch event so Navbar can update the badge count
+    window.dispatchEvent(new Event("wishlist-updated"));
   };
 
   return (

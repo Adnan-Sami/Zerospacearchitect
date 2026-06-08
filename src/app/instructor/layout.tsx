@@ -63,14 +63,17 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4 px-4 py-3 md:px-6">
+        <div className="flex items-center justify-between px-4 py-3 md:px-6">
           <Link href="/instructor" className="flex items-center gap-2">
             <Image src="/logo.png" alt={settings.site_name} width={130} height={40} className="h-9 w-auto" priority />
             <span className="hidden rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700 sm:inline">Instructor</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <NotificationBell />
-            <span className="hidden text-sm font-medium text-slate-700 md:inline">{name}</span>
+            <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 md:flex">
+              <User className="h-4 w-4 text-slate-500" />
+              <span className="max-w-40 truncate">{name || "ইন্সট্রাক্টর"}</span>
+            </div>
             <Button variant="outline" size="sm" className="rounded-full" onClick={async () => { await supabase.auth.signOut(); router.push("/"); }}>
               <LogOut className="mr-1 h-4 w-4" />লগ আউট
             </Button>

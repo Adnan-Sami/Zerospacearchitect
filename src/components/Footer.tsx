@@ -9,9 +9,12 @@ const quickLinks = [
   { label: "আমাদের প্রশিক্ষক", href: "/instructors" },
   { label: "শিক্ষক হিসেবে যোগ দিন", href: "/become-instructor" },
   { label: "সার্টিফিকেট চেক করুন", href: "/verify" },
-  { label: "সেমিনারে যোগ দিন", href: "/seminars" },
+];
+
+const aboutLinks = [
   { label: "যোগাযোগ করুন", href: "/support" },
-  { label: "রিফান্ড পলিসি", href: "/" },
+  { label: "সেমিনারে যোগ দিন", href: "/seminars" },
+  { label: "রিফান্ড পলিসি", href: "/refund-policy" },
 ];
 
 export function Footer() {
@@ -19,7 +22,7 @@ export function Footer() {
   return (
     <footer className="bg-gradient-to-b from-[#0b1623] to-[#060d16] text-gray-300">
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
           {/* Brand & Contact */}
           <div>
             <Image
@@ -57,8 +60,23 @@ export function Footer() {
           {/* Quick Links */}
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">Quick Links</h4>
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {quickLinks.map((l) => (
+                <li key={l.label}>
+                  <Link href={l.href} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-1.5 text-sm text-gray-400 transition-all duration-200 hover:text-sky-400 hover:translate-x-1">
+                    <ArrowUpRight className="h-3 w-3 text-sky-500/60 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-sky-400" />
+                    <span className="border-b border-transparent group-hover:border-sky-400/50">{l.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* About */}
+          <div>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">About</h4>
+            <ul className="space-y-3">
+              {aboutLinks.map((l) => (
                 <li key={l.label}>
                   <Link href={l.href} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-1.5 text-sm text-gray-400 transition-all duration-200 hover:text-sky-400 hover:translate-x-1">
                     <ArrowUpRight className="h-3 w-3 text-sky-500/60 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-sky-400" />
@@ -91,13 +109,21 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Background Text */}
+        <div className="relative mt-10 overflow-hidden">
+          <div className="select-none text-center font-black uppercase leading-[0.85] tracking-tight text-white/[0.04]">
+            <div className="text-[clamp(3rem,12vw,9rem)]">Zero Space</div>
+            <div className="text-[clamp(3rem,12vw,9rem)]">Architect</div>
+          </div>
+        </div>
+
         {/* Bottom Bar */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/5 pt-6 sm:flex-row">
+        <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-white/5 pt-6 sm:flex-row">
           <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} ZeroSpace Architect. All rights reserved.
           </p>
           <p className="text-xs text-gray-500">
-            {settings.footer_text || "Designed & Developed by ZeroSpace Team"}
+            Designed & Developed by <a href="https://anex-i.com" target="_blank" rel="noopener noreferrer" className="text-sky-500 hover:text-sky-400 transition-colors">Anex Intelligence</a> Team
           </p>
         </div>
       </div>
