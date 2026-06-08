@@ -661,9 +661,9 @@ export default function AdminCourses() {
                         {/* Lesson draft */}
                         {lessonDraft?.moduleId === mod.id && (
                           <div className="space-y-2 rounded border bg-background p-2">
-                            <Input placeholder="লেসনের নাম" value={lessonDraft.title} onChange={(e) => setLessonDraft((d) => d && { ...d, title: e.target.value })} />
-                            <Input placeholder="ভিডিও URL" value={lessonDraft.videoUrl} onChange={(e) => setLessonDraft((d) => d && { ...d, videoUrl: e.target.value })} />
-                            <Input type="number" placeholder="সময়কাল (মিনিট)" value={lessonDraft.duration} onChange={(e) => setLessonDraft((d) => d && { ...d, duration: e.target.value })} />
+                            <Input placeholder="লেসনের নাম" value={lessonDraft!.title} onChange={(e) => setLessonDraft((d) => d && { ...d, title: e.target.value })} />
+                            <Input placeholder="ভিডিও URL" value={lessonDraft!.videoUrl} onChange={(e) => setLessonDraft((d) => d && { ...d, videoUrl: e.target.value })} />
+                            <Input type="number" placeholder="সময়কাল (মিনিট)" value={lessonDraft!.duration} onChange={(e) => setLessonDraft((d) => d && { ...d, duration: e.target.value })} />
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setLessonDraft(null)}>বাতিল</Button>
                               <Button size="sm" onClick={saveLessonDraft}>যোগ করুন</Button>
@@ -674,7 +674,7 @@ export default function AdminCourses() {
                         {/* Quiz draft */}
                         {quizDraft?.moduleId === mod.id && (
                           <div className="space-y-2 rounded border bg-background p-2">
-                            <Input placeholder="কুইজের নাম" value={quizDraft.title} onChange={(e) => setQuizDraft((d) => d && { ...d, title: e.target.value })} />
+                            <Input placeholder="কুইজের নাম" value={quizDraft!.title} onChange={(e) => setQuizDraft((d) => d && { ...d, title: e.target.value })} />
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setQuizDraft(null)}>বাতিল</Button>
                               <Button size="sm" onClick={saveQuizDraft}>যোগ করুন</Button>
