@@ -58,7 +58,7 @@ export function NotificationBell() {
       const count = data.filter((n: any) => !n.is_read).length;
       setUnreadCount(count);
       // Update browser tab title
-      const baseTitle = "ZeroSpace Architect";
+      const baseTitle = "Zero Space Architect";
       document.title = count > 0 ? `(${count}) ${baseTitle}` : baseTitle;
     }
   }, []);

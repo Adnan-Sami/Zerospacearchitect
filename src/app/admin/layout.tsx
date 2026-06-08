@@ -41,6 +41,7 @@ const navSections = [
       { href: "/admin/slides", label: "হিরো স্লাইডার", icon: ImageIcon },
       { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },
       { href: "/admin/testimonials", label: "টেস্টিমোনিয়াল", icon: MessageSquare },
+      { href: "/admin/services", label: "ডিজাইন ও কনসালটেন্সি", icon: BookOpen },
     ],
   },
   {
@@ -71,7 +72,8 @@ export default function AdminLayout({
   const pathname = usePathname();
   const settings = useSiteSettings();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [badges, setBadges] = useState<Record<string, number>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -79,7 +81,9 @@ export default function AdminLayout({
         router.push("/login");
         return;
       }
-      setUserEmail(session.user.email ?? session.user.id);
+      setUserName(session.user.email ?? "অ্যাডমিন");
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).single();
+      if (profile?.full_name) setUserName(profile.full_name);
       const { data } = await supabase
         .from("user_roles")
         .select("role")
@@ -90,6 +94,23 @@ export default function AdminLayout({
         return;
       }
       setIsAdmin(true);
+
+      // Fetch pending counts for sidebar badges (only actionable items)
+      const [
+        { count: pendingOrders },
+        { count: pendingBookOrders },
+        { count: pendingInstructorCourses },
+        { count: pendingInstructorApps },
+      ] = await Promise.all([
+        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("instructor_courses").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("service_requests").select("*", { count: "exact", head: true }).eq("service_type", "instructor_application").eq("status", "new"),
+      ]);
+      setBadges({
+        "/admin/orders": (pendingOrders ?? 0) + (pendingBookOrders ?? 0),
+        "/admin/instructor-courses": (pendingInstructorCourses ?? 0) + (pendingInstructorApps ?? 0),
+      });
     });
   }, [router]);
 
@@ -124,7 +145,7 @@ export default function AdminLayout({
             <NotificationBell />
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 md:flex">
               <User className="h-4 w-4 text-slate-500" />
-              <span className="max-w-60 truncate">লগইন: {userEmail || "অ্যাডমিন"}</span>
+              <span className="max-w-60 truncate">লগইন: {userName || "অ্যাডমিন"}</span>
             </div>
             <Button
               type="button"
@@ -140,7 +161,7 @@ export default function AdminLayout({
         <div className="border-t border-slate-200 bg-slate-50 px-4 py-2 md:hidden">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
             <User className="h-4 w-4 text-slate-500" />
-            <span className="truncate">লগইন: {userEmail || "অ্যাডমিন"}</span>
+            <span className="truncate">লগইন: {userName || "অ্যাডমিন"}</span>
           </div>
         </div>
       </header>
@@ -167,7 +188,12 @@ export default function AdminLayout({
                         }`}
                       >
                         <item.icon className="h-4 w-4" />
-                        {item.label}
+                        <span className="flex-1">{item.label}</span>
+                        {badges[item.href] > 0 && (
+                          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                            {badges[item.href]}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}

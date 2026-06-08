@@ -23,6 +23,7 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
   const settings = useSiteSettings();
   const [isInstructor, setIsInstructor] = useState<boolean | null>(null);
   const [name, setName] = useState("");
+  const [badges, setBadges] = useState<Record<string, number>>({});
 
   // Don't apply layout to register/login pages
   const isAuthPage = pathname === "/instructor/register" || pathname === "/instructor/login";
@@ -43,6 +44,14 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
       setIsInstructor(true);
       const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).single();
       setName(profile?.full_name || "");
+
+      // Fetch badge counts
+      const { data: courses } = await supabase.from("instructor_courses").select("status").eq("instructor_id", session.user.id);
+      const pending = (courses ?? []).filter((c: any) => c.status === "pending").length;
+      const draft = (courses ?? []).filter((c: any) => c.status === "draft").length;
+      setBadges({
+        "/instructor/courses": pending + draft,
+      });
     });
   }, [router, isAuthPage]);
 
@@ -74,7 +83,13 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
               const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
               return (
                 <Link key={item.href} href={item.href} className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${isActive ? "bg-purple-100 text-purple-700" : ""}`}>
-                  <item.icon className="h-4 w-4" />{item.label}
+                  <item.icon className="h-4 w-4" />
+                  <span className="flex-1">{item.label}</span>
+                  {badges[item.href] > 0 && (
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-purple-500 px-1.5 text-[10px] font-bold text-white">
+                      {badges[item.href]}
+                    </span>
+                  )}
                 </Link>
               );
             })}
