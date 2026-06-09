@@ -53,6 +53,31 @@ export default function HomePage() {
   const [banners, setBanners] = useState<any[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
+  const [loaderDone, setLoaderDone] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
+
+  // Check if loader should be skipped (returning to page) and restore cached data
+  useEffect(() => {
+    const wasLoaded = sessionStorage.getItem("homeLoaded");
+    if (wasLoaded) {
+      setShowLoader(false);
+      setLoaderDone(true);
+      setIsReturning(true);
+      // Restore cached data instantly
+      try {
+        const cached = sessionStorage.getItem("homeData");
+        if (cached) {
+          const { courses: cc, bestsellers: bs, categories: cat, testimonials: tt, banners: bb } = JSON.parse(cached);
+          setCourses(cc || []);
+          setBestsellers(bs || []);
+          setCategories(cat || []);
+          setTestimonials(tt || []);
+          setBanners(bb || []);
+          setDataLoaded(true);
+        }
+      } catch {}
+    }
+  }, []);
   const [animatedStats, setAnimatedStats] = useState([0, 0, 0]);
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
   const statsSectionRef = useRef<HTMLElement | null>(null);
@@ -147,7 +172,6 @@ export default function HomePage() {
         } else {
           setBestsellers([]);
         }
-        setDataLoaded(true);
       } else {
         // Fallback: use enrollment_count if no orders exist
         const { data: fallback } = await supabase
@@ -162,6 +186,17 @@ export default function HomePage() {
     };
     loadData();
   }, []);
+
+  // Cache homepage data for instant restore on return navigation
+  useEffect(() => {
+    if (dataLoaded && courses.length > 0) {
+      try {
+        sessionStorage.setItem("homeData", JSON.stringify({
+          courses, bestsellers, categories, testimonials, banners,
+        }));
+      } catch {}
+    }
+  }, [dataLoaded, courses, bestsellers, categories, testimonials, banners]);
 
   const heroImgSrc = heroImage || "/Gemini_Generated_Image_fornqhfornqhforn.png";
   const instImgSrc = instImage || "/instructor-cta.png";
@@ -221,8 +256,6 @@ export default function HomePage() {
     };
   }, []);
 
-  const [loaderDone, setLoaderDone] = useState(false);
-
   const handleLoaderComplete = useCallback(() => {
     setLoaderDone(true);
   }, []);
@@ -231,6 +264,7 @@ export default function HomePage() {
   useEffect(() => {
     if (loaderDone && dataLoaded) {
       setShowLoader(false);
+      sessionStorage.setItem("homeLoaded", "1");
     }
   }, [loaderDone, dataLoaded]);
 
@@ -242,8 +276,8 @@ export default function HomePage() {
 
       <motion.div
         className="flex min-h-screen flex-col"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: showLoader ? 0 : 1, y: showLoader ? 10 : 0 }}
+        initial={isReturning ? false : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
       <Navbar />
