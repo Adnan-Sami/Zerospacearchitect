@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { FloatingButtons } from "@/components/FloatingButtons";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { Toaster } from "sonner";
 import { SchemaMarkup } from "./schema";
 
@@ -92,6 +93,7 @@ export default function RootLayout({
         <SchemaMarkup />
       </head>
       <body className="font-[\'Hind_Siliguri\',sans-serif]" suppressHydrationWarning>
+        <ScrollToTop />
         {children}
         <FloatingButtons />
         <Toaster richColors />

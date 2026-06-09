@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { PremiumLoader } from "@/components/PremiumLoader";
+import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteContent } from "@/hooks/use-site-content";
 
@@ -49,6 +51,8 @@ export default function HomePage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
   const [animatedStats, setAnimatedStats] = useState([0, 0, 0]);
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
   const statsSectionRef = useRef<HTMLElement | null>(null);
@@ -84,38 +88,79 @@ export default function HomePage() {
   const testimonialsTitle = useSiteContent("home.testimonials.title");
 
   useEffect(() => {
-    Promise.all([
-      supabase
-        .from("courses")
-        .select("*, categories(name)")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(8),
-      supabase
-        .from("courses")
-        .select("*")
-        .eq("is_published", true)
-        .order("enrollment_count", { ascending: false })
-        .limit(6),
-      supabase.from("categories").select("*").order("name").limit(6),
-      supabase
-        .from("testimonials")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order")
-        .limit(6),
-      supabase
-        .from("promo_banners")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order"),
-    ]).then(([c, bs, cat, t, b]) => {
+    const loadData = async () => {
+      const [c, cat, t, b] = await Promise.all([
+        supabase
+          .from("courses")
+          .select("*, categories(name)")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase.from("categories").select("*").order("name").limit(6),
+        supabase
+          .from("testimonials")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order")
+          .limit(6),
+        supabase
+          .from("promo_banners")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order"),
+      ]);
+
       setCourses(c.data ?? []);
-      setBestsellers(bs.data ?? []);
       setCategories(cat.data ?? []);
       setTestimonials(t.data ?? []);
       setBanners(b.data ?? []);
-    });
+
+      // Fetch bestsellers based on actual approved orders
+      const { data: approvedOrders } = await supabase
+        .from("orders")
+        .select("course_id")
+        .eq("status", "approved");
+
+      if (approvedOrders && approvedOrders.length > 0) {
+        // Count orders per course
+        const countMap: Record<string, number> = {};
+        approvedOrders.forEach((o: any) => {
+          if (o.course_id) countMap[o.course_id] = (countMap[o.course_id] || 0) + 1;
+        });
+        // Sort by count, take top 6
+        const topCourseIds = Object.entries(countMap)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([id]) => id);
+
+        if (topCourseIds.length > 0) {
+          const { data: bestData } = await supabase
+            .from("courses")
+            .select("*")
+            .in("id", topCourseIds)
+            .eq("is_published", true);
+          // Re-sort by order count
+          const sorted = (bestData ?? []).sort(
+            (a: any, b: any) => (countMap[b.id] || 0) - (countMap[a.id] || 0)
+          );
+          setBestsellers(sorted);
+        } else {
+          setBestsellers([]);
+        }
+        setDataLoaded(true);
+      } else {
+        // Fallback: use enrollment_count if no orders exist
+        const { data: fallback } = await supabase
+          .from("courses")
+          .select("*")
+          .eq("is_published", true)
+          .order("enrollment_count", { ascending: false })
+          .limit(6);
+        setBestsellers(fallback ?? []);
+      }
+      setDataLoaded(true);
+    };
+    loadData();
   }, []);
 
   const heroImgSrc = heroImage || "/Gemini_Generated_Image_fornqhfornqhforn.png";
@@ -176,8 +221,31 @@ export default function HomePage() {
     };
   }, []);
 
+  const [loaderDone, setLoaderDone] = useState(false);
+
+  const handleLoaderComplete = useCallback(() => {
+    setLoaderDone(true);
+  }, []);
+
+  // Only hide loader when BOTH loader animation is done AND data is loaded
+  useEffect(() => {
+    if (loaderDone && dataLoaded) {
+      setShowLoader(false);
+    }
+  }, [loaderDone, dataLoaded]);
+
   return (
-    <div className="flex min-h-screen flex-col">
+    <>
+      <AnimatePresence>
+        {showLoader && <PremiumLoader onComplete={handleLoaderComplete} />}
+      </AnimatePresence>
+
+      <motion.div
+        className="flex min-h-screen flex-col"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: showLoader ? 0 : 1, y: showLoader ? 10 : 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
       <Navbar />
 
       {/* Hero Section */}
@@ -674,6 +742,7 @@ export default function HomePage() {
       )}
 
       <Footer />
-    </div>
+    </motion.div>
+    </>
   );
 }

@@ -33,7 +33,7 @@ export default function InstructorUpload() {
 
   const [form, setForm] = useState({
     title: "", description: "", price: "0", original_price: "",
-    duration_text: "", thumbnail_url: "", intro_video_url: "",
+    duration_text: "", enrollment_count: "0", thumbnail_url: "", intro_video_url: "",
     what_will_learn: "", requirements: "", target_audience: "",
     materials_included: "", instructor_name: "", instructor_bio: "",
     instructor_avatar: "", certificate_enabled: true,
@@ -79,6 +79,7 @@ export default function InstructorUpload() {
       original_price: form.original_price ? Number(form.original_price) : null,
       duration_text: form.duration_text.trim(),
       duration_minutes: parseInt(form.duration_text) || 0,
+      enrollment_count: Number(form.enrollment_count) || 0,
       thumbnail_url: form.thumbnail_url,
       intro_video_url: form.intro_video_url.trim(),
       what_will_learn: form.what_will_learn.trim(),
@@ -126,6 +127,7 @@ export default function InstructorUpload() {
     if (!form.description.trim()) { toast.error("বিবরণ দিন"); return; }
     if (!form.price || Number(form.price) <= 0) { toast.error("মূল্য দিন"); return; }
     if (!form.duration_text.trim()) { toast.error("সময়কাল দিন"); return; }
+    if (!form.enrollment_count || Number(form.enrollment_count) < 0) { toast.error("এনরোলমেন্ট সংখ্যা দিন"); return; }
     if (!form.thumbnail_url) { toast.error("কভার ইমেজ আপলোড করুন"); return; }
     if (!form.what_will_learn.trim()) { toast.error("কী শিখবেন তথ্য দিন"); return; }
     if (!form.certificate_title.trim()) { toast.error("সার্টিফিকেট শিরোনাম দিন"); return; }
@@ -284,6 +286,9 @@ export default function InstructorUpload() {
                   <Input type="number" min="1" value={form.duration_text} onChange={(e) => setForm({ ...form, duration_text: e.target.value })} placeholder="যেমন: 120" className="pr-14" />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">মিনিট</span>
                 </div>
+              </div>
+              <div><Label>এনরোলমেন্ট সংখ্যা *</Label>
+                <Input type="number" min="0" value={form.enrollment_count} onChange={(e) => setForm({ ...form, enrollment_count: e.target.value })} placeholder="যেমন: 0" className="mt-1.5" />
               </div>
             </CardContent>
           </Card>

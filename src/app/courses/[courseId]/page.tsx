@@ -604,16 +604,10 @@ function SidebarCard({
               {totalLessons} টি ভিডিও লেসন
             </div>
           )}
-          {totalDuration > 0 && (
-            <div className="flex items-center gap-2.5 text-sm text-foreground">
-              <Clock className="h-4 w-4 shrink-0 text-sky-500" />
-              মোট {totalDuration} মিনিট কন্টেন্ট
-            </div>
-          )}
           {course.duration_text && (
             <div className="flex items-center gap-2.5 text-sm text-foreground">
               <Clock className="h-4 w-4 shrink-0 text-sky-500" />
-              {course.duration_text}
+              মোট {course.duration_text} মিনিট কন্টেন্ট
             </div>
           )}
           <div className="flex items-center gap-2.5 text-sm text-foreground">

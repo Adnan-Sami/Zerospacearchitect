@@ -100,6 +100,19 @@ export default function AdminCourses() {
 
   const publish = async () => {
     if (!editing.title?.trim()) { toast.error("কোর্সের নাম দিন"); return; }
+    if (!editing.description?.trim()) { toast.error("বিবরণ দিন"); return; }
+    if (!editing.price && editing.price !== 0) { toast.error("মূল্য দিন"); return; }
+    if (!editing.duration_text?.trim()) { toast.error("সময়কাল (মিনিট) দিন"); return; }
+    if (!editing.instructor_name?.trim()) { toast.error("ইন্সট্রাক্টরের নাম দিন"); return; }
+    if (!editing.instructor_bio?.trim()) { toast.error("ইন্সট্রাক্টরের পরিচিতি দিন"); return; }
+    if (!editing.instructor_avatar?.trim()) { toast.error("ইন্সট্রাক্টরের ছবি আপলোড করুন"); return; }
+    if (!editing.thumbnail_url?.trim()) { toast.error("কভার ইমেজ আপলোড করুন"); return; }
+    if (!editing.category_id) { toast.error("ক্যাটেগরি নির্বাচন করুন"); return; }
+    if (!editing.what_will_learn?.trim()) { toast.error("কী শিখবেন লিখুন"); return; }
+    if (!editing.certificate_title?.trim()) { toast.error("সার্টিফিকেট শিরোনাম দিন"); return; }
+    if (!editing.certificate_body?.trim()) { toast.error("সার্টিফিকেট বডি টেক্সট দিন"); return; }
+    if (!editing.certificate_signature?.trim()) { toast.error("সার্টিফিকেট স্বাক্ষর দিন"); return; }
+    if (modules.length === 0) { toast.error("কমপক্ষে ১টি কারিকুলাম টপিক যোগ করুন"); return; }
     setSaving(true);
     const slug = editing.title.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9\u0980-\u09FF-]/g, "");
     const payload: any = { ...editing, slug, is_published: true };
@@ -399,12 +412,12 @@ export default function AdminCourses() {
                 <Input value={editing.title} onChange={(e) => setEditing((p: any) => ({ ...p, title: e.target.value }))} placeholder="কোর্সের নাম লিখুন" />
               </div>
               <div>
-                <Label>বিবরণ</Label>
+                <Label>বিবরণ *</Label>
                 <Textarea rows={4} value={editing.description ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, description: e.target.value }))} placeholder="কোর্স সম্পর্কে সংক্ষিপ্ত বিবরণ" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>মূল্য (৳)</Label>
+                  <Label>মূল্য (৳) *</Label>
                   <Input type="number" value={editing.price ?? 0} onChange={(e) => setEditing((p: any) => ({ ...p, price: Number(e.target.value) }))} />
                 </div>
                 <div>
@@ -414,16 +427,16 @@ export default function AdminCourses() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>সময়কাল</Label>
-                  <Input value={editing.duration_text ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, duration_text: e.target.value }))} placeholder="যেমন: ৪০ ঘণ্টা" />
+                  <Label>সময়কাল (মিনিট) *</Label>
+                  <Input value={editing.duration_text ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, duration_text: e.target.value }))} placeholder="যেমন: ১২০ মিনিট" />
                 </div>
                 <div>
-                  <Label>এনরোলমেন্ট সংখ্যা</Label>
+                  <Label>এনরোলমেন্ট সংখ্যা *</Label>
                   <Input type="number" value={editing.enrollment_count ?? 0} onChange={(e) => setEditing((p: any) => ({ ...p, enrollment_count: Number(e.target.value) }))} />
                 </div>
               </div>
               <div>
-                <Label>ক্যাটেগরি</Label>
+                <Label>ক্যাটেগরি *</Label>
                 <select
                   value={editing.category_id ?? ""}
                   onChange={(e) => setEditing((p: any) => ({ ...p, category_id: e.target.value || null }))}
@@ -464,11 +477,11 @@ export default function AdminCourses() {
                 </div>
               </div>
               <div>
-                <Label>নাম</Label>
+                <Label>নাম *</Label>
                 <Input value={editing.instructor_name ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, instructor_name: e.target.value }))} />
               </div>
               <div>
-                <Label>পরিচিতি</Label>
+                <Label>পরিচিতি *</Label>
                 <Textarea rows={2} value={editing.instructor_bio ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, instructor_bio: e.target.value }))} />
               </div>
             </CardContent>
@@ -479,16 +492,8 @@ export default function AdminCourses() {
             <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">ওভারভিউ</CardTitle></CardHeader>
             <CardContent className="space-y-3 pt-0">
               <div>
-                <Label>কী শিখবেন</Label>
+                <Label>কী শিখবেন *</Label>
                 <Textarea rows={3} value={editing.what_will_learn ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, what_will_learn: e.target.value }))} />
-              </div>
-              <div>
-                <Label>টার্গেট অডিয়েন্স</Label>
-                <Textarea rows={2} value={editing.target_audience ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, target_audience: e.target.value }))} />
-              </div>
-              <div>
-                <Label>পূর্বশর্ত</Label>
-                <Textarea rows={2} value={editing.requirements ?? ""} onChange={(e) => setEditing((p: any) => ({ ...p, requirements: e.target.value }))} />
               </div>
               <div>
                 <Label>উপকরণ</Label>
@@ -738,7 +743,7 @@ export default function AdminCourses() {
             {editing.certificate_enabled && (
               <CardContent className="space-y-4 pt-0">
                 <div>
-                  <Label>শিরোনাম</Label>
+                  <Label>শিরোনাম *</Label>
                   <Input
                     placeholder="যেমন: কোর্স সমাপ্তি সার্টিফিকেট"
                     value={editing.certificate_title ?? ""}
@@ -746,7 +751,7 @@ export default function AdminCourses() {
                   />
                 </div>
                 <div>
-                  <Label>বডি টেক্সট</Label>
+                  <Label>বডি টেক্সট *</Label>
                   <Textarea
                     rows={2}
                     placeholder="যেমন: সফলভাবে নিম্নলিখিত কোর্সটি সম্পন্ন করার জন্য:"
@@ -755,7 +760,7 @@ export default function AdminCourses() {
                   />
                 </div>
                 <div>
-                  <Label>স্বাক্ষর / পদবী (ঐচ্ছিক)</Label>
+                  <Label>স্বাক্ষর / পদবী *</Label>
                   <Input
                     placeholder="যেমন: Engr. Dulal Reza, Founder"
                     value={editing.certificate_signature ?? ""}
@@ -807,7 +812,7 @@ export default function AdminCourses() {
         <div className="space-y-4">
           {/* Thumbnail */}
           <Card>
-            <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">কভার ইমেজ</CardTitle></CardHeader>
+            <CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">কভার ইমেজ *</CardTitle></CardHeader>
             <CardContent className="pt-0 space-y-2">
               {editing.thumbnail_url ? (
                 <div className="relative">
