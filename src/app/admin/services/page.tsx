@@ -11,8 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export default function AdminServices() {
+import { uploadFile } from "@/lib/upload";export default function AdminServices() {
   const [items, setItems] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
@@ -55,12 +54,12 @@ export default function AdminServices() {
 
   const upload = async (file: File) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `services/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-    if (error) { toast.error(error.message); setUploading(false); return; }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setEditing((p: any) => ({ ...p, image_url: data.publicUrl }));
+    try {
+      const url = await uploadFile(file, { folder: "services" });
+      setEditing((p: any) => ({ ...p, image_url: url }));
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
+    }
     setUploading(false);
   };
 
@@ -124,13 +123,13 @@ export default function AdminServices() {
               const file = e.target.files?.[0];
               if (!file) return;
               setGalleryUploading(true);
-              const ext = file.name.split(".").pop();
-              const path = `gallery/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-              const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-              if (error) { toast.error(error.message); setGalleryUploading(false); return; }
-              const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-              await supabase.from("design_gallery").insert({ image_url: data.publicUrl, sort_order: gallery.length });
-              toast.success("ছবি যোগ হয়েছে");
+              try {
+                const url = await uploadFile(file, { folder: "gallery" });
+                await supabase.from("design_gallery").insert({ image_url: url, sort_order: gallery.length });
+                toast.success("ছবি যোগ হয়েছে");
+              } catch (err: any) {
+                toast.error(err.message || "আপলোড ব্যর্থ");
+              }
               setGalleryUploading(false);
               load();
             }} />

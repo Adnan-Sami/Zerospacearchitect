@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import Link from "next/link";
+import { uploadFile } from "@/lib/upload";import Link from "next/link";
 
 export default function AdminRefundPolicy() {
   const [title, setTitle] = useState("রিফান্ড নীতিমালা");
@@ -149,13 +149,13 @@ export default function AdminRefundPolicy() {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 setUploading(true);
-                const ext = file.name.split(".").pop();
-                const path = `refund-policy/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-                if (error) { toast.error(error.message); setUploading(false); return; }
-                const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-                setImageUrl(data.publicUrl);
-                setSaved(false);
+                try {
+                  const url = await uploadFile(file, { folder: "refund-policy" });
+                  setImageUrl(url);
+                  setSaved(false);
+                } catch (err: any) {
+                  toast.error(err.message || "আপলোড ব্যর্থ");
+                }
                 setUploading(false);
               }}
             />

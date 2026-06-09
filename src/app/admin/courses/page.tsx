@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Certificate } from "@/components/Certificate";
+import { uploadFile } from "@/lib/upload";
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -154,13 +155,13 @@ export default function AdminCourses() {
   const handleImageUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error("শুধু ইমেজ ফাইল আপলোড করুন"); return; }
     setUploadingImage(true);
-    const ext = file.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(fileName, file);
-    if (error) { toast.error(error.message); setUploadingImage(false); return; }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(fileName);
-    setEditing((p: any) => ({ ...p, thumbnail_url: data.publicUrl }));
-    toast.success("ইমেজ আপলোড হয়েছে");
+    try {
+      const url = await uploadFile(file, { folder: "courses" });
+      setEditing((p: any) => ({ ...p, thumbnail_url: url }));
+      toast.success("ইমেজ আপলোড হয়েছে");
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
+    }
     setUploadingImage(false);
   };
 
@@ -169,13 +170,13 @@ export default function AdminCourses() {
   const handleAvatarUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error("শুধু ইমেজ ফাইল আপলোড করুন"); return; }
     setUploadingAvatar(true);
-    const ext = file.name.split(".").pop();
-    const fileName = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(fileName, file);
-    if (error) { toast.error(error.message); setUploadingAvatar(false); return; }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(fileName);
-    setEditing((p: any) => ({ ...p, instructor_avatar: data.publicUrl }));
-    toast.success("আভাটার আপলোড হয়েছে");
+    try {
+      const url = await uploadFile(file, { folder: "instructor-avatars" });
+      setEditing((p: any) => ({ ...p, instructor_avatar: url }));
+      toast.success("আভাটার আপলোড হয়েছে");
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
+    }
     setUploadingAvatar(false);
   };
 

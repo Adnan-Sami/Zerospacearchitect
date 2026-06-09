@@ -11,8 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-function slugify(value: string) {
+import { uploadFile } from "@/lib/upload";function slugify(value: string) {
   return value
     .toLowerCase()
     .trim()
@@ -79,16 +78,12 @@ export default function AdminBooks() {
       return;
     }
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `books/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-    if (error) {
-      toast.error(error.message);
-      setUploading(false);
-      return;
+    try {
+      const url = await uploadFile(file, { folder: "books" });
+      setEditing((prev: any) => ({ ...prev, cover_url: url }));
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
     }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setEditing((prev: any) => ({ ...prev, cover_url: data.publicUrl }));
     setUploading(false);
   };
 
@@ -147,12 +142,13 @@ export default function AdminBooks() {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         if (!file.name.endsWith(".pdf")) { toast.error("শুধু PDF ফাইল আপলোড করুন"); return; }
-                        const path = `books-pdf/${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
-                        const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-                        if (error) { toast.error(error.message); return; }
-                        const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-                        setEditing({ ...editing, pdf_url: data.publicUrl });
-                        toast.success("PDF আপলোড হয়েছে");
+                        try {
+                          const url = await uploadFile(file, { folder: "books-pdf" });
+                          setEditing({ ...editing, pdf_url: url });
+                          toast.success("PDF আপলোড হয়েছে");
+                        } catch (err: any) {
+                          toast.error(err.message || "আপলোড ব্যর্থ");
+                        }
                       }}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">অথবা URL দিন:</p>

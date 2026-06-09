@@ -13,6 +13,7 @@ import { DashboardNavbar, StudentLayout } from "@/components/DashboardNavbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { uploadFile } from "@/lib/upload";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -62,27 +63,19 @@ export default function ProfilePage() {
       return;
     }
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${userId}/avatar-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true });
-    if (upErr) {
-      toast.error(upErr.message);
-      setUploading(false);
-      return;
-    }
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("avatars").getPublicUrl(path);
-    const { error: dbErr } = await supabase
-      .from("profiles")
-      .update({ avatar_url: publicUrl })
-      .eq("user_id", userId);
-    if (dbErr) toast.error(dbErr.message);
-    else {
-      setAvatarUrl(publicUrl);
-      toast.success("প্রোফাইল ছবি আপডেট হয়েছে!");
+    try {
+      const publicUrl = await uploadFile(file, { folder: "avatars", bucket: "avatars" });
+      const { error: dbErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", userId);
+      if (dbErr) toast.error(dbErr.message);
+      else {
+        setAvatarUrl(publicUrl);
+        toast.success("প্রোফাইল ছবি আপডেট হয়েছে!");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
     }
     setUploading(false);
   };

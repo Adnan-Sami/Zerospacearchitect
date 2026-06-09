@@ -15,8 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Certificate } from "@/components/Certificate";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export default function InstructorEditCourse({ params }: { params: Promise<{ courseId: string }> }) {
+import { uploadFile } from "@/lib/upload";export default function InstructorEditCourse({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = use(params);
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -75,23 +74,23 @@ export default function InstructorEditCourse({ params }: { params: Promise<{ cou
 
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
-    const ext = file.name.split(".").pop();
-    const path = `instructor/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-    if (error) { toast.error(error.message); setUploadingImage(false); return; }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setForm((p) => ({ ...p, thumbnail_url: data.publicUrl }));
+    try {
+      const url = await uploadFile(file, { folder: "courses" });
+      setForm((p) => ({ ...p, thumbnail_url: url }));
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
+    }
     setUploadingImage(false);
   };
 
   const handleAvatarUpload = async (file: File) => {
     setUploadingAvatar(true);
-    const ext = file.name.split(".").pop();
-    const path = `instructor/avatar-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-    if (error) { toast.error(error.message); setUploadingAvatar(false); return; }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setForm((p) => ({ ...p, instructor_avatar: data.publicUrl }));
+    try {
+      const url = await uploadFile(file, { folder: "instructor-avatars" });
+      setForm((p) => ({ ...p, instructor_avatar: url }));
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
+    }
     setUploadingAvatar(false);
   };
 

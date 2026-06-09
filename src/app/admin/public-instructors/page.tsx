@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { toBn } from "@/lib/utils";
+import { uploadFile } from "@/lib/upload";
 
 export default function AdminPublicInstructors() {
   const [items, setItems] = useState<any[]>([]);
@@ -89,16 +90,12 @@ export default function AdminPublicInstructors() {
 
   const uploadImage = async (file: File) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `instructors/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-    if (error) {
-      toast.error(error.message);
-      setUploading(false);
-      return;
+    try {
+      const url = await uploadFile(file, { folder: "instructors" });
+      setEditing((prev: any) => ({ ...prev, image_url: url }));
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
     }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setEditing((prev: any) => ({ ...prev, image_url: data.publicUrl }));
     setUploading(false);
   };
 

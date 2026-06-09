@@ -39,6 +39,7 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.103.0",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
@@ -59,13 +60,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "eslint": "^9.32.0",
     "eslint-config-next": "^15.3.3",
     "tailwindcss": "^4.2.1",
-    "@tailwindcss/postcss": "^4.2.1",
     "typescript": "^5.8.3"
   }
 }

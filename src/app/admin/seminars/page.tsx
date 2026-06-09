@@ -12,7 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { toBn } from "@/lib/utils";export default function AdminSeminars() {
+import { toBn } from "@/lib/utils";
+import { uploadFile } from "@/lib/upload";export default function AdminSeminars() {
   const [items, setItems] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
@@ -58,12 +59,12 @@ import { toBn } from "@/lib/utils";export default function AdminSeminars() {
 
   const uploadImage = async (file: File) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `seminars/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-    if (error) { toast.error(error.message); setUploading(false); return; }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setEditing((prev: any) => ({ ...prev, image_url: data.publicUrl }));
+    try {
+      const url = await uploadFile(file, { folder: "seminars" });
+      setEditing((prev: any) => ({ ...prev, image_url: url }));
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
+    }
     setUploading(false);
   };
 

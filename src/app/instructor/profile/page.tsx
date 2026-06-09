@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
+import { uploadFile } from "@/lib/upload";
 export default function InstructorProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -138,16 +138,12 @@ export default function InstructorProfilePage() {
 
   const uploadImage = async (file: File) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `instructor-profiles/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("course-thumbnails").upload(path, file);
-    if (error) {
-      toast.error(error.message);
-      setUploading(false);
-      return;
+    try {
+      const url = await uploadFile(file, { folder: "instructor-profiles" });
+      setForm((prev) => ({ ...prev, image_url: url }));
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ");
     }
-    const { data } = supabase.storage.from("course-thumbnails").getPublicUrl(path);
-    setForm((prev) => ({ ...prev, image_url: data.publicUrl }));
     setUploading(false);
   };
 

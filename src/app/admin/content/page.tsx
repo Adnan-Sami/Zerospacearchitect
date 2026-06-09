@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateSiteContent } from "@/hooks/use-site-content";
+import { uploadFile } from "@/lib/upload";
 import {
   CONTENT_REGISTRY,
   REGISTRY_BY_KEY,
@@ -102,23 +103,12 @@ export default function AdminContent() {
   const handleUpload = async (file: File) => {
     if (!editing) return;
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `site-content/${editing.key.replace(
-      /\./g,
-      "_"
-    )}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("course-thumbnails")
-      .upload(path, file, { upsert: true });
-    if (error) {
-      toast.error(error.message);
-      setUploading(false);
-      return;
+    try {
+      const url = await uploadFile(file, { folder: "site-content" });
+      setEditing({ ...editing, value: url });
+    } catch (err: any) {
+      toast.error(err.message || "আপলোড ব্যর্থ হয়েছে");
     }
-    const { data } = supabase.storage
-      .from("course-thumbnails")
-      .getPublicUrl(path);
-    setEditing({ ...editing, value: data.publicUrl });
     setUploading(false);
   };
 
