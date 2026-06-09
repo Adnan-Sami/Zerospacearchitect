@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { toBn } from "@/lib/utils";
 
 type Period = "all" | "this_month" | "last_month" | "this_year";
 
@@ -200,7 +201,7 @@ export default function AdminStudents() {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">শিক্ষার্থী তালিকা ({filtered.length})</h1>
+        <h1 className="text-2xl font-bold">শিক্ষার্থী তালিকা ({toBn(filtered.length)})</h1>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={exportCSV}>
             <Download className="mr-1 h-3 w-3" />এই ফিল্টার CSV

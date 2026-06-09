@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { toBn } from "@/lib/utils";
 
 export default function InstructorDashboard() {
   const [stats, setStats] = useState({ total: 0, published: 0, pending: 0, earnings: 0 });
@@ -82,25 +83,25 @@ export default function InstructorDashboard() {
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center justify-between p-5">
-            <div><p className="text-sm text-muted-foreground">মোট কোর্স</p><p className="mt-1 text-2xl font-bold">{stats.total}</p></div>
+            <div><p className="text-sm text-muted-foreground">মোট কোর্স</p><p className="mt-1 text-2xl font-bold tabular-nums">{toBn(stats.total)}</p></div>
             <BookOpen className="h-8 w-8 text-purple-500" />
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center justify-between p-5">
-            <div><p className="text-sm text-muted-foreground">পাবলিশড</p><p className="mt-1 text-2xl font-bold">{stats.published}</p></div>
+            <div><p className="text-sm text-muted-foreground">পাবলিশড</p><p className="mt-1 text-2xl font-bold tabular-nums">{toBn(stats.published)}</p></div>
             <Eye className="h-8 w-8 text-green-500" />
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center justify-between p-5">
-            <div><p className="text-sm text-muted-foreground">পেন্ডিং</p><p className="mt-1 text-2xl font-bold">{stats.pending}</p></div>
+            <div><p className="text-sm text-muted-foreground">পেন্ডিং</p><p className="mt-1 text-2xl font-bold tabular-nums">{toBn(stats.pending)}</p></div>
             <Clock className="h-8 w-8 text-yellow-500" />
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center justify-between p-5">
-            <div><p className="text-sm text-muted-foreground">আনুমানিক আয়</p><p className="mt-1 text-2xl font-bold">৳{stats.earnings.toLocaleString()}</p></div>
+            <div><p className="text-sm text-muted-foreground">আনুমানিক আয়</p><p className="mt-1 text-2xl font-bold tabular-nums">৳{toBn(stats.earnings.toLocaleString())}</p></div>
             <DollarSign className="h-8 w-8 text-sky-500" />
           </CardContent>
         </Card>

@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { DashboardNavbar, StudentLayout } from "@/components/DashboardNavbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { toBn } from "@/lib/utils";
 
 export default function MyCoursesPage() {
   const router = useRouter();
@@ -92,8 +93,8 @@ export default function MyCoursesPage() {
                     </p>
                     <Progress value={e.progress} className="mb-2 h-2" />
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {e.progress}% সম্পন্ন
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {toBn(e.progress)}% সম্পন্ন
                       </span>
                       <div className="flex gap-2">
                         {e.progress === 100 && (

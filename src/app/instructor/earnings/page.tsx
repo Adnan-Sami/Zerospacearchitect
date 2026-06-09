@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { toBn } from "@/lib/utils";
 
 export default function InstructorEarnings() {
   const [data, setData] = useState<any>(null);
@@ -53,19 +54,19 @@ export default function InstructorEarnings() {
         <Card className="border-purple-200 bg-purple-50">
           <CardContent className="p-5">
             <p className="text-xs text-purple-700">মোট আয় (৪০%)</p>
-            <p className="mt-1 text-2xl font-black text-purple-800">৳{totalEarned.toLocaleString()}</p>
+            <p className="mt-1 text-2xl font-black text-purple-800 tabular-nums">৳{toBn(totalEarned.toLocaleString())}</p>
           </CardContent>
         </Card>
         <Card className="border-green-200 bg-green-50">
           <CardContent className="p-5">
             <p className="text-xs text-green-700">মোট প্রাপ্ত</p>
-            <p className="mt-1 text-2xl font-black text-green-800">৳{totalPaid.toLocaleString()}</p>
+            <p className="mt-1 text-2xl font-black text-green-800 tabular-nums">৳{toBn(totalPaid.toLocaleString())}</p>
           </CardContent>
         </Card>
         <Card className={`${balance > 0 ? "border-amber-200 bg-amber-50" : "border-green-200 bg-green-50"}`}>
           <CardContent className="p-5">
             <p className={`text-xs ${balance > 0 ? "text-amber-700" : "text-green-700"}`}>বকেয়া</p>
-            <p className={`mt-1 text-2xl font-black ${balance > 0 ? "text-amber-800" : "text-green-800"}`}>৳{balance.toLocaleString()}</p>
+            <p className={`mt-1 text-2xl font-black tabular-nums ${balance > 0 ? "text-amber-800" : "text-green-800"}`}>৳{toBn(balance.toLocaleString())}</p>
           </CardContent>
         </Card>
       </div>
@@ -116,9 +117,9 @@ export default function InstructorEarnings() {
                   {filteredMonths.map((m: any) => (
                     <tr key={m.month} className="hover:bg-muted/30">
                       <td className="px-3 py-2.5 font-medium">{m.month}</td>
-                      <td className="px-3 py-2.5 text-right text-purple-600 font-semibold">৳{m.earned.toLocaleString()}</td>
-                      <td className="px-3 py-2.5 text-right text-green-600">৳{m.paid.toLocaleString()}</td>
-                      <td className="px-3 py-2.5 text-right">{m.due > 0 ? `৳${m.due.toLocaleString()}` : "—"}</td>
+                      <td className="px-3 py-2.5 text-right text-purple-600 font-semibold tabular-nums">৳{toBn(m.earned.toLocaleString())}</td>
+                      <td className="px-3 py-2.5 text-right text-green-600 tabular-nums">৳{toBn(m.paid.toLocaleString())}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{m.due > 0 ? `৳${toBn(m.due.toLocaleString())}` : "—"}</td>
                       <td className="px-3 py-2.5 text-right">
                         {m.due <= 0 ? (
                           <Badge className="bg-green-100 text-green-800"><CheckCircle className="mr-1 h-3 w-3" />পেইড</Badge>

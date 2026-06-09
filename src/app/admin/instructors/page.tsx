@@ -207,7 +207,7 @@ export default function AdminInstructors() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="font-bold">{inst.full_name}</h3>
-                  <p className="text-sm text-muted-foreground">{inst.phone} · যোগদান: {new Date(inst.created_at).toLocaleDateString("bn-BD")}</p>
+                  <p className="text-sm text-muted-foreground">{inst.phone} · <span className="tabular-nums">যোগদান: {new Date(inst.created_at).toLocaleDateString("bn-BD")}</span></p>
                   {inst.payment_method ? (
                     <div className="mt-1 text-xs text-green-600">
                       {inst.payment_method === "bank" ? (
@@ -246,9 +246,9 @@ export default function AdminInstructors() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">কমিশন (৪০%)</p>
-                  <p className="text-2xl font-black text-purple-600">৳{toBengaliNumber(inst.commission.toLocaleString())}</p>
-                  <p className="text-xs text-green-600">পেইড: ৳{toBengaliNumber(inst.paid.toLocaleString())}</p>
-                  {inst.balance > 0 && <p className="text-xs font-semibold text-amber-600">বকেয়া: ৳{toBengaliNumber(inst.balance.toLocaleString())}</p>}
+                  <p className="text-2xl font-black text-purple-600 tabular-nums">৳{toBengaliNumber(inst.commission.toLocaleString())}</p>
+                  <p className="text-xs text-green-600 tabular-nums">পেইড: ৳{toBengaliNumber(inst.paid.toLocaleString())}</p>
+                  {inst.balance > 0 && <p className="text-xs font-semibold text-amber-600 tabular-nums">বকেয়া: ৳{toBengaliNumber(inst.balance.toLocaleString())}</p>}
                   {inst.balance > 0 && (
                     <Button size="sm" className="mt-2 h-7 bg-green-600 text-xs hover:bg-green-700" onClick={() => { setPayingId(inst.user_id); setPayAmount(String(inst.balance)); setPayNote(""); }}>
                       <CreditCard className="mr-1 h-3 w-3" />পেমেন্ট করুন
@@ -265,7 +265,7 @@ export default function AdminInstructors() {
                     {inst.courseDetails.map((c: any, i: number) => (
                       <div key={i} className="flex flex-col gap-0.5 text-xs sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-foreground truncate">{c.title}</span>
-                        <span className="shrink-0 text-muted-foreground">{toBengaliNumber(c.sales)} সেল · ৳{toBengaliNumber(c.revenue)} → <span className="font-semibold text-purple-600">৳{toBengaliNumber(c.commission)}</span></span>
+                        <span className="shrink-0 text-muted-foreground tabular-nums">{toBengaliNumber(c.sales)} সেল · ৳{toBengaliNumber(c.revenue)} → <span className="font-semibold text-purple-600">৳{toBengaliNumber(c.commission)}</span></span>
                       </div>
                     ))}
                   </div>

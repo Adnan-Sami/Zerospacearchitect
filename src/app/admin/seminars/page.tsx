@@ -12,8 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export default function AdminSeminars() {
+import { toBn } from "@/lib/utils";export default function AdminSeminars() {
   const [items, setItems] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
@@ -159,7 +158,7 @@ export default function AdminSeminars() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{s.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {s.is_upcoming ? "🟢 আসন্ন" : "📁 পূর্ববর্তী"} · {s.is_active ? "✅ অ্যাক্টিভ" : "🔒 নিষ্ক্রিয়"} · ক্রম: {s.sort_order}
+                  {s.is_upcoming ? "🟢 আসন্ন" : "📁 পূর্ববর্তী"} · {s.is_active ? "✅ অ্যাক্টিভ" : "🔒 নিষ্ক্রিয়"} · ক্রম: {toBn(s.sort_order)}
                 </p>
               </div>
               {s.is_upcoming && (

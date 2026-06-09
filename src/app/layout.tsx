@@ -86,9 +86,12 @@ export default function RootLayout({
     <html lang="bn" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo-footer.png" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <SchemaMarkup />
       </head>
-      <body suppressHydrationWarning>
+      <body className="font-[\'Hind_Siliguri\',sans-serif]" suppressHydrationWarning>
         {children}
         <FloatingButtons />
         <Toaster richColors />

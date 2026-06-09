@@ -163,7 +163,7 @@ export default function AdminDashboard() {
             <DollarSign className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">৳{totalRevenue.toLocaleString("bn-BD")}</p>
+            <p className="text-2xl font-bold text-green-600 tabular-nums">৳{totalRevenue.toLocaleString("bn-BD")}</p>
           </CardContent>
         </Card>
         <Card className="border-purple-200">
@@ -172,8 +172,8 @@ export default function AdminDashboard() {
             <DollarSign className="h-5 w-5 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-purple-600">৳{(totalRevenue - instructorCommission).toLocaleString("bn-BD")}</p>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">ইন্সট্রাক্টর কমিশন: ৳{instructorCommission.toLocaleString("bn-BD")}</p>
+            <p className="text-2xl font-bold text-purple-600 tabular-nums">৳{(totalRevenue - instructorCommission).toLocaleString("bn-BD")}</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">ইন্সট্রাক্টর কমিশন: ৳{instructorCommission.toLocaleString("bn-BD")}</p>
           </CardContent>
         </Card>
         <Card>
@@ -259,9 +259,9 @@ export default function AdminDashboard() {
                 <tbody className="divide-y">
                   {courseOrders.slice(0, 20).map((o) => (
                     <tr key={o.id} className="hover:bg-muted/50">
-                      <td className="px-3 py-2">{new Date(o.created_at).toLocaleDateString("bn-BD")}</td>
+                      <td className="px-3 py-2 tabular-nums">{new Date(o.created_at).toLocaleDateString("bn-BD")}</td>
                       <td className="px-3 py-2 max-w-[200px] truncate">{o.courses?.title}</td>
-                      <td className="px-3 py-2 text-right">৳{Number(o.amount).toLocaleString("bn-BD")}</td>
+                      <td className="px-3 py-2 text-right font-medium tabular-nums">৳{Number(o.amount).toLocaleString("bn-BD")}</td>
                       <td className="px-3 py-2 text-right">
                         <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${o.status === "approved" ? "bg-green-100 text-green-700" : o.status === "rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
                           {o.status === "approved" ? "✓" : o.status === "rejected" ? "✗" : "⏳"}
@@ -330,9 +330,9 @@ export default function AdminDashboard() {
                 <tbody className="divide-y">
                   {bookOrders.slice(0, 20).map((o) => (
                     <tr key={o.id} className="hover:bg-muted/50">
-                      <td className="px-3 py-2">{new Date(o.created_at).toLocaleDateString("bn-BD")}</td>
+                      <td className="px-3 py-2 tabular-nums">{new Date(o.created_at).toLocaleDateString("bn-BD")}</td>
                       <td className="px-3 py-2 max-w-[200px] truncate">{o.books?.title}</td>
-                      <td className="px-3 py-2 text-right">৳{Number(o.amount).toLocaleString("bn-BD")}</td>
+                      <td className="px-3 py-2 text-right font-medium tabular-nums">৳{Number(o.amount).toLocaleString("bn-BD")}</td>
                       <td className="px-3 py-2 text-right">
                         <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${o.status === "approved" ? "bg-green-100 text-green-700" : o.status === "rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
                           {o.status === "approved" ? "✓" : o.status === "rejected" ? "✗" : "⏳"}

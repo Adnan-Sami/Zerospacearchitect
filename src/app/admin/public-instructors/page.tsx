@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { toBn } from "@/lib/utils";
 
 export default function AdminPublicInstructors() {
   const [items, setItems] = useState<any[]>([]);
@@ -300,10 +301,10 @@ export default function AdminPublicInstructors() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{inst.name}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {inst.title || inst.designation || "—"} · {inst.total_courses} কোর্স · {inst.total_students} শিক্ষার্থী
+                  {inst.title || inst.designation || "—"} · {toBn(inst.total_courses)} কোর্স · {toBn(inst.total_students)} শিক্ষার্থী
                 </p>
                 <p className="text-[10px] text-muted-foreground">
-                  {inst.is_active ? "✅ অ্যাক্টিভ" : "🔒 নিষ্ক্রিয়"} · ক্রম: {inst.sort_order}
+                  {inst.is_active ? "✅ অ্যাক্টিভ" : "🔒 নিষ্ক্রিয়"} · ক্রম: {toBn(inst.sort_order)}
                 </p>
               </div>
               <Button variant="outline" size="sm" onClick={() => openAssignCourses(inst.id)} title="কোর্স অ্যাসাইন">

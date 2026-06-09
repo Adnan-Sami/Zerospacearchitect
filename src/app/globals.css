@@ -125,6 +125,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: 'Hind Siliguri', sans-serif;
   }
 }
 
@@ -194,4 +195,17 @@
 * {
   scrollbar-width: thin;
   scrollbar-color: oklch(0.7 0.1 230) oklch(0.96 0.005 250);
+}
+
+/* Ensure consistent digit widths for Bengali numerals in tables and data displays */
+td, .tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  -webkit-font-feature-settings: "tnum";
+}
+
+/* Fix Bengali zero (০) alignment — force consistent line-height for numerals */
+body {
+  font-feature-settings: "tnum", "kern";
+  -webkit-font-feature-settings: "tnum", "kern";
 }

@@ -22,6 +22,7 @@ import { Footer } from "@/components/Footer";
 import { OrderStatusCard } from "@/components/OrderStatusCard";
 import { BookOrdersCard } from "@/components/BookOrdersCard";
 import { supabase } from "@/integrations/supabase/client";
+import { toBn } from "@/lib/utils";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -157,7 +158,7 @@ export default function StudentDashboard() {
               <CardContent className="flex items-center justify-between p-5">
                 <div>
                   <p className="text-sm text-muted-foreground">{s.label}</p>
-                  <p className="mt-1 text-3xl font-bold">{s.value}</p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums">{toBn(s.value)}</p>
                 </div>
                 <s.icon className={`h-10 w-10 ${s.color}`} />
               </CardContent>
@@ -171,14 +172,13 @@ export default function StudentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="mb-2 flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
-                {stats.completed} / {stats.total} কোর্স সম্পন্ন
+              <span className="text-muted-foreground tabular-nums">
+                {toBn(stats.completed)} / {toBn(stats.total)} কোর্স সম্পন্ন
               </span>
-              <span className="font-semibold">
-                {stats.total > 0
+              <span className="font-semibold tabular-nums">
+                {toBn(stats.total > 0
                   ? Math.round((stats.completed / stats.total) * 100)
-                  : 0}
-                %
+                  : 0)}%
               </span>
             </div>
             <Progress
@@ -241,11 +241,11 @@ export default function StudentDashboard() {
                       </p>
                       <div className="mb-2 flex items-center gap-2">
                         <Progress value={e.progress} className="h-2 flex-1" />
-                        <span className="text-xs font-medium">{e.progress}%</span>
+                        <span className="text-xs font-medium tabular-nums">{toBn(e.progress)}%</span>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          {e.completedLessons}/{e.totalLessons} লেসন সম্পন্ন
+                        <span className="tabular-nums">
+                          {toBn(e.completedLessons)}/{toBn(e.totalLessons)} লেসন সম্পন্ন
                         </span>
                         <Link href={`/learn/${e.courses?.id}`}>
                           <Button size="sm" variant="outline">

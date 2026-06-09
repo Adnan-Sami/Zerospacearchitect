@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { toBn } from "@/lib/utils";
 
 export default function AdminSubscribers() {
   const [subscribers, setSubscribers] = useState<any[]>([]);
@@ -59,7 +60,7 @@ export default function AdminSubscribers() {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">সাবস্ক্রাইবার তালিকা ({filtered.length})</h1>
+        <h1 className="text-2xl font-bold">সাবস্ক্রাইবার তালিকা ({toBn(filtered.length)})</h1>
         <Button size="sm" variant="outline" onClick={exportCSV}>
           <Download className="mr-1 h-3 w-3" />CSV ডাউনলোড
         </Button>

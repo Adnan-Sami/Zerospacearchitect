@@ -181,10 +181,6 @@ export default function ProfilePage() {
                 </p>
               </div>
               <div className="space-y-2">
-                <Label>ইমেইল</Label>
-                <Input value={email} disabled />
-              </div>
-              <div className="space-y-2">
                 <Label>পুরো নাম</Label>
                 <Input
                   value={fullName}
