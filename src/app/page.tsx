@@ -23,6 +23,7 @@ import { PremiumLoader } from "@/components/PremiumLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteContent } from "@/hooks/use-site-content";
+import { toBn } from "@/lib/utils";
 
 const STATS = [
   {
@@ -201,6 +202,7 @@ export default function HomePage() {
   const heroImgSrc = heroImage || "/Gemini_Generated_Image_fornqhfornqhforn.png";
   const instImgSrc = instImage || "/instructor-cta.png";
   const marqueeBanners = [...banners, ...banners];
+  const formatDuration = (d: string | null) => d ? toBn(d) + " মিনিট" : "—";
 
   useEffect(() => {
     const section = statsSectionRef.current;
@@ -447,7 +449,7 @@ export default function HomePage() {
                     <div className="flex items-center justify-between border-t pt-4">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-4 w-4 text-sky-500" />
-                        <span>{c.duration_text || "—"}</span>
+                        <span>{formatDuration(c.duration_text)}</span>
                       </div>
                       <span className="rounded-full border border-sky-400 px-4 py-1.5 text-sm font-medium text-sky-600 group-hover:bg-sky-50">
                         কোর্সটি কিনুন
@@ -529,7 +531,7 @@ export default function HomePage() {
                     <div className="flex items-center justify-between border-t pt-4">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-4 w-4 text-sky-500" />
-                        <span>{c.duration_text || "—"}</span>
+                        <span>{formatDuration(c.duration_text)}</span>
                       </div>
                       <span className="rounded-full border border-sky-400 px-4 py-1.5 text-sm font-medium text-sky-600 group-hover:bg-sky-50">
                         কোর্সটি কিনুন

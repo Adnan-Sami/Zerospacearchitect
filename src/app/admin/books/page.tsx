@@ -126,37 +126,48 @@ export default function AdminBooks() {
 
             {/* PDF Upload - only show when book_type is pdf */}
             {(editing.book_type === "pdf") && (
-              <div>
-                <Label>PDF ফাইল আপলোড</Label>
+              <div className="rounded-xl border-2 border-dashed border-sky-200 bg-sky-50/50 p-4">
+                <Label className="text-sky-700 font-semibold">📄 PDF ফাইল</Label>
                 {editing.pdf_url ? (
-                  <div className="mt-2 flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-                    <span className="flex-1 text-xs break-all text-muted-foreground">{editing.pdf_url}</span>
-                    <Button size="sm" variant="ghost" className="h-7 text-destructive" onClick={() => setEditing({ ...editing, pdf_url: "" })}>মুছুন</Button>
+                  <div className="mt-3 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-100">
+                      <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <span className="flex-1 text-xs break-all text-green-700 font-medium">PDF আপলোড হয়েছে</span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50" onClick={() => setEditing({ ...editing, pdf_url: "" })}>মুছুন</Button>
                   </div>
                 ) : (
-                  <div className="mt-2">
-                    <Input
-                      type="file"
-                      accept=".pdf"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (!file.name.endsWith(".pdf")) { toast.error("শুধু PDF ফাইল আপলোড করুন"); return; }
-                        try {
-                          const url = await uploadFile(file, { folder: "books-pdf" });
-                          setEditing({ ...editing, pdf_url: url });
-                          toast.success("PDF আপলোড হয়েছে");
-                        } catch (err: any) {
-                          toast.error(err.message || "আপলোড ব্যর্থ");
-                        }
-                      }}
-                    />
-                    <p className="mt-1 text-xs text-muted-foreground">অথবা URL দিন:</p>
+                  <div className="mt-3 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <Input
+                          type="file"
+                          accept=".pdf"
+                          className="cursor-pointer"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (!file.name.endsWith(".pdf")) { toast.error("শুধু PDF ফাইল আপলোড করুন"); return; }
+                            try {
+                              const url = await uploadFile(file, { folder: "books-pdf" });
+                              setEditing({ ...editing, pdf_url: url });
+                              toast.success("PDF আপলোড হয়েছে");
+                            } catch (err: any) {
+                              toast.error(err.message || "আপলোড ব্যর্থ");
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-px flex-1 bg-sky-200" />
+                      <span className="text-[10px] text-sky-400 font-medium">অথবা URL দিন</span>
+                      <div className="h-px flex-1 bg-sky-200" />
+                    </div>
                     <Input
                       placeholder="PDF URL পেস্ট করুন"
                       value={editing.pdf_url ?? ""}
                       onChange={(e) => setEditing({ ...editing, pdf_url: e.target.value })}
-                      className="mt-1"
                     />
                   </div>
                 )}
