@@ -17,6 +17,8 @@ import { uploadFile } from "@/lib/upload";export default function AdminServices(
   const [uploading, setUploading] = useState(false);
   const [gallery, setGallery] = useState<any[]>([]);
   const [galleryUploading, setGalleryUploading] = useState(false);
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 10;
 
   const load = async () => {
     const { data } = await supabase.from("design_services").select("*").order("sort_order");
@@ -98,7 +100,7 @@ import { uploadFile } from "@/lib/upload";export default function AdminServices(
       )}
 
       <div className="space-y-3">
-        {items.map((s) => (
+        {items.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((s) => (
           <Card key={s.id}>
             <CardContent className="flex items-center gap-4 p-4">
               {s.image_url && <Image src={s.image_url} alt="" width={80} height={56} className="h-14 w-20 rounded object-cover" />}
@@ -111,6 +113,17 @@ import { uploadFile } from "@/lib/upload";export default function AdminServices(
             </CardContent>
           </Card>
         ))}
+        {items.length > LIST_PAGE_SIZE && (
+          <div className="flex items-center justify-between pt-3">
+            <p className="text-xs text-muted-foreground">
+              {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, items.length)} / {items.length}
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+              <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= items.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+            </div>
+          </div>
+        )}
         {items.length === 0 && <p className="text-center text-muted-foreground">কোনো সার্ভিস নেই।</p>}
       </div>
 

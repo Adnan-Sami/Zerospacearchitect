@@ -252,27 +252,47 @@ export default function AdminOrders() {
       {tab === "course" && (
         <div className="space-y-3">
           {orders.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((order) => (
-            <Card key={order.id}>
-              <CardContent className="p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h3 className="font-semibold">{order.courses?.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      শিক্ষার্থী: {order.profiles?.full_name} · ফোন:{" "}
-                      {order.profiles?.phone}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      পেমেন্ট ফোন: {order.payment_phone} · শেষ ৪ ডিজিট:{" "}
-                      {order.transaction_id}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      মাধ্যম: {order.payment_method} · পরিমাণ: ৳
-                      {Number(order.amount)} · তারিখ: {new Date(order.created_at).toLocaleDateString("bn-BD")}
-                    </p>
-                    <div className="mt-1">{statusBadge(order.status)}</div>
+            <Card key={order.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col md:flex-row">
+                  {/* Order Info */}
+                  <div className="flex-1 p-4 md:p-5">
+                    <h3 className="font-bold text-foreground">{order.courses?.title}</h3>
+                    <div className="mt-2 grid gap-1.5 text-sm">
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[80px]">শিক্ষার্থী</span>
+                        <span className="font-medium">{order.profiles?.full_name}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[80px]">ফোন</span>
+                        <span className="font-medium">{order.profiles?.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[80px]">পেমেন্ট ফোন</span>
+                        <span className="font-medium">{order.payment_phone}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[80px]">শেষ ৪ ডিজিট</span>
+                        <span className="font-mono font-bold text-sky-600">{order.transaction_id}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[80px]">মাধ্যম</span>
+                        <span className="font-medium capitalize">{order.payment_method}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[80px]">পরিমাণ</span>
+                        <span className="font-bold text-green-600 tabular-nums">৳{Number(order.amount).toLocaleString("bn-BD")}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[80px]">তারিখ</span>
+                        <span className="tabular-nums">{new Date(order.created_at).toLocaleDateString("bn-BD")}</span>
+                      </div>
+                    </div>
+                    <div className="mt-3">{statusBadge(order.status)}</div>
                   </div>
+                  {/* Action Buttons */}
                   {order.status === "pending" && (
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 border-t p-4 md:border-l md:border-t-0 md:p-5">
                       <Button
                         size="sm"
                         onClick={() =>
@@ -328,47 +348,82 @@ export default function AdminOrders() {
       {tab === "book" && (
         <div className="space-y-3">
           {bookOrders.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((order) => (
-            <Card key={order.id}>
-              <CardContent className="p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-1">
+            <Card key={order.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col md:flex-row">
+                  <div className="flex-1 p-4 md:p-5">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{order.books?.title}</h3>
+                      <h3 className="font-bold text-foreground">{order.books?.title}</h3>
                       {order.user_id
                         ? <Badge className="bg-sky-100 text-sky-700 text-[10px]">এনরোল্ড</Badge>
                         : <Badge className="bg-orange-100 text-orange-700 text-[10px]">গেস্ট</Badge>
                       }
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      গ্রাহক: {order.customer_name || order.profiles?.full_name || "—"} · ফোন: {order.customer_phone || order.profiles?.phone || "—"}
-                    </p>
-                    {order.delivery_address && (
-                      <p className="text-sm text-muted-foreground">ঠিকানা: {order.delivery_address}</p>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      পেমেন্ট ফোন: {order.payment_phone} · শেষ ৪ ডিজিট: {order.transaction_id} · মাধ্যম: {order.payment_method || "—"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      ধরন: {order.books?.book_type === "pdf" ? "PDF" : "হার্ডকপি"} · পরিমাণ: ৳{Number(order.amount)} · তারিখ: {new Date(order.created_at).toLocaleDateString("bn-BD")}
-                    </p>
-                    {order.order_note && (
-                      <p className="text-sm text-muted-foreground">বার্তা: {order.order_note}</p>
-                    )}
-                    {order.invoice_number && (
-                      <p className="text-xs text-muted-foreground">ইনভয়েস: <span className="font-mono">{order.invoice_number}</span></p>
-                    )}
-                    <div className="mt-1">{deliveryStatusBadge(order.status, order.delivery_status)}</div>
+                    <div className="mt-2 grid gap-1.5 text-sm">
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">গ্রাহক</span>
+                        <span className="font-medium">{order.customer_name || order.profiles?.full_name || "—"}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">ফোন</span>
+                        <span className="font-medium">{order.customer_phone || order.profiles?.phone || "—"}</span>
+                      </div>
+                      {order.delivery_address && (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground min-w-[90px]">ঠিকানা</span>
+                          <span className="font-medium">{order.delivery_address}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">পেমেন্ট ফোন</span>
+                        <span className="font-medium">{order.payment_phone}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">শেষ ৪ ডিজিট</span>
+                        <span className="font-mono font-bold text-sky-600">{order.transaction_id}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">মাধ্যম</span>
+                        <span className="font-medium capitalize">{order.payment_method || "—"}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">ধরন</span>
+                        <span className="font-medium">{order.books?.book_type === "pdf" ? "PDF" : "হার্ডকপি"}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">পরিমাণ</span>
+                        <span className="font-bold text-green-600 tabular-nums">৳{Number(order.amount).toLocaleString("bn-BD")}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[90px]">তারিখ</span>
+                        <span className="tabular-nums">{new Date(order.created_at).toLocaleDateString("bn-BD")}</span>
+                      </div>
+                      {order.order_note && (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground min-w-[90px]">বার্তা</span>
+                          <span className="text-muted-foreground">{order.order_note}</span>
+                        </div>
+                      )}
+                      {order.invoice_number && (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground min-w-[90px]">ইনভয়েস</span>
+                          <span className="font-mono text-xs">{order.invoice_number}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-3">{deliveryStatusBadge(order.status, order.delivery_status)}</div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 border-t p-4 md:border-l md:border-t-0 md:p-5">
                     {order.status === "pending" && (
-                      <>
+                      <div className="flex flex-wrap gap-2">
                         <Button size="sm" onClick={() => updateBookOrderStatus(order.id, "approved", order.user_id, order.books?.title ?? "")}>
                           <CheckCircle className="mr-1 h-4 w-4" />অ্যাপ্রুভ
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => updateBookOrderStatus(order.id, "rejected", order.user_id, order.books?.title ?? "")}>
                           <XCircle className="mr-1 h-4 w-4" />রিজেক্ট
                         </Button>
-                      </>
+                      </div>
                     )}
                     {order.status === "approved" && order.delivery_status !== "dispatched" && order.delivery_status !== "delivered" && order.books?.book_type !== "pdf" && (
                       <Button size="sm" variant="outline" onClick={() => updateBookOrderStatus(order.id, "approved", order.user_id, order.books?.title ?? "", "dispatched")}>

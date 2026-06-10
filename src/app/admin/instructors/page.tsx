@@ -22,6 +22,8 @@ export default function AdminInstructors() {
   const [payAmount, setPayAmount] = useState("");
   const [payNote, setPayNote] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("all");
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 5;
 
   useEffect(() => {
     const load = async () => {
@@ -201,7 +203,7 @@ export default function AdminInstructors() {
 
       {/* Instructor list */}
       <div className="space-y-4">
-        {instructors.map((inst) => (
+        {instructors.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((inst) => (
           <Card key={inst.user_id}>
             <CardContent className="p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -274,7 +276,19 @@ export default function AdminInstructors() {
             </CardContent>
           </Card>
         ))}
-        {instructors.length === 0 && <p className="py-10 text-center text-muted-foreground">কোনো ইন্সট্রাক্টর নেই।</p>}
+        
+          {instructors.length > LIST_PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, instructors.length)} / {instructors.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= instructors.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
+          {instructors.length === 0 && <p className="py-10 text-center text-muted-foreground">কোনো ইন্সট্রাক্টর নেই।</p>}
       </div>
 
       {/* Payment Modal */}

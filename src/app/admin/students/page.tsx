@@ -17,6 +17,8 @@ export default function AdminStudents() {
   const [students, setStudents] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [period, setPeriod] = useState<Period>("all");
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 10;
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -240,32 +242,42 @@ export default function AdminStudents() {
         </div>
         {/* Summary */}
         <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1">
-          <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5 text-sky-500" />{filtered.length} জন ({periodLabel(period)})</span>
+          <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5 text-sky-500" />{toBn(filtered.length)} জন ({periodLabel(period)})</span>
         </div>
       </div>
 
       <div className="space-y-2">
-        {filtered.map((s) => (
+        {filtered.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((s) => (
           <Card key={s.id} className={s.is_banned ? "border-destructive/40 bg-destructive/5" : ""}>
             <CardContent className="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-600">
-                    {filtered.indexOf(s) + 1}
+                    {toBn(filtered.indexOf(s) + 1 + listPage * LIST_PAGE_SIZE)}
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-medium">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-foreground">
                       {s.full_name || "নাম নেই"}
                       {s.is_banned && <Badge variant="destructive" className="ml-2">ব্যানড</Badge>}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
-                      {s.phone || "ফোন নেই"} · যোগদান: {new Date(s.created_at).toLocaleDateString("bn-BD")}
-                    </p>
-                    {s.last_ip && (
-                      <p className="text-xs text-muted-foreground">🌐 IP: {s.last_ip}</p>
-                    )}
+                    <div className="mt-1.5 grid gap-1 text-xs">
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[55px]">ফোন</span>
+                        <span className="font-medium">{s.phone || "নেই"}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[55px]">যোগদান</span>
+                        <span className="tabular-nums">{new Date(s.created_at).toLocaleDateString("bn-BD")}</span>
+                      </div>
+                      {s.last_ip && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-muted-foreground min-w-[55px]">IP</span>
+                          <span className="font-mono text-[11px]">{s.last_ip}</span>
+                        </div>
+                      )}
+                    </div>
                     {s.is_banned && (
-                      <p className="mt-1 text-xs text-red-600 bg-red-50 rounded px-2 py-0.5 inline-block">
+                      <p className="mt-2 text-xs text-red-600 bg-red-50 rounded px-2 py-0.5 inline-block">
                         ⚠️ ব্যান কারণ: ভিন্ন ডিভাইস থেকে লগইন চেষ্টা
                       </p>
                     )}
@@ -380,14 +392,25 @@ export default function AdminStudents() {
                                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingCertId(null)}><X className="h-3 w-3" /></Button>
                                     </div>
                                   ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7 text-xs"
-                                      onClick={() => { setEditingCertId(cert.id); setEditName(s.full_name || ""); }}
-                                    >
-                                      <Pencil className="mr-1 h-3 w-3" />নাম পরিবর্তন
-                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                      <a
+                                        href={`/certificate/${cert.course_id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Button size="sm" variant="ghost" className="h-7 text-xs">
+                                          <Download className="mr-1 h-3 w-3" />ডাউনলোড
+                                        </Button>
+                                      </a>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 text-xs"
+                                        onClick={() => { setEditingCertId(cert.id); setEditName(s.full_name || ""); }}
+                                      >
+                                        <Pencil className="mr-1 h-3 w-3" />নাম পরিবর্তন
+                                      </Button>
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -404,7 +427,19 @@ export default function AdminStudents() {
             </CardContent>
           </Card>
         ))}
-        {filtered.length === 0 && <p className="text-muted-foreground">কোনো শিক্ষার্থী নেই।</p>}
+        
+          {filtered.length > LIST_PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, filtered.length)} / {filtered.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= filtered.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
+          {filtered.length === 0 && <p className="text-muted-foreground">কোনো শিক্ষার্থী নেই।</p>}
       </div>
     </div>
   );

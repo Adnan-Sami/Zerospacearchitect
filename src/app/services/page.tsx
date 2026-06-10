@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { toBn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -219,7 +220,7 @@ export default function ServicesPage() {
                     />
                   </div>
                   {form.phone && form.phone.length < 11 && (
-                    <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({form.phone.length}/১১)</p>
+                    <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({toBn(form.phone.length)}/১১)</p>
                   )}
                 </div>
                 <div><Label>ইমেইল *</Label><Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>

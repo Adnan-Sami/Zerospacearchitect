@@ -25,6 +25,8 @@ export default function AdminCourses() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [coursePage, setCoursePage] = useState(0);
+  const COURSES_PER_PAGE = 5;
 
   // inline module/lesson drafts
   const [topicDraft, setTopicDraft] = useState<{ title: string; summary: string } | null>(null);
@@ -341,7 +343,7 @@ export default function AdminCourses() {
 
         {/* Course list */}
         <div className="space-y-3">
-          {courses.map((course) => (
+          {courses.slice(coursePage * COURSES_PER_PAGE, (coursePage + 1) * COURSES_PER_PAGE).map((course) => (
             <Card key={course.id}>
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="h-14 w-20 shrink-0 overflow-hidden rounded bg-muted">
@@ -362,6 +364,17 @@ export default function AdminCourses() {
             </Card>
           ))}
           {courses.length === 0 && <p className="py-10 text-center text-muted-foreground">কোনো কোর্স নেই</p>}
+          {courses.length > COURSES_PER_PAGE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {coursePage * COURSES_PER_PAGE + 1}–{Math.min((coursePage + 1) * COURSES_PER_PAGE, courses.length)} / {courses.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={coursePage === 0} onClick={() => setCoursePage(coursePage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(coursePage + 1) * COURSES_PER_PAGE >= courses.length} onClick={() => setCoursePage(coursePage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

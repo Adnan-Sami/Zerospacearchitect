@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { toBn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -206,7 +207,7 @@ export default function SeminarsPage() {
               )}
               {selected.deadline && (
                 <p className="mb-4 text-xs font-medium text-orange-600">
-                  ⏰ রেজিস্ট্রেশন শেষ: {new Date(selected.deadline).toLocaleString("bn-BD")}
+                  ⏰ রেজিস্ট্রেশন শেষ: {new Date(selected.deadline).toLocaleDateString("bn-BD")}, {new Date(selected.deadline).toLocaleTimeString("bn-BD", { hour: "numeric", minute: "2-digit", hour12: true })}
                 </p>
               )}
 
@@ -234,7 +235,32 @@ export default function SeminarsPage() {
                   return (
                     <form onSubmit={handleJoinSubmit} className="space-y-3">
                       <div><Label>নাম *</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-                      <div><Label>ফোন *</Label><Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="০১XXXXXXXXX" /></div>
+                      <div>
+                        <Label>ফোন *</Label>
+                        <div className="flex">
+                          <div className="flex items-center gap-1.5 rounded-l-md border border-r-0 bg-muted px-3 text-sm text-muted-foreground">
+                            <svg width="20" height="14" viewBox="0 0 20 14" className="shrink-0"><rect width="20" height="14" fill="#006a4e"/><circle cx="9" cy="7" r="4" fill="#f42a41"/></svg>
+                            <span>+88</span>
+                          </div>
+                          <Input
+                            required
+                            value={form.phone}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+                              setForm({ ...form, phone: val });
+                            }}
+                            placeholder="01XXXXXXXXX"
+                            maxLength={11}
+                            minLength={11}
+                            pattern="[0-9]{11}"
+                            title="১১ ডিজিটের মোবাইল নম্বর দিন"
+                            className="rounded-l-none"
+                          />
+                        </div>
+                        {form.phone && form.phone.length < 11 && (
+                          <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({toBn(form.phone.length)}/১১)</p>
+                        )}
+                      </div>
                       <div><Label>ইমেইল</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
                       <Button type="submit" disabled={submitting} className="w-full rounded-full bg-green-600 font-semibold hover:bg-green-700">
                         {submitting ? "জমা হচ্ছে..." : <><Send className="mr-2 h-4 w-4" />রেজিস্ট্রেশন কনফার্ম করুন</>}

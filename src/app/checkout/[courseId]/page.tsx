@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { toBn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 
@@ -367,7 +368,7 @@ export default function CheckoutPage({
                       />
                     </div>
                     {paymentPhone && paymentPhone.length < 11 && (
-                      <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({paymentPhone.length}/১১)</p>
+                      <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({toBn(paymentPhone.length)}/১১)</p>
                     )}
                   </div>
                   <div>
@@ -386,7 +387,7 @@ export default function CheckoutPage({
                       title="৪ ডিজিট দিন"
                     />
                     {transactionId && transactionId.length < 4 && (
-                      <p className="mt-1 text-xs text-amber-600">৪ ডিজিট প্রয়োজন ({transactionId.length}/৪)</p>
+                      <p className="mt-1 text-xs text-amber-600">৪ ডিজিট প্রয়োজন ({toBn(transactionId.length)}/৪)</p>
                     )}
                   </div>
                 </div>

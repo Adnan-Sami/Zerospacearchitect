@@ -24,6 +24,8 @@ export default function AdminPublicInstructors() {
   const [allCourses, setAllCourses] = useState<any[]>([]);
   const [assignedCourseIds, setAssignedCourseIds] = useState<string[]>([]);
   const [courseSearch, setCourseSearch] = useState("");
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 10;
 
   const load = async () => {
     const { data } = await supabase
@@ -285,7 +287,7 @@ export default function AdminPublicInstructors() {
 
       {/* Instructor List */}
       <div className="space-y-3">
-        {items.map((inst) => (
+        {items.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((inst) => (
           <Card key={inst.id}>
             <CardContent className="flex items-center gap-4 p-4">
               {inst.image_url ? (
@@ -316,7 +318,19 @@ export default function AdminPublicInstructors() {
             </CardContent>
           </Card>
         ))}
-        {items.length === 0 && (
+        
+          {items.length > LIST_PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, items.length)} / {items.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= items.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
+          {items.length === 0 && (
           <p className="py-10 text-center text-muted-foreground">কোনো প্রশিক্ষক যোগ করা হয়নি। উপরে &quot;নতুন প্রশিক্ষক&quot; বাটনে ক্লিক করুন।</p>
         )}
       </div>

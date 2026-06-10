@@ -11,6 +11,8 @@ import { toBn } from "@/lib/utils";
 
 export default function AdminSubscribers() {
   const [subscribers, setSubscribers] = useState<any[]>([]);
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 10;
   const [search, setSearch] = useState("");
   const [period, setPeriod] = useState<"all" | "this_month" | "last_month" | "this_year">("all");
 
@@ -95,7 +97,7 @@ export default function AdminSubscribers() {
       </div>
 
       <div className="space-y-2">
-        {filtered.map((s) => (
+        {filtered.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((s) => (
           <Card key={s.id}>
             <CardContent className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
@@ -129,7 +131,19 @@ export default function AdminSubscribers() {
             </CardContent>
           </Card>
         ))}
-        {subscribers.length === 0 && (
+        
+          {filtered.length > LIST_PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, filtered.length)} / {filtered.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= filtered.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
+          {subscribers.length === 0 && (
           <p className="py-10 text-center text-muted-foreground">কোনো সাবস্ক্রাইবার নেই।</p>
         )}
       </div>

@@ -31,6 +31,8 @@ export default function AdminInstructorProfiles() {
   const [selected, setSelected] = useState<InstructorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(false);
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 10;
 
   const load = async () => {
     const { data } = await supabase
@@ -141,7 +143,7 @@ export default function AdminInstructorProfiles() {
         <p className="py-10 text-center text-muted-foreground">কোনো ইন্সট্রাক্টর এখনো প্রোফাইল সাবমিট করেনি।</p>
       ) : (
         <div className="space-y-3">
-          {profiles.map((profile) => (
+          {profiles.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((profile) => (
             <Card key={profile.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setSelected(profile)}>
               <CardContent className="flex items-center gap-4 p-4">
                 {profile.image_url ? (
@@ -173,6 +175,17 @@ export default function AdminInstructorProfiles() {
               </CardContent>
             </Card>
           ))}
+          {profiles.length > LIST_PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, profiles.length)} / {profiles.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= profiles.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

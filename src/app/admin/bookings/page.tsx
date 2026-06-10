@@ -31,6 +31,8 @@ export default function AdminBookings() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "new" | "contacted" | "completed">("all");
   const [selected, setSelected] = useState<Booking | null>(null);
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 10;
 
   const load = async () => {
     setLoading(true);
@@ -169,33 +171,63 @@ export default function AdminBookings() {
         <p className="py-10 text-center text-muted-foreground">কোনো বুকিং পাওয়া যায়নি</p>
       ) : (
         <div className="space-y-3">
-          {bookings.map((booking) => (
+          {bookings.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((booking) => (
             <Card
               key={booking.id}
               className={`cursor-pointer transition-shadow hover:shadow-md ${selected?.id === booking.id ? "ring-2 ring-sky-500" : ""}`}
               onClick={() => setSelected(booking)}
             >
-              <CardContent className="flex flex-wrap items-center gap-4 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700 font-bold">
-                  {booking.full_name?.charAt(0)?.toUpperCase() || "?"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{booking.full_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {booking.service_type} · {new Date(booking.created_at).toLocaleDateString("bn-BD")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getStatusBadge(booking.status)}
+              <CardContent className="p-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-100 text-lg text-sky-700 font-bold">
+                    {booking.full_name?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-bold text-foreground truncate">{booking.full_name}</p>
+                      {getStatusBadge(booking.status)}
+                    </div>
+                    <div className="mt-1.5 grid gap-1 text-xs">
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[50px]">ফোন</span>
+                        <span className="font-medium">{booking.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[50px]">সেবা</span>
+                        <span>{booking.service_type}</span>
+                      </div>
+                      {booking.project_location && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-muted-foreground min-w-[50px]">লোকেশন</span>
+                          <span>{booking.project_location}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[50px]">তারিখ</span>
+                        <span className="tabular-nums">{new Date(booking.created_at).toLocaleDateString("bn-BD")}</span>
+                      </div>
+                    </div>
+                  </div>
                   <a href={`tel:${booking.phone}`} onClick={(e) => e.stopPropagation()}>
-                    <Button size="sm" variant="outline" className="h-8">
-                      <Phone className="h-3.5 w-3.5" />
+                    <Button size="sm" variant="outline" className="h-9 w-9 shrink-0">
+                      <Phone className="h-4 w-4" />
                     </Button>
                   </a>
                 </div>
               </CardContent>
             </Card>
           ))}
+          {bookings.length > LIST_PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, bookings.length)} / {bookings.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= bookings.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

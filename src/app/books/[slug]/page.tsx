@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { toBn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -114,8 +115,16 @@ export default function BookDetailsPage() {
     if (!book) return;
     setSubmitting(true);
 
-    // Check if logged in (optional for hardcopy)
+    // Check if logged in (required for PDF books)
     const { data: { session } } = await supabase.auth.getSession();
+    
+    if (book.book_type === "pdf" && !session) {
+      toast.error("PDF বই কিনতে আগে লগ-ইন করুন।");
+      setSubmitting(false);
+      router.push("/login");
+      return;
+    }
+
     const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
 
     const { error } = await supabase.from("book_orders").insert({
@@ -363,7 +372,7 @@ export default function BookDetailsPage() {
                       />
                     </div>
                     {form.phone && form.phone.length < 11 && (
-                      <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({form.phone.length}/১১)</p>
+                      <p className="mt-1 text-xs text-amber-600">১১ ডিজিট প্রয়োজন ({toBn(form.phone.length)}/১১)</p>
                     )}
                   </div>
                 </div>
@@ -384,7 +393,7 @@ export default function BookDetailsPage() {
                       title="৪ ডিজিট দিন"
                     />
                     {form.transaction_id && form.transaction_id.length < 4 && (
-                      <p className="mt-1 text-xs text-amber-600">৪ ডিজিট প্রয়োজন ({form.transaction_id.length}/৪)</p>
+                      <p className="mt-1 text-xs text-amber-600">৪ ডিজিট প্রয়োজন ({toBn(form.transaction_id.length)}/৪)</p>
                     )}
                   </div>
                   <div>

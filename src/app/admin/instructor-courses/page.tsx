@@ -119,16 +119,35 @@ export default function AdminInstructorCourses() {
       {tab === "applications" && (
         <div className="space-y-3">
           {applications.map((app) => (
-            <Card key={app.id}>
-              <CardContent className="p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="font-semibold">{app.full_name}</h3>
-                    <p className="text-sm text-muted-foreground">📞 {app.phone} {app.email && `· 📧 ${app.email}`}</p>
-                    {app.message && <p className="mt-1 text-xs text-muted-foreground">{app.message}</p>}
-                    <p className="mt-1 text-xs text-muted-foreground">তারিখ: {new Date(app.created_at).toLocaleDateString("bn-BD")}</p>
+            <Card key={app.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col md:flex-row">
+                  <div className="flex-1 p-4 md:p-5">
+                    <h3 className="text-lg font-bold text-foreground">{app.full_name}</h3>
+                    <div className="mt-2 grid gap-1.5 text-sm">
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[60px]">ফোন</span>
+                        <span className="font-medium">{app.phone}</span>
+                      </div>
+                      {app.email && (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground min-w-[60px]">ইমেইল</span>
+                          <span className="font-medium">{app.email}</span>
+                        </div>
+                      )}
+                      {app.message && (
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground min-w-[60px]">বিষয়</span>
+                          <span className="text-foreground">{app.message}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground min-w-[60px]">তারিখ</span>
+                        <span className="tabular-nums">{new Date(app.created_at).toLocaleDateString("bn-BD")}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 border-t p-4 md:border-l md:border-t-0 md:p-5">
                     <Button
                       size="sm"
                       variant={app.status === "contacted" ? "outline" : "default"}
@@ -146,8 +165,7 @@ export default function AdminInstructorCourses() {
                     </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </CardContent>            </Card>
           ))}
           {applications.length === 0 && <p className="text-muted-foreground">কোনো আবেদন নেই।</p>}
         </div>

@@ -105,15 +105,6 @@ export default function AdminBanners() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <Label>শিরোনাম (ঐচ্ছিক)</Label>
-              <Input
-                value={editing.title ?? ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, title: e.target.value })
-                }
-              />
-            </div>
-            <div>
               <Label>ব্যানার ছবি আপলোড করুন</Label>
               <Input
                 type="file"
@@ -147,16 +138,6 @@ export default function AdminBanners() {
                 onChange={(e) =>
                   setEditing({ ...editing, image_url: e.target.value })
                 }
-              />
-            </div>
-            <div>
-              <Label>লিংক URL</Label>
-              <Input
-                value={editing.link_url ?? ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, link_url: e.target.value })
-                }
-                placeholder="/courses"
               />
             </div>
             <div>

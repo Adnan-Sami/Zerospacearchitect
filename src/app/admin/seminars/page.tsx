@@ -13,19 +13,41 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { toBn } from "@/lib/utils";
-import { uploadFile } from "@/lib/upload";export default function AdminSeminars() {
+import { uploadFile } from "@/lib/upload";
+
+export default function AdminSeminars() {
   const [items, setItems] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [showRegs, setShowRegs] = useState<string | null>(null);
+  const [regCounts, setRegCounts] = useState<Record<string, number>>({});
+  const [listPage, setListPage] = useState(0);
+  const LIST_PAGE_SIZE = 10;
 
   const load = async () => {
     const { data } = await supabase.from("seminars").select("*").order("sort_order");
     setItems(data ?? []);
+
+    // Fetch registration counts per seminar (only unseen)
+    const { data: allRegs } = await supabase.from("seminar_registrations").select("seminar_id, created_at");
+    const counts: Record<string, number> = {};
+    (allRegs ?? []).forEach((r: any) => {
+      if (r.seminar_id) {
+        const lastSeen = localStorage.getItem(`seminar_regs_seen_${r.seminar_id}`) || "2000-01-01";
+        if (new Date(r.created_at) > new Date(lastSeen)) {
+          counts[r.seminar_id] = (counts[r.seminar_id] || 0) + 1;
+        }
+      }
+    });
+    setRegCounts(counts);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Mark seminar registrations as seen
+    localStorage.setItem("seminar_last_seen", new Date().toISOString());
+  }, []);
 
   const save = async () => {
     if (!editing?.title?.trim()) { toast.error("টাইটেল দিন"); return; }
@@ -76,6 +98,9 @@ import { uploadFile } from "@/lib/upload";export default function AdminSeminars(
       .eq("seminar_id", seminarId)
       .order("created_at", { ascending: false });
     setRegistrations(data ?? []);
+    // Mark this seminar's registrations as seen
+    localStorage.setItem(`seminar_regs_seen_${seminarId}`, new Date().toISOString());
+    setRegCounts((prev) => ({ ...prev, [seminarId]: 0 }));
   };
 
   return (
@@ -152,7 +177,7 @@ import { uploadFile } from "@/lib/upload";export default function AdminSeminars(
       )}
 
       <div className="space-y-3">
-        {items.map((s) => (
+        {items.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((s) => (
           <Card key={s.id}>
             <CardContent className="flex items-center gap-4 p-4">
               {s.image_url && <Image src={s.image_url} alt="" width={80} height={60} className="h-14 w-20 rounded object-cover" />}
@@ -163,8 +188,13 @@ import { uploadFile } from "@/lib/upload";export default function AdminSeminars(
                 </p>
               </div>
               {s.is_upcoming && (
-                <Button variant="outline" size="sm" onClick={() => viewRegistrations(s.id)} title="রেজিস্ট্রেশন দেখুন">
+                <Button variant="outline" size="sm" className="relative" onClick={() => viewRegistrations(s.id)} title="রেজিস্ট্রেশন দেখুন">
                   <Users className="h-4 w-4" />
+                  {(regCounts[s.id] || 0) > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      {regCounts[s.id]}
+                    </span>
+                  )}
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => setEditing(s)}><Edit className="h-4 w-4" /></Button>
@@ -172,7 +202,19 @@ import { uploadFile } from "@/lib/upload";export default function AdminSeminars(
             </CardContent>
           </Card>
         ))}
-        {items.length === 0 && <p className="py-10 text-center text-muted-foreground">কোনো সেমিনার যোগ করা হয়নি।</p>}
+        
+          {items.length > LIST_PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-3">
+              <p className="text-xs text-muted-foreground">
+                {listPage * LIST_PAGE_SIZE + 1}–{Math.min((listPage + 1) * LIST_PAGE_SIZE, items.length)} / {items.length}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" disabled={listPage === 0} onClick={() => setListPage(listPage - 1)}>পূর্ববর্তী</Button>
+                <Button size="sm" variant="outline" disabled={(listPage + 1) * LIST_PAGE_SIZE >= items.length} onClick={() => setListPage(listPage + 1)}>পরবর্তী</Button>
+              </div>
+            </div>
+          )}
+          {items.length === 0 && <p className="py-10 text-center text-muted-foreground">কোনো সেমিনার যোগ করা হয়নি।</p>}
       </div>
 
       {/* Registrations Modal */}
@@ -181,7 +223,7 @@ import { uploadFile } from "@/lib/upload";export default function AdminSeminars(
           <Card className="w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <CardHeader className="border-b">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">সেমিনার রেজিস্ট্রেশন ({registrations.length} জন)</CardTitle>
+                <CardTitle className="text-base">সেমিনার রেজিস্ট্রেশন ({toBn(registrations.length)} জন)</CardTitle>
                 <button className="rounded-full p-1 hover:bg-gray-100" onClick={() => setShowRegs(null)}>✕</button>
               </div>
             </CardHeader>
@@ -197,7 +239,7 @@ import { uploadFile } from "@/lib/upload";export default function AdminSeminars(
                         <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{reg.phone}</span>
                         {reg.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{reg.email}</span>}
                       </div>
-                      <p className="mt-1 text-[10px] text-muted-foreground">{new Date(reg.created_at).toLocaleString("bn-BD")}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">{new Date(reg.created_at).toLocaleDateString("bn-BD")}, {new Date(reg.created_at).toLocaleTimeString("bn-BD", { hour: "numeric", minute: "2-digit", hour12: true })}</p>
                     </div>
                   ))}
                 </div>
