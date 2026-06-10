@@ -19,6 +19,7 @@ export default function AdminRefundPolicy() {
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageAlign, setImageAlign] = useState<"full" | "center" | "left" | "right">("full");
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -43,6 +44,13 @@ export default function AdminRefundPolicy() {
         .eq("key", "refund_policy_image")
         .maybeSingle();
       if (imageData?.value) setImageUrl(imageData.value);
+
+      const { data: alignData } = await supabase
+        .from("site_content")
+        .select("value")
+        .eq("key", "refund_policy_image_align")
+        .maybeSingle();
+      if (alignData?.value) setImageAlign(alignData.value as any);
       
       setLoading(false);
     };
@@ -92,9 +100,56 @@ export default function AdminRefundPolicy() {
       await supabase.from("site_content").insert({ key: "refund_policy_image", value: imageUrl, description: "রিফান্ড পলিসি পেজের ছবি" });
     }
 
+    // Upsert image alignment
+    await supabase.from("site_content").upsert({ key: "refund_policy_image_align", value: imageAlign, description: "রিফান্ড পলিসি ছবির অ্যালাইনমেন্ট" }, { onConflict: "key" });
+
     toast.success("রিফান্ড পলিসি সেভ হয়েছে!");
     setSaving(false);
     setSaved(true);
+  };
+
+  // Formatting helpers
+  const insertFormat = (before: string, after: string) => {
+    const el = document.getElementById("refund-content-editor") as HTMLTextAreaElement;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const selected = content.slice(start, end);
+    const newContent = content.slice(0, start) + before + selected + after + content.slice(end);
+    setContent(newContent);
+    setSaved(false);
+    setTimeout(() => { el.focus(); el.setSelectionRange(start + before.length, end + before.length); }, 0);
+  };
+
+  const insertLinePrefix = (prefix: string) => {
+    const el = document.getElementById("refund-content-editor") as HTMLTextAreaElement;
+    if (!el) return;
+    const start = el.selectionStart;
+    const lineStart = content.lastIndexOf("\n", start - 1) + 1;
+    const newContent = content.slice(0, lineStart) + prefix + content.slice(lineStart);
+    setContent(newContent);
+    setSaved(false);
+    setTimeout(() => { el.focus(); el.setSelectionRange(start + prefix.length, start + prefix.length); }, 0);
+  };
+
+  const insertNumberedList = () => {
+    const el = document.getElementById("refund-content-editor") as HTMLTextAreaElement;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const selected = content.slice(start, end);
+    if (selected) {
+      const lines = selected.split("\n");
+      const numbered = lines.map((line, i) => `${i + 1}. ${line}`).join("\n");
+      const newContent = content.slice(0, start) + numbered + content.slice(end);
+      setContent(newContent);
+    } else {
+      const lineStart = content.lastIndexOf("\n", start - 1) + 1;
+      const newContent = content.slice(0, lineStart) + "1. " + content.slice(lineStart);
+      setContent(newContent);
+    }
+    setSaved(false);
+    setTimeout(() => el.focus(), 0);
   };
 
   if (loading) {
@@ -128,14 +183,29 @@ export default function AdminRefundPolicy() {
           </div>
 
           <div>
-            <Label>কন্টেন্ট (সরাসরি লিখুন বা পেস্ট করুন)</Label>
+            <Label>কন্টেন্ট</Label>
+            {/* Formatting Toolbar */}
+            <div className="mt-1.5 mb-1 flex flex-wrap gap-1 rounded-t-md border border-b-0 bg-muted/30 px-2 py-1.5">
+              <button type="button" className="rounded px-2 py-1 text-xs font-bold hover:bg-white hover:shadow-sm" title="Bold" onClick={() => insertFormat("**", "**")}>B</button>
+              <button type="button" className="rounded px-2 py-1 text-xs italic hover:bg-white hover:shadow-sm" title="Italic" onClick={() => insertFormat("*", "*")}>I</button>
+              <button type="button" className="rounded px-2 py-1 text-xs underline hover:bg-white hover:shadow-sm" title="Underline" onClick={() => insertFormat("__", "__")}>U</button>
+              <div className="mx-1 w-px bg-border" />
+              <button type="button" className="rounded px-2 py-1 text-xs hover:bg-white hover:shadow-sm" title="Bullet Point" onClick={() => insertLinePrefix("• ")}>• তালিকা</button>
+              <button type="button" className="rounded px-2 py-1 text-xs hover:bg-white hover:shadow-sm" title="Numbered List" onClick={() => insertNumberedList()}>1. নম্বর</button>
+              <div className="mx-1 w-px bg-border" />
+              <button type="button" className="rounded px-2 py-1 text-xs font-bold hover:bg-white hover:shadow-sm" title="Heading" onClick={() => insertLinePrefix("## ")}>H শিরোনাম</button>
+            </div>
             <Textarea
+              id="refund-content-editor"
               rows={18}
               value={content}
               onChange={(e) => { setContent(e.target.value); setSaved(false); }}
               placeholder="এখানে আপনার রিফান্ড পলিসি লিখুন বা পেস্ট করুন..."
-              className="text-sm leading-relaxed"
+              className="rounded-t-none text-sm leading-relaxed"
             />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              **বোল্ড**, *ইটালিক*, __আন্ডারলাইন__, • বুলেট পয়েন্ট, ## শিরোনাম
+            </p>
           </div>
 
           {/* Image Upload */}
@@ -166,6 +236,30 @@ export default function AdminRefundPolicy() {
                 <Button variant="outline" size="sm" onClick={() => { setImageUrl(""); setSaved(false); }}>সরান</Button>
               </div>
             )}
+            {imageUrl && (
+              <div className="mt-3">
+                <Label className="text-xs">ছবির অ্যালাইনমেন্ট</Label>
+                <div className="mt-1.5 flex gap-2">
+                  {([
+                    { v: "full" as const, l: "পূর্ণ প্রস্থ" },
+                    { v: "center" as const, l: "মাঝখানে" },
+                    { v: "left" as const, l: "বামে" },
+                    { v: "right" as const, l: "ডানে" },
+                  ]).map((opt) => (
+                    <Button
+                      key={opt.v}
+                      type="button"
+                      size="sm"
+                      variant={imageAlign === opt.v ? "default" : "outline"}
+                      className="h-7 text-xs"
+                      onClick={() => { setImageAlign(opt.v); setSaved(false); }}
+                    >
+                      {opt.l}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Preview Toggle */}
@@ -178,7 +272,7 @@ export default function AdminRefundPolicy() {
           {showPreview && (
             <div className="rounded-xl border bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-xl font-bold text-sky-700">{title}</h2>
-              {imageUrl && <img src={imageUrl} alt="" className="mb-4 w-full max-h-64 rounded-lg object-cover" />}
+              {imageUrl && <img src={imageUrl} alt="" className={`mb-4 rounded-lg object-cover ${imageAlign === "full" ? "w-full max-h-64" : imageAlign === "center" ? "mx-auto max-w-md max-h-64" : imageAlign === "left" ? "float-left mr-4 max-w-xs max-h-48" : "float-right ml-4 max-w-xs max-h-48"}`} />}
               <div className="whitespace-pre-line text-sm leading-relaxed text-gray-700">
                 {content || "কন্টেন্ট এখনো লেখা হয়নি..."}
               </div>
