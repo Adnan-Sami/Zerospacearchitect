@@ -85,7 +85,8 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (isLoginPage) { setIsAdmin(true); return; }
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+
+    const checkAdmin = async (session: any) => {
       if (!session) {
         router.push("/admin/login");
         return;
@@ -131,7 +132,21 @@ export default function AdminLayout({
         "/admin/instructor-profiles": unseenProfiles ?? 0,
         "/admin/public-instructors": unseenPublicInstructors ?? 0,
       });
+    };
+
+    // Check current session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      checkAdmin(session);
     });
+
+    // Also listen for auth changes (handles post-login redirect)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && isAdmin === null) {
+        checkAdmin(session);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   const handleLogout = async () => {
@@ -181,7 +196,7 @@ export default function AdminLayout({
             <Button
               type="button"
               variant="outline"
-              className="shrink-0 rounded-full border-slate-200 px-3 text-slate-700 hover:bg-slate-50 md:px-4"
+              className="shrink-0 rounded-full border-slate-200 px-3 text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors md:px-4"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4 md:mr-2" />

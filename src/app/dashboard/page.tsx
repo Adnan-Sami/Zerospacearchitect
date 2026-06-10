@@ -38,7 +38,7 @@ export default function StudentDashboard() {
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const loadDashboard = async (session: any) => {
       if (!session) {
         router.push("/login");
         return;
@@ -97,7 +97,19 @@ export default function StudentDashboard() {
         certificates: certRes.data?.length ?? 0,
       });
       setLoading(false);
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      loadDashboard(session);
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && loading) {
+        loadDashboard(session);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   if (loading) {

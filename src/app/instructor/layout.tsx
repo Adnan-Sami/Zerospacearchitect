@@ -32,7 +32,8 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
 
   useEffect(() => {
     if (isAuthPage) { setIsInstructor(true); return; }
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+
+    const checkInstructor = async (session: any) => {
       if (!session) { router.push("/instructor/login"); return; }
       const { data } = await supabase
         .from("user_roles")
@@ -54,7 +55,19 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
       setBadges({
         "/instructor/courses": pending + draft,
       });
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      checkInstructor(session);
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && isInstructor === null) {
+        checkInstructor(session);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [router, isAuthPage]);
 
   if (isAuthPage) return <>{children}</>;
@@ -83,7 +96,7 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
               <User className="h-4 w-4 text-slate-500" />
               <span className="max-w-40 truncate">{name || "ইন্সট্রাক্টর"}</span>
             </div>
-            <Button variant="outline" size="sm" className="shrink-0 rounded-full px-3 md:px-4" onClick={async () => { await supabase.auth.signOut(); router.push("/instructor/login"); }}>
+            <Button variant="outline" size="sm" className="shrink-0 rounded-full px-3 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors md:px-4" onClick={async () => { await supabase.auth.signOut(); router.push("/instructor/login"); }}>
               <LogOut className="h-4 w-4 md:mr-1" /><span className="hidden md:inline">লগ আউট</span>
             </Button>
           </div>

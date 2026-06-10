@@ -96,7 +96,7 @@ export default function LoginPage() {
                   <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>
                 )}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">ফোন নম্বর বা ইমেইল</Label>
+                  <Label className="text-sm font-medium text-gray-700">ফোন নম্বর</Label>
                   <Input
                     type="text"
                     placeholder="০১XXXXXXXXX অথবা email@example.com"
