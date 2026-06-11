@@ -106,7 +106,8 @@ export function Navbar() {
               alt={settings.site_name || "ZeroSpace Architect"}
               width={140}
               height={44}
-              className="h-10 w-auto sm:h-11"
+              className="h-10 sm:h-11"
+              style={{ width: "auto", height: "auto", maxHeight: "44px" }}
               priority
             />
           </Link>

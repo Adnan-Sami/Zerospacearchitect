@@ -87,6 +87,12 @@ export default function RootLayout({
     <html lang="bn" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo-footer.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0EA5E9" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="ZeroSpace" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -97,6 +103,17 @@ export default function RootLayout({
         {children}
         <FloatingButtons />
         <Toaster richColors />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
