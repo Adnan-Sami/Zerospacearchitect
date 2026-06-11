@@ -19,6 +19,8 @@ export function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
@@ -81,8 +83,29 @@ export function Navbar() {
     e.preventDefault();
     if (searchTerm.trim()) {
       router.push(`/courses?search=${encodeURIComponent(searchTerm)}`);
+      setShowSuggestions(false);
     }
   };
+
+  // Fetch search suggestions
+  useEffect(() => {
+    if (searchTerm.trim().length < 1) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from("courses")
+        .select("id, title, thumbnail_url, instructor_name")
+        .eq("is_published", true)
+        .or(`title.ilike.%${searchTerm}%,instructor_name.ilike.%${searchTerm}%`)
+        .limit(5);
+      setSuggestions(data ?? []);
+      setShowSuggestions(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const navLinks = [
     { href: "/", label: "হোম", icon: Home },
@@ -117,11 +140,51 @@ export function Navbar() {
             <div className="relative">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Search..."
-                className="h-12 rounded-full border-0 bg-slate-100/80 pl-11 pr-4 text-sm shadow-inner shadow-slate-200/70 ring-1 ring-transparent placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sky-500"
+                placeholder="কোর্স খুঁজুন..."
+                className="h-12 rounded-full border-0 bg-slate-100/80 pl-11 pr-10 text-sm shadow-inner shadow-slate-200/70 ring-1 ring-transparent placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sky-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               />
+              {searchTerm && (
+                <button type="button" onClick={() => { setSearchTerm(""); setSuggestions([]); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              {/* Suggestions Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border bg-white shadow-xl">
+                  <p className="px-4 py-2 text-xs font-medium text-muted-foreground">সার্চ রেজাল্ট</p>
+                  {suggestions.map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/courses/${s.id}`}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-sky-50 transition-colors"
+                      onClick={() => setShowSuggestions(false)}
+                    >
+                      {s.thumbnail_url ? (
+                        <Image src={s.thumbnail_url} alt="" width={48} height={32} className="h-8 w-12 shrink-0 rounded object-cover" />
+                      ) : (
+                        <div className="flex h-8 w-12 shrink-0 items-center justify-center rounded bg-muted text-[8px] text-muted-foreground">IMG</div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{s.title}</p>
+                        {s.instructor_name && <p className="text-[11px] text-muted-foreground">{s.instructor_name}</p>}
+                      </div>
+                      <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    </Link>
+                  ))}
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-2 border-t px-4 py-2.5 text-xs font-medium text-sky-600 hover:bg-sky-50"
+                    onClick={() => { handleSearch({ preventDefault: () => {} } as React.FormEvent); }}
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                    &ldquo;{searchTerm}&rdquo; দিয়ে সব কোর্স দেখুন
+                  </button>
+                </div>
+              )}
             </div>
           </form>
 
@@ -212,7 +275,7 @@ export function Navbar() {
             <div className="relative">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Search..."
+                placeholder="কোর্স খুঁজুন..."
                 className="h-11 rounded-full border-slate-200 bg-slate-100/80 pl-11"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

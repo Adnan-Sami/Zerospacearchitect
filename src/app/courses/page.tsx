@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteContent } from "@/hooks/use-site-content";
 
 export default function CoursesPage() {
+  const searchParams = useSearchParams();
   const pageTitle = useSiteContent("courses.title");
   const searchPlaceholder = useSiteContent("courses.search.placeholder");
   const allLabel = useSiteContent("courses.all");
@@ -20,6 +22,12 @@ export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Read search param from URL (from navbar search)
+  useEffect(() => {
+    const q = searchParams.get("search");
+    if (q) setSearchTerm(q);
+  }, [searchParams]);
 
   useEffect(() => {
     supabase
@@ -40,7 +48,9 @@ export default function CoursesPage() {
       .order("created_at", { ascending: false });
 
     if (selectedCategory) query = query.eq("category_id", selectedCategory);
-    if (searchTerm) query = query.ilike("title", `%${searchTerm}%`);
+    if (searchTerm) {
+      query = query.or(`title.ilike.%${searchTerm}%,instructor_name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+    }
 
     query.then(({ data }) => {
       if (data) setCourses(data);

@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     supabase
@@ -43,6 +45,14 @@ export default function BooksPage() {
     if (filter === "free") return Number(b.price) === 0;
     if (filter === "paid") return Number(b.price) > 0;
     return true;
+  }).filter((b) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      b.title?.toLowerCase().includes(term) ||
+      b.author?.toLowerCase().includes(term) ||
+      b.description?.toLowerCase().includes(term)
+    );
   });
 
   return (
@@ -53,6 +63,15 @@ export default function BooksPage() {
 
         {/* Filter Section */}
         <div className="mb-6 space-y-4 rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="বই খুঁজুন (নাম, লেখক)..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p className="text-sm font-semibold text-foreground">
               {filteredBooks.length} টি বই পাওয়া গেছে
