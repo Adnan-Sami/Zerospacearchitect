@@ -553,19 +553,19 @@ function SidebarCard({
         {!enrolled && Number(course.price) > 0 && (
           <div className="mb-4 rounded-lg border border-dashed border-sky-200 bg-sky-50/50 p-3">
             <p className="mb-2 text-xs font-semibold text-sky-700">🎟️ কুপন কোড আছে?</p>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 type="text"
                 placeholder="কুপন কোড লিখুন"
                 value={couponCode}
                 onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
                 disabled={!!couponApplied}
-                className="flex-1 rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-sky-500"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 sm:flex-1"
               />
               {couponApplied ? (
-                <button type="button" onClick={() => { setCouponApplied(null); setCouponCode(""); }} className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">সরান</button>
+                <button type="button" onClick={() => { setCouponApplied(null); setCouponCode(""); }} className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 sm:w-auto">সরান</button>
               ) : (
-                <button type="button" onClick={applyCoupon} disabled={applyingCoupon || !couponCode.trim()} className="shrink-0 rounded-lg bg-sky-600 px-4 py-2 text-xs font-medium text-white hover:bg-sky-700 disabled:opacity-50">{applyingCoupon ? "..." : "প্রয়োগ"}</button>
+                <button type="button" onClick={applyCoupon} disabled={applyingCoupon || !couponCode.trim()} className="w-full rounded-lg bg-sky-600 px-4 py-2 text-xs font-medium text-white hover:bg-sky-700 disabled:opacity-50 sm:w-auto">{applyingCoupon ? "..." : "প্রয়োগ"}</button>
               )}
             </div>
             {couponError && <p className="mt-1.5 text-[11px] text-red-500">{couponError}</p>}
