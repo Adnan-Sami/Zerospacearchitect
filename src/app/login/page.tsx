@@ -99,7 +99,7 @@ export default function LoginPage() {
                   <Label className="text-sm font-medium text-gray-700">ফোন নম্বর</Label>
                   <Input
                     type="text"
-                    placeholder="০১XXXXXXXXX অথবা email@example.com"
+                    placeholder="০১XXXXXXXXX"
                     value={loginId}
                     onChange={(e) => setLoginId(e.target.value)}
                     required
