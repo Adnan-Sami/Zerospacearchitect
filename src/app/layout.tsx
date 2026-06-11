@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { FloatingButtons } from "@/components/FloatingButtons";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { Toaster } from "sonner";
 import { SchemaMarkup } from "./schema";
 
@@ -102,6 +103,7 @@ export default function RootLayout({
         <ScrollToTop />
         {children}
         <FloatingButtons />
+        <InstallPrompt />
         <Toaster richColors />
         <script
           dangerouslySetInnerHTML={{
