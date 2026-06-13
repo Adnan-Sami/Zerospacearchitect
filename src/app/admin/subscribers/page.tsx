@@ -99,34 +99,36 @@ export default function AdminSubscribers() {
       <div className="space-y-2">
         {filtered.slice(listPage * LIST_PAGE_SIZE, (listPage + 1) * LIST_PAGE_SIZE).map((s) => (
           <Card key={s.id}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100">
-                  <Mail className="h-4 w-4 text-sky-600" />
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100">
+                    <Mail className="h-4 w-4 text-sky-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{s.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(s.created_at).toLocaleDateString("bn-BD")}
+                      {s.contacted && <span className="ml-2 text-green-600">✓ যোগাযোগ হয়েছে</span>}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-sm">{s.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(s.created_at).toLocaleDateString("bn-BD")}
-                    {s.contacted && <span className="ml-2 text-green-600">✓ যোগাযোগ হয়েছে</span>}
-                  </p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    variant={s.contacted ? "outline" : "default"}
+                    className={`h-7 text-xs ${!s.contacted ? "bg-green-600 hover:bg-green-700" : ""}`}
+                    onClick={async () => {
+                      await supabase.from("subscribers").update({ contacted: !s.contacted }).eq("id", s.id);
+                      load();
+                    }}
+                  >
+                    {s.contacted ? "আনমার্ক" : "✓ যোগাযোগ হয়েছে"}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteSubscriber(s.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={s.contacted ? "outline" : "default"}
-                  className={`h-7 text-xs ${!s.contacted ? "bg-green-600 hover:bg-green-700" : ""}`}
-                  onClick={async () => {
-                    await supabase.from("subscribers").update({ contacted: !s.contacted }).eq("id", s.id);
-                    load();
-                  }}
-                >
-                  {s.contacted ? "আনমার্ক" : "✓ যোগাযোগ হয়েছে"}
-                </Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteSubscriber(s.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
               </div>
             </CardContent>
           </Card>

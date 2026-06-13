@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteContent } from "@/hooks/use-site-content";
 
 export default function CoursesPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-muted-foreground">লোড হচ্ছে...</div>}>
+      <CoursesContent />
+    </Suspense>
+  );
+}
+
+function CoursesContent() {
   const searchParams = useSearchParams();
   const pageTitle = useSiteContent("courses.title");
   const searchPlaceholder = useSiteContent("courses.search.placeholder");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,9 @@ function timeAgo(dateStr: string): string {
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith("/admin");
+  const isInstructor = pathname.startsWith("/instructor");
 
   const fetchNotifications = useCallback(async () => {
     const {
@@ -54,14 +58,25 @@ export function NotificationBell() {
       .limit(20);
 
     if (data) {
-      setNotifications(data as Notification[]);
-      const count = data.filter((n: any) => !n.is_read).length;
+      // Filter notifications by current portal
+      const filtered = (data as Notification[]).filter((n) => {
+        if (!n.link) return true; // No link = show everywhere
+        if (isAdmin) {
+          return n.link.startsWith("/admin");
+        } else if (isInstructor) {
+          return n.link.startsWith("/instructor");
+        } else {
+          // Student portal: show only /dashboard or /learn links
+          return !n.link.startsWith("/admin") && !n.link.startsWith("/instructor");
+        }
+      });
+      setNotifications(filtered);
+      const count = filtered.filter((n) => !n.is_read).length;
       setUnreadCount(count);
-      // Update browser tab title
       const baseTitle = "Zero Space Architect";
       document.title = count > 0 ? `(${count}) ${baseTitle}` : baseTitle;
     }
-  }, []);
+  }, [isAdmin, isInstructor]);
 
   useEffect(() => {
     fetchNotifications();
