@@ -31,6 +31,7 @@ export default function AdminSettings() {
 
     const payload: Record<string, any> = {
       site_name: settings.site_name?.trim() || "ZeroSpace Architect",
+      commission_percentage: Math.max(1, Math.min(99, Number(settings.commission_percentage) || 40)),
       bkash_number: settings.bkash_number?.trim() ?? "",
       nagad_number: settings.nagad_number?.trim() ?? "",
       rocket_number: settings.rocket_number?.trim() ?? "",
@@ -55,10 +56,10 @@ export default function AdminSettings() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold">পেমেন্ট সেটিংস</h1>
+      <h1 className="mb-6 text-2xl font-bold">সাইট সেটিংস</h1>
       <Card>
         <CardHeader>
-          <CardTitle>পেমেন্ট নম্বর সেটিংস</CardTitle>
+          <CardTitle>সাইট কনফিগারেশন</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -67,6 +68,17 @@ export default function AdminSettings() {
               value={settings.site_name ?? ""}
               onChange={(e) => { setSettings({ ...settings, site_name: e.target.value }); setSaved(false); }}
             />
+          </div>
+          <div>
+            <Label>ইন্সট্রাক্টর কমিশন (%)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={99}
+              value={settings.commission_percentage ?? 40}
+              onChange={(e) => { setSettings({ ...settings, commission_percentage: e.target.value }); setSaved(false); }}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">ইন্সট্রাক্টরদের কমিশন শতাংশ (১-৯৯)। ডিফল্ট: ৪০%</p>
           </div>
           <div>
             <Label>বিকাশ পার্সোনাল নম্বর</Label>

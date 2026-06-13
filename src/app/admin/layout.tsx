@@ -93,7 +93,7 @@ export default function AdminLayout({
         return;
       }
       setUserName(session.user.email ?? "অ্যাডমিন");
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle();
       if (profile?.full_name) setUserName(profile.full_name);
       const { data } = await supabase
         .from("user_roles")

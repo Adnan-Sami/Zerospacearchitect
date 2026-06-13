@@ -15,16 +15,21 @@ export default function InstructorEarnings() {
   const [loading, setLoading] = useState(true);
   const [monthFilter, setMonthFilter] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState("all");
+  const [commissionPct, setCommissionPct] = useState(40);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
-      const res = await fetch("/api/instructor-monthly-earnings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ instructorId: session.user.id }),
-      });
-      const result = await res.json();
+      const [settingsRes, earningsRes] = await Promise.all([
+        supabase.from("site_settings").select("commission_percentage").limit(1).maybeSingle(),
+        fetch("/api/instructor-monthly-earnings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ instructorId: session.user.id }),
+        }),
+      ]);
+      setCommissionPct(Number(settingsRes.data?.commission_percentage) || 40);
+      const result = await earningsRes.json();
       setData(result);
       setLoading(false);
     });
@@ -53,7 +58,7 @@ export default function InstructorEarnings() {
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Card className="border-purple-200 bg-purple-50">
           <CardContent className="p-5">
-            <p className="text-xs text-purple-700">মোট আয় (৪০%)</p>
+            <p className="text-xs text-purple-700">মোট আয় ({toBn(commissionPct)}%)</p>
             <p className="mt-1 text-2xl font-black text-purple-800 tabular-nums">৳{toBn(totalEarned.toLocaleString())}</p>
           </CardContent>
         </Card>

@@ -10,6 +10,7 @@ export interface SiteSettings {
   bkash_number?: string;
   nagad_number?: string;
   rocket_number?: string;
+  commission_percentage: number;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -19,6 +20,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   bkash_number: "",
   nagad_number: "",
   rocket_number: "",
+  commission_percentage: 40,
 };
 
 export function useSiteSettings(): SiteSettings {
@@ -27,11 +29,11 @@ export function useSiteSettings(): SiteSettings {
   useEffect(() => {
     supabase
       .from("site_settings")
-      .select("logo_url, site_name, footer_text, bkash_number, nagad_number, rocket_number")
+      .select("logo_url, site_name, footer_text, bkash_number, nagad_number, rocket_number, commission_percentage")
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setSettings(data as SiteSettings);
+        if (data) setSettings({ ...(data as SiteSettings), commission_percentage: Number(data.commission_percentage) || 40 });
       });
   }, []);
 

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getCommissionRate, calculateCommission } from "@/lib/commission";
 
 export async function POST(request: Request) {
   try {
     const { instructorId } = await request.json();
     if (!instructorId) return NextResponse.json({ months: [], totalEarned: 0, totalPaid: 0 });
+
+    const commissionRate = await getCommissionRate();
 
     // Get instructor's approved courses
     const { data: instructorCourses } = await supabaseAdmin
@@ -27,7 +30,7 @@ export async function POST(request: Request) {
       (orders ?? []).forEach((o: any) => {
         const d = new Date(o.created_at);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        ordersByMonth[key] = (ordersByMonth[key] || 0) + Math.round(Number(o.amount) * 0.4);
+        ordersByMonth[key] = (ordersByMonth[key] || 0) + calculateCommission(Number(o.amount), commissionRate);
       });
     }
 

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,23 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [otherSession, setOtherSession] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .then(({ data: roles }) => {
+          const userRoles = (roles ?? []).map((r: any) => r.role);
+          if (!userRoles.includes("admin")) {
+            setOtherSession(session.user.email ?? "");
+          }
+        });
+    });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +87,22 @@ export default function AdminLoginPage() {
           <CardDescription>অ্যাডমিন প্যানেলে প্রবেশ করতে লগ-ইন করুন</CardDescription>
         </CardHeader>
         <CardContent>
+          {otherSession && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm sm:p-4">
+              <p className="font-semibold leading-snug text-amber-800">আপনি ইতিমধ্যে ভিন্ন অ্যাকাউন্টে লগ-ইন করেছেন</p>
+              <p className="mt-1 break-all text-amber-700">{otherSession}</p>
+              <p className="mt-2 leading-relaxed text-amber-600">নতুন অ্যাডমিন অ্যাকাউন্টে লগ-ইন করলে বর্তমান সেশন বন্ধ হয়ে যাবে।</p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <Button type="button" variant="outline" size="sm" className="h-auto min-h-9 w-full whitespace-normal border-amber-300 py-2 text-center leading-snug text-amber-800 hover:bg-amber-100 sm:w-auto" onClick={async () => {
+                  await supabase.auth.signOut();
+                  setOtherSession(null);
+                }}>
+                  সেশন রিসেট করুন
+                </Button>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>

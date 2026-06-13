@@ -42,10 +42,11 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
         .eq("role", "instructor");
       if (!data?.length) {
         const { data: adminCheck } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin");
-        if (!adminCheck?.length) { router.push("/instructor/login"); return; }
+        if (adminCheck?.length) { router.push("/admin"); return; }
+        router.push("/instructor/login"); return;
       }
       setIsInstructor(true);
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle();
       setName(profile?.full_name || "");
 
       // Fetch badge counts

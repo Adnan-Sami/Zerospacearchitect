@@ -18,6 +18,7 @@ export default function AdminInstructors() {
 
   const [instructors, setInstructors] = useState<any[]>([]);
   const [totalCommission, setTotalCommission] = useState(0);
+  const [commissionPct, setCommissionPct] = useState(40);
   const [payingId, setPayingId] = useState<string | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payNote, setPayNote] = useState("");
@@ -27,6 +28,12 @@ export default function AdminInstructors() {
 
   useEffect(() => {
     const load = async () => {
+      // Fetch commission percentage from site settings
+      const { data: siteSettings } = await supabase.from("site_settings").select("commission_percentage").limit(1).maybeSingle();
+      const pct = Number(siteSettings?.commission_percentage) || 40;
+      setCommissionPct(pct);
+      const commissionFraction = pct / 100;
+
       // Get all users with instructor role
       const { data: roles } = await supabase
         .from("user_roles")
@@ -98,10 +105,10 @@ export default function AdminInstructors() {
           const stats = orderMap[c.course_id] || { count: 0, revenue: 0 };
           totalRevenue += stats.revenue;
           totalSales += stats.count;
-          return { title: c.course_title, sales: stats.count, revenue: stats.revenue, commission: Math.round(stats.revenue * 0.4) };
+          return { title: c.course_title, sales: stats.count, revenue: stats.revenue, commission: Math.round(stats.revenue * commissionFraction) };
         });
 
-        const commission = Math.round(totalRevenue * 0.4);
+        const commission = Math.round(totalRevenue * commissionFraction);
         const paid = paidMap[p.user_id] || 0;
         const balance = commission - paid;
         total += balance;
@@ -247,7 +254,7 @@ export default function AdminInstructors() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">কমিশন (৪০%)</p>
+                  <p className="text-xs text-muted-foreground">কমিশন ({toBengaliNumber(commissionPct)}%)</p>
                   <p className="text-2xl font-black text-purple-600 tabular-nums">৳{toBengaliNumber(inst.commission.toLocaleString())}</p>
                   <p className="text-xs text-green-600 tabular-nums">পেইড: ৳{toBengaliNumber(inst.paid.toLocaleString())}</p>
                   {inst.balance > 0 && <p className="text-xs font-semibold text-amber-600 tabular-nums">বকেয়া: ৳{toBengaliNumber(inst.balance.toLocaleString())}</p>}

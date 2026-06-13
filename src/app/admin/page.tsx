@@ -101,7 +101,9 @@ export default function AdminDashboard() {
         const instructorOrderRevenue = cData
           .filter((o) => o.status === "approved" && instructorCourseIds.includes(o.course_id))
           .reduce((s, o) => s + Number(o.amount), 0);
-        setInstructorCommission(Math.round(instructorOrderRevenue * 0.4));
+        const { data: siteSettings } = await supabase.from("site_settings").select("commission_percentage").limit(1).maybeSingle();
+        const rate = Number(siteSettings?.commission_percentage) || 40;
+        setInstructorCommission(Math.round(instructorOrderRevenue * (rate / 100)));
       } else {
         setInstructorCommission(0);
       }

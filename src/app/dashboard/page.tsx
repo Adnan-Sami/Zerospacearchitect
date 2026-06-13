@@ -36,11 +36,24 @@ export default function StudentDashboard() {
     inProgress: 0,
     certificates: 0,
   });
+  const [adminSession, setAdminSession] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDashboard = async (session: any) => {
       if (!session) {
         router.push("/login");
+        return;
+      }
+
+      // If admin, show switch dialog instead of dashboard
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id);
+      const userRoles = (roles ?? []).map((r: any) => r.role);
+      if (userRoles.includes("admin") && !userRoles.includes("student")) {
+        setAdminSession(session.user.email ?? "");
+        setLoading(false);
         return;
       }
 
@@ -111,6 +124,31 @@ export default function StudentDashboard() {
 
     return () => subscription.unsubscribe();
   }, [router]);
+
+  if (adminSession) {
+    return (
+      <StudentLayout>
+        <div className="flex flex-1 items-center justify-center p-4 sm:p-8">
+          <div className="w-full max-w-md rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm sm:p-6">
+            <p className="text-base font-semibold leading-snug text-amber-800 sm:text-lg">আপনি অ্যাডমিন হিসাবে লগ-ইন করেছেন</p>
+            <p className="mt-1 break-all text-amber-700">{adminSession}</p>
+            <p className="mt-3 leading-relaxed text-amber-600">শিক্ষার্থী ড্যাশবোর্ড ব্যবহার করতে একটি শিক্ষার্থী অ্যাকাউন্টে লগ-ইন করতে হবে।</p>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Button type="button" variant="outline" className="h-auto min-h-10 w-full whitespace-normal border-amber-300 py-2 text-center leading-snug text-amber-800 hover:bg-amber-100 sm:w-auto" onClick={() => router.push("/admin")}>
+                অ্যাডমিন প্যানেলে যান
+              </Button>
+              <Button type="button" variant="outline" className="h-auto min-h-10 w-full whitespace-normal border-amber-300 py-2 text-center leading-snug text-amber-800 hover:bg-amber-100 sm:w-auto" onClick={async () => {
+                await supabase.auth.signOut();
+                router.push("/login");
+              }}>
+                শিক্ষার্থী লগ-ইন
+              </Button>
+            </div>
+          </div>
+        </div>
+      </StudentLayout>
+    );
+  }
 
   if (loading) {
     return (

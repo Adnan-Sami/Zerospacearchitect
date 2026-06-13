@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getCommissionRate, calculateCommission } from "@/lib/commission";
 
 export async function POST(request: Request) {
   try {
     const { instructorId } = await request.json();
     if (!instructorId) return NextResponse.json({ courses: [], total: 0 });
+
+    const commissionRate = await getCommissionRate();
 
     // Get instructor's approved courses
     const { data: instructorCourses } = await supabaseAdmin
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
 
     const courses = list.map((c: any) => {
       const stats = orderMap[c.course_id] || { sales: 0, revenue: 0 };
-      return { course_id: c.course_id, course_title: c.course_title, sales: stats.sales, revenue: stats.revenue, commission: Math.round(stats.revenue * 0.4) };
+      return { course_id: c.course_id, course_title: c.course_title, sales: stats.sales, revenue: stats.revenue, commission: calculateCommission(stats.revenue, commissionRate) };
     });
 
     const total = courses.reduce((s: number, c: any) => s + c.commission, 0);

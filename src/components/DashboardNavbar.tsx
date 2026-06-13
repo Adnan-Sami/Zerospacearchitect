@@ -30,7 +30,7 @@ export function DashboardNavbar() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        supabase.from("profiles").select("full_name").eq("user_id", session.user.id).single().then(({ data }) => {
+        supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle().then(({ data }) => {
           setFullName(data?.full_name || "");
         });
       }
@@ -133,7 +133,7 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        supabase.from("profiles").select("full_name").eq("user_id", session.user.id).single().then(({ data }) => {
+        supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle().then(({ data }) => {
           setFullName(data?.full_name || "");
         });
       }
