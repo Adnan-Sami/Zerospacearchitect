@@ -34,11 +34,18 @@ import { uploadFile } from "@/lib/upload";export default function InstructorEdit
   const [form, setForm] = useState({
     title: "", description: "", price: "0", original_price: "",
     duration_text: "", thumbnail_url: "", intro_video_url: "",
+    category_id: "",
     what_will_learn: "", requirements: "", target_audience: "",
     materials_included: "", instructor_name: "", instructor_bio: "",
     instructor_avatar: "", certificate_enabled: true,
     certificate_title: "", certificate_body: "", certificate_signature: "",
   });
+  const [categories, setCategories] = useState<any[]>([]);
+
+  // Load categories
+  useEffect(() => {
+    supabase.from("categories").select("*").order("name").then(({ data }) => setCategories(data ?? []));
+  }, []);
 
   // Load existing course data
   useEffect(() => {
@@ -53,6 +60,7 @@ import { uploadFile } from "@/lib/upload";export default function InstructorEdit
           duration_text: data.duration_text || "",
           thumbnail_url: data.thumbnail_url || "",
           intro_video_url: data.intro_video_url || "",
+          category_id: data.category_id || "",
           what_will_learn: data.what_will_learn || "",
           requirements: data.requirements || "",
           target_audience: data.target_audience || "",
@@ -103,7 +111,7 @@ import { uploadFile } from "@/lib/upload";export default function InstructorEdit
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "update", courseId,
-        payload: { title: form.title.trim(), slug, description: form.description.trim(), price: Number(form.price) || 0, original_price: form.original_price ? Number(form.original_price) : null, duration_text: form.duration_text.trim(), thumbnail_url: form.thumbnail_url, intro_video_url: form.intro_video_url.trim(), what_will_learn: form.what_will_learn.trim(), requirements: form.requirements.trim(), target_audience: form.target_audience.trim(), materials_included: form.materials_included.trim(), instructor_name: form.instructor_name.trim(), instructor_bio: form.instructor_bio.trim(), instructor_avatar: form.instructor_avatar, certificate_enabled: form.certificate_enabled, certificate_title: form.certificate_title.trim(), certificate_body: form.certificate_body.trim(), certificate_signature: form.certificate_signature.trim() },
+        payload: { title: form.title.trim(), slug, description: form.description.trim(), price: Number(form.price) || 0, original_price: form.original_price ? Number(form.original_price) : null, duration_text: form.duration_text.trim(), category_id: form.category_id || null, thumbnail_url: form.thumbnail_url, intro_video_url: form.intro_video_url.trim(), what_will_learn: form.what_will_learn.trim(), requirements: form.requirements.trim(), target_audience: form.target_audience.trim(), materials_included: form.materials_included.trim(), instructor_name: form.instructor_name.trim(), instructor_bio: form.instructor_bio.trim(), instructor_avatar: form.instructor_avatar, certificate_enabled: form.certificate_enabled, certificate_title: form.certificate_title.trim(), certificate_body: form.certificate_body.trim(), certificate_signature: form.certificate_signature.trim() },
       }),
     });
     if (!res.ok) { const r = await res.json(); toast.error(r.error); } else { toast.success("সেভ হয়েছে"); }
@@ -151,6 +159,17 @@ import { uploadFile } from "@/lib/upload";export default function InstructorEdit
             <div><Label>বিবরণ</Label><Textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3"><div><Label>মূল্য (৳)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div><div><Label>পূর্বের মূল্য</Label><Input type="number" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} /></div></div>
             <div><Label>সময়কাল</Label><Input value={form.duration_text} onChange={(e) => setForm({ ...form, duration_text: e.target.value })} /></div>
+            <div>
+              <Label>ক্যাটেগরি</Label>
+              <select
+                value={form.category_id}
+                onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                <option value="">— ক্যাটেগরি নির্বাচন করুন —</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
           </CardContent></Card>
 
           <Card className="border-purple-200"><CardHeader className="py-3"><CardTitle className="text-sm font-semibold text-purple-700 uppercase">ইন্সট্রাক্টর তথ্য</CardTitle></CardHeader><CardContent className="space-y-3 pt-0">

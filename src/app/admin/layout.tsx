@@ -40,6 +40,7 @@ const navSections = [
     title: "কন্টেন্ট",
     items: [
       { href: "/admin/courses", label: "কোর্স", icon: BookOpen },
+      { href: "/admin/categories", label: "ক্যাটেগরি", icon: BookOpen },
       { href: "/admin/books", label: "বই", icon: BookOpen },
       { href: "/admin/public-instructors", label: "প্রশিক্ষক প্রোফাইল", icon: Users },
       { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },

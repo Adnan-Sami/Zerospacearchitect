@@ -30,10 +30,16 @@ export default function InstructorUpload() {
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [newQuestion, setNewQuestion] = useState({ question: "", options: ["", "", "", ""], correct_answer: 0 });
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from("categories").select("*").order("name").then(({ data }) => setCategories(data ?? []));
+  }, []);
 
   const [form, setForm] = useState({
     title: "", description: "", price: "0", original_price: "",
-    duration_text: "", enrollment_count: "0", thumbnail_url: "", intro_video_url: "",
+    duration_text: "", enrollment_count: "0", category_id: "",
+    thumbnail_url: "", intro_video_url: "",
     what_will_learn: "", requirements: "", target_audience: "",
     materials_included: "", instructor_name: "", instructor_bio: "",
     instructor_avatar: "", certificate_enabled: true,
@@ -80,8 +86,8 @@ export default function InstructorUpload() {
       duration_text: form.duration_text.trim(),
       duration_minutes: parseInt(form.duration_text) || 0,
       enrollment_count: Number(form.enrollment_count) || 0,
-      thumbnail_url: form.thumbnail_url,
-      intro_video_url: form.intro_video_url.trim(),
+      category_id: form.category_id || null,
+      thumbnail_url: form.thumbnail_url,      intro_video_url: form.intro_video_url.trim(),
       what_will_learn: form.what_will_learn.trim(),
       requirements: form.requirements.trim(),
       target_audience: form.target_audience.trim(),
@@ -289,6 +295,18 @@ export default function InstructorUpload() {
               </div>
               <div><Label>এনরোলমেন্ট সংখ্যা *</Label>
                 <Input type="number" min="0" value={form.enrollment_count} onChange={(e) => setForm({ ...form, enrollment_count: e.target.value })} placeholder="যেমন: 0" className="mt-1.5" />
+              </div>
+              <div>
+                <Label>ক্যাটেগরি</Label>
+                <select
+                  value={form.category_id}
+                  onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                  className="mt-1.5 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">— ক্যাটেগরি নির্বাচন করুন —</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <p className="mt-1 text-[10px] text-muted-foreground">অ্যাডমিন পাবলিশ করার সময় পরিবর্তন করতে পারবে</p>
               </div>
             </CardContent>
           </Card>
