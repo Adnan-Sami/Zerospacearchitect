@@ -294,19 +294,18 @@ export function Navbar() {
                 <Link href={dashboardUrl} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
                   <LayoutDashboard className="h-4 w-4 text-slate-500" />ড্যাশবোর্ড
                 </Link>
-                <Link href="/my-courses" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                  <BookOpen className="h-4 w-4 text-slate-500" />আমার কোর্স
-                </Link>
-                <Link href="/wishlist" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                  <Heart className="h-4 w-4 text-slate-500" />উইশলিস্ট
-                </Link>
-                <Link href="/profile" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                  <User className="h-4 w-4 text-slate-500" />প্রোফাইল
-                </Link>
-                {isAdmin && (
-                  <Link href="/admin" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                    <Shield className="h-4 w-4 text-slate-500" />অ্যাডমিন
-                  </Link>
+                {!isAdmin && !isInstructor && (
+                  <>
+                    <Link href="/my-courses" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                      <BookOpen className="h-4 w-4 text-slate-500" />আমার কোর্স
+                    </Link>
+                    <Link href="/wishlist" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                      <Heart className="h-4 w-4 text-slate-500" />উইশলিস্ট
+                    </Link>
+                    <Link href="/profile" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
+                      <User className="h-4 w-4 text-slate-500" />প্রোফাইল
+                    </Link>
+                  </>
                 )}
                 <hr className="my-2" />
                 <button className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-red-50" onClick={() => { handleLogout(); setMobileOpen(false); }}>
