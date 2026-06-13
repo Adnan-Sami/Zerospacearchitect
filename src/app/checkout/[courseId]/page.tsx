@@ -18,6 +18,7 @@ import { Footer } from "@/components/Footer";
 import { toBn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/use-site-settings";
+import { validateCoupon } from "@/lib/coupon-validation";
 
 export default function CheckoutPage({
   params,
@@ -71,42 +72,20 @@ export default function CheckoutPage({
   // Auto-apply coupon from URL
   useEffect(() => {
     const couponParam = searchParams.get("coupon");
-    if (couponParam && !couponApplied) {
+    if (couponParam && !couponApplied && courseId) {
       setCouponCode(couponParam.toUpperCase());
-      // Auto-apply after a short delay
       setTimeout(async () => {
-        const { data } = await supabase
-          .from("coupons")
-          .select("*")
-          .eq("code", couponParam.toUpperCase())
-          .eq("is_active", true)
-          .maybeSingle();
-        if (data) {
-          if (data.expires_at && new Date(data.expires_at) < new Date()) return;
-          if (data.max_uses && data.used_count >= data.max_uses) return;
-          // Check per-user limit
-          if (data.per_user_limit) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const { count: courseUses } = await supabase
-                .from("orders")
-                .select("*", { count: "exact", head: true })
-                .eq("user_id", user.id)
-                .eq("coupon_code", data.code);
-              const { count: bookUses } = await supabase
-                .from("book_orders")
-                .select("*", { count: "exact", head: true })
-                .eq("user_id", user.id)
-                .eq("coupon_code", data.code);
-              if ((courseUses ?? 0) + (bookUses ?? 0) >= data.per_user_limit) return;
-            }
-          }
-          setCouponApplied(data);
-        }
+        const { data: { user } } = await supabase.auth.getUser();
+        const result = await validateCoupon(supabase, couponParam, {
+          type: "course",
+          itemId: courseId,
+          userId: user?.id,
+        });
+        if (result.ok) setCouponApplied(result.coupon);
       }, 500);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, courseId]);
 
   // Calculate final price with coupon
   const originalPrice = Number(course?.price ?? 0);
@@ -122,61 +101,21 @@ export default function CheckoutPage({
     setCouponError("");
     setApplyingCoupon(true);
 
-    const { data, error } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("code", couponCode.trim().toUpperCase())
-      .eq("is_active", true)
-      .maybeSingle();
+    const { data: { user } } = await supabase.auth.getUser();
+    const result = await validateCoupon(supabase, couponCode, {
+      type: "course",
+      itemId: courseId,
+      userId: user?.id,
+    });
 
-    if (error || !data) {
-      setCouponError("এই কুপন কোড বৈধ নয়।");
+    if (!result.ok) {
+      setCouponError(result.error);
       setCouponApplied(null);
       setApplyingCoupon(false);
       return;
     }
 
-    // Check expiry
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      setCouponError("এই কুপনের মেয়াদ শেষ হয়ে গেছে।");
-      setCouponApplied(null);
-      setApplyingCoupon(false);
-      return;
-    }
-
-    // Check usage limit
-    if (data.max_uses && data.used_count >= data.max_uses) {
-      setCouponError("এই কুপনের ব্যবহার সীমা শেষ হয়ে গেছে।");
-      setCouponApplied(null);
-      setApplyingCoupon(false);
-      return;
-    }
-
-    // Check per-user limit
-    if (data.per_user_limit) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { count: courseUses } = await supabase
-          .from("orders")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("coupon_code", data.code);
-        const { count: bookUses } = await supabase
-          .from("book_orders")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("coupon_code", data.code);
-        const totalUserUses = (courseUses ?? 0) + (bookUses ?? 0);
-        if (totalUserUses >= data.per_user_limit) {
-          setCouponError("আপনি এই কুপনটি সর্বোচ্চ সীমায় ব্যবহার করেছেন।");
-          setCouponApplied(null);
-          setApplyingCoupon(false);
-          return;
-        }
-      }
-    }
-
-    setCouponApplied(data);
+    setCouponApplied(result.coupon);
     setApplyingCoupon(false);
   };
 

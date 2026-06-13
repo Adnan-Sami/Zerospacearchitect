@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, BookOpen, Upload, DollarSign, LogOut, User, Menu, X } from "lucide-react";
+import { LayoutDashboard, BookOpen, Upload, DollarSign, LogOut, User, Menu, X, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/use-site-settings";
@@ -16,6 +16,7 @@ const navItems = [
   { href: "/instructor/courses", label: "আমার কোর্স", icon: BookOpen },
   { href: "/instructor/upload", label: "নতুন কোর্স আপলোড", icon: Upload },
   { href: "/instructor/earnings", label: "আয়", icon: DollarSign },
+  { href: "/instructor/coupons", label: "কুপন", icon: Tag },
 ];
 
 export default function InstructorLayout({ children }: { children: React.ReactNode }) {
@@ -53,8 +54,14 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
       const { data: courses } = await supabase.from("instructor_courses").select("status").eq("instructor_id", session.user.id);
       const pending = (courses ?? []).filter((c: any) => c.status === "pending").length;
       const draft = (courses ?? []).filter((c: any) => c.status === "draft").length;
+      const { count: pendingCoupons } = await supabase
+        .from("coupons")
+        .select("*", { count: "exact", head: true })
+        .eq("instructor_id", session.user.id)
+        .eq("approval_status", "pending");
       setBadges({
         "/instructor/courses": pending + draft,
+        "/instructor/coupons": pendingCoupons ?? 0,
       });
     };
 

@@ -1,170 +1,246 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Trash2, Edit, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  CouponEditor,
+  emptyCouponForm,
+  saveCouponRequest,
+  approveCouponRequest,
+  rejectCouponRequest,
+  deleteCouponRequest,
+  type CouponFormState,
+} from "@/components/coupon-editor";
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<any[]>([]);
-  const [editing, setEditing] = useState<any>(null);
+  const [instructors, setInstructors] = useState<{ id: string; label: string }[]>([]);
+  const [allCourses, setAllCourses] = useState<{ id: string; label: string; instructor_id?: string }[]>([]);
+  const [allBooks, setAllBooks] = useState<{ id: string; label: string }[]>([]);
+  const [instructorCourses, setInstructorCourses] = useState<any[]>([]);
+  const [editing, setEditing] = useState<CouponFormState | null>(null);
+  const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
+  const [selectedBookIds, setSelectedBookIds] = useState<string[]>([]);
+  const [filter, setFilter] = useState<"all" | "pending">("all");
 
-  const load = async () => {
-    const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
-    setCoupons(data ?? []);
+  const load = useCallback(async () => {
+    const [{ data: couponData }, { data: roles }, { data: courses }, { data: books }, { data: instCourses }] = await Promise.all([
+      supabase.from("coupons").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id").eq("role", "instructor"),
+      supabase.from("courses").select("id, title").order("title"),
+      supabase.from("books").select("id, title").eq("is_published", true).order("title"),
+      supabase.from("instructor_courses").select("instructor_id, course_id, course_title, status").eq("status", "approved"),
+    ]);
+
+    setCoupons(couponData ?? []);
+    setAllCourses((courses ?? []).map((c: any) => ({ id: c.id, label: c.title })));
+    setAllBooks((books ?? []).map((b: any) => ({ id: b.id, label: b.title })));
+    setInstructorCourses(instCourses ?? []);
+
+    const userIds = (roles ?? []).map((r: any) => r.user_id);
+    if (userIds.length) {
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      setInstructors((profiles ?? []).map((p: any) => ({ id: p.user_id, label: p.full_name || p.user_id })));
+    } else {
+      setInstructors([]);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const instructorNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    instructors.forEach((i) => { map[i.id] = i.label; });
+    return map;
+  }, [instructors]);
+
+  const courseOptions = useMemo(() => {
+    if (!editing) return allCourses;
+    if (editing.scope === "instructor" && editing.instructor_id) {
+      const ids = new Set(
+        instructorCourses
+          .filter((ic) => ic.instructor_id === editing.instructor_id)
+          .map((ic) => ic.course_id)
+      );
+      return allCourses.filter((c) => ids.has(c.id));
+    }
+    return allCourses;
+  }, [editing, allCourses, instructorCourses]);
+
+  const openEdit = async (coupon: any) => {
+    setEditing({
+      id: coupon.id,
+      code: coupon.code,
+      discount_type: coupon.discount_type,
+      discount_value: coupon.discount_value,
+      max_uses: coupon.max_uses ?? "",
+      per_user_limit: coupon.per_user_limit ?? "",
+      expires_at: coupon.expires_at ? coupon.expires_at.slice(0, 16) : "",
+      is_active: coupon.is_active,
+      scope: coupon.scope || "global",
+      instructor_id: coupon.instructor_id || "",
+      applies_to_courses: coupon.applies_to_courses ?? true,
+      applies_to_books: coupon.applies_to_books ?? true,
+      all_courses: coupon.all_courses ?? true,
+      all_books: coupon.all_books ?? true,
+      approval_status: coupon.approval_status,
+    });
+
+    const [{ data: courseLinks }, { data: bookLinks }] = await Promise.all([
+      supabase.from("coupon_allowed_courses").select("course_id").eq("coupon_id", coupon.id),
+      supabase.from("coupon_allowed_books").select("book_id").eq("coupon_id", coupon.id),
+    ]);
+    setSelectedCourseIds((courseLinks ?? []).map((c: any) => c.course_id));
+    setSelectedBookIds((bookLinks ?? []).map((b: any) => b.book_id));
   };
 
-  useEffect(() => { load(); }, []);
-
   const save = async () => {
-    if (!editing?.code?.trim()) { toast.error("কুপন কোড দিন"); return; }
-    if (!editing?.discount_value || Number(editing.discount_value) <= 0) { toast.error("ডিসকাউন্ট মান দিন"); return; }
-
-    const payload = {
-      code: editing.code.trim().toUpperCase(),
-      discount_type: editing.discount_type || "fixed",
-      discount_value: Number(editing.discount_value),
-      max_uses: editing.max_uses ? Number(editing.max_uses) : null,
-      per_user_limit: editing.per_user_limit ? Number(editing.per_user_limit) : null,
-      expires_at: editing.expires_at || null,
-      is_active: editing.is_active ?? true,
-    };
-
-    const { error } = editing.id
-      ? await supabase.from("coupons").update(payload).eq("id", editing.id)
-      : await supabase.from("coupons").insert({ ...payload, used_count: 0 });
-
-    if (error) { toast.error(error.message); return; }
-    toast.success("সেভ হয়েছে");
-    setEditing(null);
-    load();
+    if (!editing) return;
+    try {
+      await saveCouponRequest(editing, selectedCourseIds, selectedBookIds);
+      toast.success("সেভ হয়েছে");
+      setEditing(null);
+      setSelectedCourseIds([]);
+      setSelectedBookIds([]);
+      load();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   };
 
   const del = async (id: string) => {
     if (!confirm("ডিলিট করবেন?")) return;
-    await supabase.from("coupons").delete().eq("id", id);
-    toast.success("ডিলিট হয়েছে");
-    load();
+    try {
+      await deleteCouponRequest(id);
+      toast.success("ডিলিট হয়েছে");
+      load();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const approve = async (id: string) => {
+    try {
+      await approveCouponRequest(id);
+      toast.success("অনুমোদিত হয়েছে");
+      load();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const reject = async (id: string) => {
+    const reason = prompt("প্রত্যাখ্যানের কারণ (ঐচ্ছিক)") || undefined;
+    try {
+      await rejectCouponRequest(id, reason);
+      toast.success("প্রত্যাখ্যান করা হয়েছে");
+      load();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const filteredCoupons = filter === "pending"
+    ? coupons.filter((c) => c.approval_status === "pending")
+    : coupons;
+
+  const statusBadge = (coupon: any) => {
+    if (coupon.approval_status === "pending") {
+      return <Badge className="bg-amber-100 text-amber-800">অপেক্ষমান</Badge>;
+    }
+    if (coupon.approval_status === "rejected") {
+      return <Badge className="bg-red-100 text-red-700">প্রত্যাখ্যাত</Badge>;
+    }
+    return coupon.is_active ? (
+      <Badge className="bg-green-100 text-green-700">অ্যাক্টিভ</Badge>
+    ) : (
+      <Badge className="bg-gray-100 text-gray-600">নিষ্ক্রিয়</Badge>
+    );
   };
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">কুপন ম্যানেজমেন্ট</h1>
-          <p className="text-sm text-muted-foreground">প্রোমো কোড যোগ/এডিট করুন</p>
+          <p className="text-sm text-muted-foreground">গ্লোবাল ও ইন্সট্রাক্টর-নির্দিষ্ট কুপন পরিচালনা</p>
         </div>
-        <Button onClick={() => setEditing({ is_active: true, discount_type: "fixed", discount_value: "", code: "", max_uses: "", per_user_limit: "", expires_at: "" })}>
-          <Plus className="mr-1 h-4 w-4" />নতুন কুপন
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>সব</Button>
+          <Button variant={filter === "pending" ? "default" : "outline"} size="sm" onClick={() => setFilter("pending")}>
+            অপেক্ষমান ({coupons.filter((c) => c.approval_status === "pending").length})
+          </Button>
+          <Button onClick={() => {
+            setEditing(emptyCouponForm());
+            setSelectedCourseIds([]);
+            setSelectedBookIds([]);
+          }}>
+            <Plus className="mr-1 h-4 w-4" />নতুন কুপন
+          </Button>
+        </div>
       </div>
 
       {editing && (
-        <Card className="mb-6">
-          <CardHeader><CardTitle>{editing.id ? "এডিট" : "নতুন"} কুপন</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label>কুপন কোড *</Label>
-                <Input
-                  value={editing.code ?? ""}
-                  onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })}
-                  placeholder="যেমন: SAVE20"
-                />
-              </div>
-              <div>
-                <Label>ডিসকাউন্ট টাইপ</Label>
-                <select
-                  value={editing.discount_type || "fixed"}
-                  onChange={(e) => setEditing({ ...editing, discount_type: e.target.value })}
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                >
-                  <option value="fixed">নির্দিষ্ট পরিমাণ (৳)</option>
-                  <option value="percent">শতাংশ (%)</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div>
-                <Label>ডিসকাউন্ট মান *</Label>
-                <Input
-                  type="number"
-                  value={editing.discount_value ?? ""}
-                  onChange={(e) => setEditing({ ...editing, discount_value: e.target.value })}
-                  placeholder={editing.discount_type === "percent" ? "যেমন: 20" : "যেমন: 500"}
-                />
-              </div>
-              <div>
-                <Label>সর্বোচ্চ ব্যবহার (ঐচ্ছিক)</Label>
-                <Input
-                  type="number"
-                  value={editing.max_uses ?? ""}
-                  onChange={(e) => setEditing({ ...editing, max_uses: e.target.value })}
-                  placeholder="খালি = সীমাহীন"
-                />
-              </div>
-              <div>
-                <Label>প্রতি ইউজার সীমা (ঐচ্ছিক)</Label>
-                <Input
-                  type="number"
-                  value={editing.per_user_limit ?? ""}
-                  onChange={(e) => setEditing({ ...editing, per_user_limit: e.target.value })}
-                  placeholder="খালি = সীমাহীন"
-                />
-              </div>
-              <div>
-                <Label>মেয়াদ শেষ (ঐচ্ছিক)</Label>
-                <Input
-                  type="datetime-local"
-                  value={editing.expires_at ?? ""}
-                  onChange={(e) => setEditing({ ...editing, expires_at: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={editing.is_active ?? true} onCheckedChange={(v) => setEditing({ ...editing, is_active: v })} />
-              <Label>অ্যাক্টিভ</Label>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={save}>সেভ করুন</Button>
-              <Button variant="outline" onClick={() => setEditing(null)}>বাতিল</Button>
-            </div>
-          </CardContent>
-        </Card>
+        <CouponEditor
+          title={editing.id ? "এডিট কুপন" : "নতুন কুপন"}
+          editing={editing}
+          setEditing={setEditing}
+          instructors={instructors}
+          courses={courseOptions}
+          books={allBooks}
+          selectedCourseIds={selectedCourseIds}
+          setSelectedCourseIds={setSelectedCourseIds}
+          selectedBookIds={selectedBookIds}
+          setSelectedBookIds={setSelectedBookIds}
+          onSave={save}
+          onCancel={() => { setEditing(null); setSelectedCourseIds([]); setSelectedBookIds([]); }}
+          mode="admin"
+        />
       )}
 
       <div className="space-y-3">
-        {coupons.map((c) => (
+        {filteredCoupons.map((c) => (
           <Card key={c.id}>
             <CardContent className="flex flex-wrap items-center gap-3 p-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-mono font-bold text-lg">{c.code}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-lg font-bold">{c.code}</p>
                 <p className="text-xs text-muted-foreground">
                   {c.discount_type === "percent" ? `${c.discount_value}% ছাড়` : `৳${c.discount_value} ছাড়`}
+                  {c.scope === "instructor" && c.instructor_id ? ` · ইন্সট্রাক্টর: ${instructorNameMap[c.instructor_id] || "—"}` : " · গ্লোবাল"}
+                  {c.applies_to_courses ? (c.all_courses ? " · সব কোর্স" : " · নির্বাচিত কোর্স") : ""}
+                  {c.applies_to_books ? (c.all_books ? " · সব বই" : " · নির্বাচিত বই") : ""}
                   {c.max_uses ? ` · সীমা: ${c.used_count || 0}/${c.max_uses}` : ` · ব্যবহার: ${c.used_count || 0}`}
-                  {c.per_user_limit && ` · প্রতি ইউজার: ${c.per_user_limit} বার`}
-                  {c.expires_at && ` · মেয়াদ: ${new Date(c.expires_at).toLocaleDateString("bn-BD")}`}
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {c.is_active ? (
-                  <Badge className="bg-green-100 text-green-700">✅ অ্যাক্টিভ</Badge>
-                ) : (
-                  <Badge className="bg-gray-100 text-gray-600">🔒 নিষ্ক্রিয়</Badge>
+                {c.rejection_reason && (
+                  <p className="mt-1 text-xs text-red-600">কারণ: {c.rejection_reason}</p>
                 )}
-                <Button variant="outline" size="sm" onClick={() => setEditing(c)}><Edit className="h-4 w-4" /></Button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {statusBadge(c)}
+                {c.approval_status === "pending" && (
+                  <>
+                    <Button variant="outline" size="sm" className="text-green-700" onClick={() => approve(c.id)}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-red-700" onClick={() => reject(c.id)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+                <Button variant="outline" size="sm" onClick={() => openEdit(c)}><Edit className="h-4 w-4" /></Button>
                 <Button variant="outline" size="sm" onClick={() => del(c.id)}><Trash2 className="h-4 w-4" /></Button>
               </div>
             </CardContent>
           </Card>
         ))}
-        {coupons.length === 0 && <p className="py-10 text-center text-muted-foreground">কোনো কুপন যোগ করা হয়নি।</p>}
+        {filteredCoupons.length === 0 && (
+          <p className="py-10 text-center text-muted-foreground">কোনো কুপন নেই।</p>
+        )}
       </div>
     </div>
   );

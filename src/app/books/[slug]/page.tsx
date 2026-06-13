@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toBn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { validateCoupon } from "@/lib/coupon-validation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useSiteSettings } from "@/hooks/use-site-settings";
@@ -42,40 +43,23 @@ export default function BookDetailsPage() {
   const finalPrice = Math.max(originalPrice - discount, 0);
 
   const applyCoupon = async () => {
-    if (!couponCode.trim()) return;
+    if (!couponCode.trim() || !book?.id) return;
     setCouponError("");
-    const { data } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("code", couponCode.trim().toUpperCase())
-      .eq("is_active", true)
-      .maybeSingle();
-    if (!data) { setCouponError("এই কুপন কোড বৈধ নয়।"); setCouponApplied(null); return; }
-    if (data.expires_at && new Date(data.expires_at) < new Date()) { setCouponError("কুপনের মেয়াদ শেষ।"); setCouponApplied(null); return; }
-    if (data.max_uses && data.used_count >= data.max_uses) { setCouponError("কুপনের সীমা শেষ।"); setCouponApplied(null); return; }
-    // Check per-user limit
-    if (data.per_user_limit) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { count: courseUses } = await supabase
-          .from("orders")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("coupon_code", data.code);
-        const { count: bookUses } = await supabase
-          .from("book_orders")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("coupon_code", data.code);
-        const totalUserUses = (courseUses ?? 0) + (bookUses ?? 0);
-        if (totalUserUses >= data.per_user_limit) {
-          setCouponError("আপনি এই কুপনটি সর্বোচ্চ সীমায় ব্যবহার করেছেন।");
-          setCouponApplied(null);
-          return;
-        }
-      }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const result = await validateCoupon(supabase, couponCode, {
+      type: "book",
+      itemId: book.id,
+      userId: user?.id,
+    });
+
+    if (!result.ok) {
+      setCouponError(result.error);
+      setCouponApplied(null);
+      return;
     }
-    setCouponApplied(data);
+
+    setCouponApplied(result.coupon);
   };
 
   useEffect(() => {

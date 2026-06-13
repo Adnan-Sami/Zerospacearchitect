@@ -117,6 +117,7 @@ export default function AdminLayout({
         { count: unseenProfiles },
         { count: unseenPublicInstructors },
         { count: newSeminarRegs },
+        { count: pendingCoupons },
       ] = await Promise.all([
         supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -127,6 +128,7 @@ export default function AdminLayout({
         supabase.from("instructor_profile_details").select("*", { count: "exact", head: true }).eq("is_seen", false),
         supabase.from("public_instructors").select("*", { count: "exact", head: true }).eq("is_seen", false),
         supabase.from("seminar_registrations").select("*", { count: "exact", head: true }).gte("created_at", localStorage.getItem("seminar_last_seen") || "2000-01-01"),
+        supabase.from("coupons").select("*", { count: "exact", head: true }).eq("approval_status", "pending"),
       ]);
       setBadges({
         "/admin/orders": (pendingOrders ?? 0) + (pendingBookOrders ?? 0),
@@ -135,6 +137,7 @@ export default function AdminLayout({
         "/admin/instructor-profiles": unseenProfiles ?? 0,
         "/admin/public-instructors": unseenPublicInstructors ?? 0,
         "/admin/seminars": newSeminarRegs ?? 0,
+        "/admin/coupons": pendingCoupons ?? 0,
       });
     };
 
