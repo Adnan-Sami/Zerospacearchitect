@@ -4,16 +4,31 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, LogOut, BookOpen, User, LayoutDashboard, Home } from "lucide-react";
+import {
+  Menu,
+  X,
+  LogOut,
+  BookOpen,
+  User,
+  LayoutDashboard,
+  Home,
+  Headphones,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { NotificationBell } from "@/components/NotificationBell";
 
 const navLinks = [
-  { href: "/dashboard", label: "ড্যাশবোর্ড", icon: LayoutDashboard, exact: true },
+  {
+    href: "/dashboard",
+    label: "ড্যাশবোর্ড",
+    icon: LayoutDashboard,
+    exact: true,
+  },
   { href: "/my-courses", label: "আমার কোর্স", icon: BookOpen },
   { href: "/profile", label: "প্রোফাইল", icon: User },
+  { href: "/dashboard/support", label: "সাপোর্ট", icon: Headphones },
 ];
 
 /**
@@ -30,9 +45,14 @@ export function DashboardNavbar() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle().then(({ data }) => {
-          setFullName(data?.full_name || "");
-        });
+        supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            setFullName(data?.full_name || "");
+          });
       }
     });
   }, []);
@@ -55,7 +75,11 @@ export function DashboardNavbar() {
             className="flex h-9 w-9 items-center justify-center rounded-lg border md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
           <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
             <Image
@@ -66,7 +90,9 @@ export function DashboardNavbar() {
               className="h-9 w-auto"
               priority
             />
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Student</span>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+              Student
+            </span>
           </Link>
         </div>
 
@@ -74,7 +100,9 @@ export function DashboardNavbar() {
           <NotificationBell />
           <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 md:flex">
             <User className="h-4 w-4 text-slate-500" />
-            <span className="max-w-40 truncate">{fullName || "শিক্ষার্থী"}</span>
+            <span className="max-w-40 truncate">
+              {fullName || "শিক্ষার্থী"}
+            </span>
           </div>
           <Button
             variant="outline"
@@ -89,8 +117,14 @@ export function DashboardNavbar() {
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <div className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="max-h-[70vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        >
+          <div
+            className="max-h-[70vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <nav className="flex flex-col gap-1 pt-3">
               {navLinks.map((item) => {
                 const active = isActive(item.href, item.exact);
@@ -99,7 +133,9 @@ export function DashboardNavbar() {
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                      active ? "bg-sky-50 text-sky-700" : "text-slate-700 hover:bg-slate-100"
+                      active
+                        ? "bg-sky-50 text-sky-700"
+                        : "text-slate-700 hover:bg-slate-100"
                     }`}
                     onClick={() => setMobileOpen(false)}
                   >
@@ -108,8 +144,13 @@ export function DashboardNavbar() {
                   </Link>
                 );
               })}
-              <Link href="/" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                <Home className="h-4 w-4" />সাইটে যান
+              <Link
+                href="/"
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                onClick={() => setMobileOpen(false)}
+              >
+                <Home className="h-4 w-4" />
+                সাইটে যান
               </Link>
             </nav>
           </div>
@@ -133,9 +174,14 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle().then(({ data }) => {
-          setFullName(data?.full_name || "");
-        });
+        supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            setFullName(data?.full_name || "");
+          });
       }
     });
   }, []);
@@ -160,9 +206,16 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
               className="flex h-9 w-9 items-center justify-center rounded-lg border md:hidden"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
-            <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/dashboard"
+              className="flex shrink-0 items-center gap-2"
+            >
               <Image
                 src="/logo.png"
                 alt={settings.site_name || "ZeroSpace Architect"}
@@ -171,7 +224,9 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
                 className="h-9 w-auto"
                 priority
               />
-              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Student</span>
+              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                Student
+              </span>
             </Link>
           </div>
 
@@ -179,7 +234,9 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
             <NotificationBell />
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 md:flex">
               <User className="h-4 w-4 text-slate-500" />
-              <span className="max-w-40 truncate">{fullName || "শিক্ষার্থী"}</span>
+              <span className="max-w-40 truncate">
+                {fullName || "শিক্ষার্থী"}
+              </span>
             </div>
             <Button
               variant="outline"
@@ -194,8 +251,14 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <div className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden" onClick={() => setMobileOpen(false)}>
-            <div className="max-h-[70vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden"
+            onClick={() => setMobileOpen(false)}
+          >
+            <div
+              className="max-h-[70vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
               <nav className="flex flex-col gap-1 pt-3">
                 {navLinks.map((item) => {
                   const active = isActive(item.href, item.exact);
@@ -204,7 +267,9 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
                       key={item.href}
                       href={item.href}
                       className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                        active ? "bg-sky-50 text-sky-700" : "text-slate-700 hover:bg-slate-100"
+                        active
+                          ? "bg-sky-50 text-sky-700"
+                          : "text-slate-700 hover:bg-slate-100"
                       }`}
                       onClick={() => setMobileOpen(false)}
                     >
@@ -213,8 +278,13 @@ export function StudentLayout({ children }: { children: React.ReactNode }) {
                     </Link>
                   );
                 })}
-                <Link href="/" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => setMobileOpen(false)}>
-                  <Home className="h-4 w-4" />সাইটে যান
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Home className="h-4 w-4" />
+                  সাইটে যান
                 </Link>
               </nav>
             </div>

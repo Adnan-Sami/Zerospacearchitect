@@ -30,9 +30,19 @@ const navSections = [
   {
     title: "প্রধান",
     items: [
-      { href: "/admin", label: "ড্যাশবোর্ড", icon: LayoutDashboard, exact: true },
+      {
+        href: "/admin",
+        label: "ড্যাশবোর্ড",
+        icon: LayoutDashboard,
+        exact: true,
+      },
       { href: "/admin/orders", label: "অর্ডার", icon: ShoppingCart },
-      { href: "/admin/bookings", label: "কনসালটেন্সি বুকিং", icon: CalendarCheck },
+      {
+        href: "/admin/bookings",
+        label: "কনসালটেন্সি বুকিং",
+        icon: CalendarCheck,
+      },
+      { href: "/admin/support", label: "সাপোর্ট টিকেট", icon: MessageSquare },
       { href: "/admin/students", label: "শিক্ষার্থী", icon: Users },
     ],
   },
@@ -42,18 +52,34 @@ const navSections = [
       { href: "/admin/courses", label: "কোর্স", icon: BookOpen },
       { href: "/admin/categories", label: "ক্যাটেগরি", icon: BookOpen },
       { href: "/admin/books", label: "বই", icon: BookOpen },
-      { href: "/admin/public-instructors", label: "প্রশিক্ষক প্রোফাইল", icon: Users },
+      {
+        href: "/admin/public-instructors",
+        label: "প্রশিক্ষক প্রোফাইল",
+        icon: Users,
+      },
       { href: "/admin/banners", label: "প্রোমো ব্যানার", icon: Megaphone },
       { href: "/admin/seminars", label: "সেমিনার", icon: BookOpen },
-      { href: "/admin/services", label: "ডিজাইন ও কনসালটেন্সি", icon: BookOpen },
+      {
+        href: "/admin/services",
+        label: "ডিজাইন ও কনসালটেন্সি",
+        icon: BookOpen,
+      },
     ],
   },
   {
     title: "ইন্সট্রাক্টর",
     items: [
-      { href: "/admin/instructor-courses", label: "কোর্স রিভিউ", icon: BookOpen },
+      {
+        href: "/admin/instructor-courses",
+        label: "কোর্স রিভিউ",
+        icon: BookOpen,
+      },
       { href: "/admin/instructors", label: "তালিকা ও আয়", icon: Users },
-      { href: "/admin/instructor-profiles", label: "প্রোফাইল সাবমিশন", icon: Users },
+      {
+        href: "/admin/instructor-profiles",
+        label: "প্রোফাইল সাবমিশন",
+        icon: Users,
+      },
     ],
   },
   {
@@ -85,7 +111,10 @@ export default function AdminLayout({
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
-    if (isLoginPage) { setIsAdmin(true); return; }
+    if (isLoginPage) {
+      setIsAdmin(true);
+      return;
+    }
 
     const checkAdmin = async (session: any) => {
       if (!session) {
@@ -93,7 +122,11 @@ export default function AdminLayout({
         return;
       }
       setUserName(session.user.email ?? "অ্যাডমিন");
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
       if (profile?.full_name) setUserName(profile.full_name);
       const { data } = await supabase
         .from("user_roles")
@@ -118,26 +151,70 @@ export default function AdminLayout({
         { count: unseenPublicInstructors },
         { count: newSeminarRegs },
         { count: pendingCoupons },
+        { count: pendingSupport },
       ] = await Promise.all([
-        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("book_orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("instructor_courses").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("service_requests").select("*", { count: "exact", head: true }).eq("service_type", "instructor_application").eq("status", "new"),
-        supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").eq("status", "new"),
-        supabase.from("service_requests").select("*", { count: "exact", head: true }).ilike("service_type", "%কনসালটেন্সি%").is("status", null),
-        supabase.from("instructor_profile_details").select("*", { count: "exact", head: true }).eq("is_seen", false),
-        supabase.from("public_instructors").select("*", { count: "exact", head: true }).eq("is_seen", false),
-        supabase.from("seminar_registrations").select("*", { count: "exact", head: true }).gte("created_at", localStorage.getItem("seminar_last_seen") || "2000-01-01"),
-        supabase.from("coupons").select("*", { count: "exact", head: true }).eq("approval_status", "pending"),
+        supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("book_orders")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("instructor_courses")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("service_requests")
+          .select("*", { count: "exact", head: true })
+          .eq("service_type", "instructor_application")
+          .eq("status", "new"),
+        supabase
+          .from("service_requests")
+          .select("*", { count: "exact", head: true })
+          .ilike("service_type", "%কনসালটেন্সি%")
+          .eq("status", "new"),
+        supabase
+          .from("service_requests")
+          .select("*", { count: "exact", head: true })
+          .ilike("service_type", "%কনসালটেন্সি%")
+          .is("status", null),
+        supabase
+          .from("instructor_profile_details")
+          .select("*", { count: "exact", head: true })
+          .eq("is_seen", false),
+        supabase
+          .from("public_instructors")
+          .select("*", { count: "exact", head: true })
+          .eq("is_seen", false),
+        supabase
+          .from("seminar_registrations")
+          .select("*", { count: "exact", head: true })
+          .gte(
+            "created_at",
+            localStorage.getItem("seminar_last_seen") || "2000-01-01",
+          ),
+        supabase
+          .from("coupons")
+          .select("*", { count: "exact", head: true })
+          .eq("approval_status", "pending"),
+        supabase
+          .from("support_tickets")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "open"),
       ]);
       setBadges({
         "/admin/orders": (pendingOrders ?? 0) + (pendingBookOrders ?? 0),
-        "/admin/instructor-courses": (pendingInstructorCourses ?? 0) + (pendingInstructorApps ?? 0),
-        "/admin/bookings": (pendingBookingsNew ?? 0) + (pendingBookingsNull ?? 0),
+        "/admin/instructor-courses":
+          (pendingInstructorCourses ?? 0) + (pendingInstructorApps ?? 0),
+        "/admin/bookings":
+          (pendingBookingsNew ?? 0) + (pendingBookingsNull ?? 0),
         "/admin/instructor-profiles": unseenProfiles ?? 0,
         "/admin/public-instructors": unseenPublicInstructors ?? 0,
         "/admin/seminars": newSeminarRegs ?? 0,
         "/admin/coupons": pendingCoupons ?? 0,
+        "/admin/support": pendingSupport ?? 0,
       });
     };
 
@@ -147,7 +224,9 @@ export default function AdminLayout({
     });
 
     // Also listen for auth changes (handles post-login redirect)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session && isAdmin === null) {
         checkAdmin(session);
       }
@@ -179,7 +258,11 @@ export default function AdminLayout({
               className="flex h-9 w-9 items-center justify-center rounded-lg border md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <MenuIcon className="h-5 w-5" />
+              )}
             </button>
             <Link href="/admin" className="flex shrink-0 items-center gap-2">
               <Image
@@ -190,7 +273,9 @@ export default function AdminLayout({
                 className="h-10 w-auto"
                 priority
               />
-              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Admin</span>
+              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                Admin
+              </span>
             </Link>
           </div>
 
@@ -198,7 +283,9 @@ export default function AdminLayout({
             <NotificationBell />
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 md:flex">
               <User className="h-4 w-4 text-slate-500" />
-              <span className="max-w-60 truncate">লগইন: {userName || "অ্যাডমিন"}</span>
+              <span className="max-w-60 truncate">
+                লগইন: {userName || "অ্যাডমিন"}
+              </span>
             </div>
             <Button
               type="button"
@@ -221,12 +308,20 @@ export default function AdminLayout({
 
       {/* Mobile navigation overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden" onClick={() => setMobileMenuOpen(false)}>
-          <div className="max-h-[80vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 top-[57px] z-40 bg-black/20 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            className="max-h-[80vh] overflow-y-auto border-b bg-white px-4 pb-4 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <nav className="space-y-1 pt-2">
               {navSections.map((section) => (
                 <div key={section.title}>
-                  <p className="mb-1 mt-3 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</p>
+                  <p className="mb-1 mt-3 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {section.title}
+                  </p>
                   {section.items.map((item) => {
                     const isActive = item.exact
                       ? pathname === item.href
@@ -237,7 +332,9 @@ export default function AdminLayout({
                         key={item.href}
                         href={item.href}
                         className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
-                          exactActive || (!item.exact && isActive) ? "bg-primary/10 text-primary" : ""
+                          exactActive || (!item.exact && isActive)
+                            ? "bg-primary/10 text-primary"
+                            : ""
                         }`}
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -263,7 +360,9 @@ export default function AdminLayout({
           <nav className="space-y-4 p-4">
             {navSections.map((section) => (
               <div key={section.title}>
-                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</p>
+                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {section.title}
+                </p>
                 <div className="space-y-0.5">
                   {section.items.map((item) => {
                     const isActive = item.exact
