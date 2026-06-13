@@ -25,22 +25,44 @@ export default function InstructorCouponsPage() {
   const [userId, setUserId] = useState<string>("");
 
   const load = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return;
     setUserId(session.user.id);
 
-    const [{ data: couponData }, { data: instCourses }, { data: bookData }] = await Promise.all([
-      supabase.from("coupons").select("*").eq("instructor_id", session.user.id).order("created_at", { ascending: false }),
-      supabase.from("instructor_courses").select("course_id, course_title").eq("instructor_id", session.user.id).eq("status", "approved"),
-      supabase.from("books").select("id, title").eq("is_published", true).order("title"),
-    ]);
+    const [{ data: couponData }, { data: instCourses }, { data: bookData }] =
+      await Promise.all([
+        supabase
+          .from("coupons")
+          .select("*")
+          .eq("instructor_id", session.user.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("instructor_courses")
+          .select("course_id, course_title")
+          .eq("instructor_id", session.user.id)
+          .eq("status", "approved"),
+        supabase
+          .from("books")
+          .select("id, title")
+          .eq("is_published", true)
+          .order("title"),
+      ]);
 
     setCoupons(couponData ?? []);
-    setCourses((instCourses ?? []).map((c: any) => ({ id: c.course_id, label: c.course_title })));
+    setCourses(
+      (instCourses ?? []).map((c: any) => ({
+        id: c.course_id,
+        label: c.course_title,
+      })),
+    );
     setBooks((bookData ?? []).map((b: any) => ({ id: b.id, label: b.title })));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const canEdit = useMemo(() => {
     if (!editing) return true;
@@ -72,8 +94,14 @@ export default function InstructorCouponsPage() {
     });
 
     const [{ data: courseLinks }, { data: bookLinks }] = await Promise.all([
-      supabase.from("coupon_allowed_courses").select("course_id").eq("coupon_id", coupon.id),
-      supabase.from("coupon_allowed_books").select("book_id").eq("coupon_id", coupon.id),
+      supabase
+        .from("coupon_allowed_courses")
+        .select("course_id")
+        .eq("coupon_id", coupon.id),
+      supabase
+        .from("coupon_allowed_books")
+        .select("book_id")
+        .eq("coupon_id", coupon.id),
     ]);
     setSelectedCourseIds((courseLinks ?? []).map((c: any) => c.course_id));
     setSelectedBookIds((bookLinks ?? []).map((b: any) => b.book_id));
@@ -83,9 +111,16 @@ export default function InstructorCouponsPage() {
     if (!editing) return;
     try {
       await saveCouponRequest(
-        { ...editing, scope: "instructor", instructor_id: userId },
+        {
+          ...editing,
+          scope: "instructor",
+          instructor_id: userId,
+          applies_to_courses: true,
+          applies_to_books: false,
+          all_books: false,
+        },
         selectedCourseIds,
-        selectedBookIds
+        [],
       );
       toast.success("অ্যাডমিন অনুমোদনের জন্য জমা দেওয়া হয়েছে");
       setEditing(null);
@@ -114,31 +149,57 @@ export default function InstructorCouponsPage() {
 
   const statusBadge = (coupon: any) => {
     if (coupon.approval_status === "pending") {
-      return <Badge className="bg-amber-100 text-amber-800">অ্যাডমিন অনুমোদন অপেক্ষমান</Badge>;
+      return (
+        <Badge className="max-w-full whitespace-normal wrap-break-word bg-amber-100 text-amber-800 text-center leading-relaxed">
+          অ্যাডমিন অনুমোদন অপেক্ষমান
+        </Badge>
+      );
     }
     if (coupon.approval_status === "rejected") {
-      return <Badge className="bg-red-100 text-red-700">প্রত্যাখ্যাত</Badge>;
+      return (
+        <Badge className="max-w-full whitespace-normal wrap-break-word bg-red-100 text-red-700">
+          প্রত্যাখ্যাত
+        </Badge>
+      );
     }
     return coupon.is_active ? (
-      <Badge className="bg-green-100 text-green-700">অ্যাক্টিভ</Badge>
+      <Badge className="max-w-full whitespace-normal wrap-break-word bg-green-100 text-green-700">
+        অ্যাক্টিভ
+      </Badge>
     ) : (
-      <Badge className="bg-gray-100 text-gray-600">নিষ্ক্রিয়</Badge>
+      <Badge className="max-w-full whitespace-normal wrap-break-word bg-gray-100 text-gray-600">
+        নিষ্ক্রিয়
+      </Badge>
     );
   };
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">আমার কুপন</h1>
-          <p className="text-sm text-muted-foreground">কুপন তৈরি করুন — অ্যাডমিন অনুমোদনের পর সক্রিয় হবে</p>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold sm:text-2xl">আমার কুপন</h1>
+          <p className="text-sm text-muted-foreground">
+            কুপন তৈরি করুন — অ্যাডমিন অনুমোদনের পর সক্রিয় হবে
+          </p>
         </div>
-        <Button onClick={() => {
-          setEditing(emptyCouponForm({ scope: "instructor", instructor_id: userId, applies_to_courses: true, applies_to_books: false, all_books: false }));
-          setSelectedCourseIds([]);
-          setSelectedBookIds([]);
-        }}>
-          <Plus className="mr-1 h-4 w-4" />নতুন কুপন
+        <Button
+          className="w-full sm:w-auto"
+          onClick={() => {
+            setEditing(
+              emptyCouponForm({
+                scope: "instructor",
+                instructor_id: userId,
+                applies_to_courses: true,
+                applies_to_books: false,
+                all_books: false,
+              }),
+            );
+            setSelectedCourseIds([]);
+            setSelectedBookIds([]);
+          }}
+        >
+          <Plus className="mr-1 h-4 w-4" />
+          নতুন কুপন
         </Button>
       </div>
 
@@ -154,7 +215,11 @@ export default function InstructorCouponsPage() {
           selectedBookIds={selectedBookIds}
           setSelectedBookIds={setSelectedBookIds}
           onSave={save}
-          onCancel={() => { setEditing(null); setSelectedCourseIds([]); setSelectedBookIds([]); }}
+          onCancel={() => {
+            setEditing(null);
+            setSelectedCourseIds([]);
+            setSelectedBookIds([]);
+          }}
           mode="instructor"
           readOnly={!canEdit}
         />
@@ -162,34 +227,68 @@ export default function InstructorCouponsPage() {
 
       <div className="space-y-3">
         {coupons.map((c) => (
-          <Card key={c.id}>
-            <CardContent className="flex flex-wrap items-center gap-3 p-4">
-              <div className="min-w-0 flex-1">
-                <p className="font-mono text-lg font-bold">{c.code}</p>
-                <p className="text-xs text-muted-foreground">
-                  {c.discount_type === "percent" ? `${c.discount_value}% ছাড়` : `৳${c.discount_value} ছাড়`}
-                  {c.applies_to_courses ? (c.all_courses ? " · সব কোর্স" : " · নির্বাচিত কোর্স") : ""}
-                  {c.applies_to_books ? (c.all_books ? " · সব বই" : " · নির্বাচিত বই") : ""}
-                  {c.max_uses ? ` · সীমা: ${c.used_count || 0}/${c.max_uses}` : ` · ব্যবহার: ${c.used_count || 0}`}
+          <Card key={c.id} className="overflow-hidden">
+            <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="break-all font-mono text-base font-bold sm:text-lg">
+                  {c.code}
+                </p>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {c.discount_type === "percent"
+                    ? `${c.discount_value}% ছাড়`
+                    : `৳${c.discount_value} ছাড়`}
+                  {c.applies_to_courses
+                    ? c.all_courses
+                      ? " · সব কোর্স"
+                      : " · নির্বাচিত কোর্স"
+                    : ""}
+                  {c.applies_to_books
+                    ? c.all_books
+                      ? " · সব বই"
+                      : " · নির্বাচিত বই"
+                    : ""}
+                  {c.max_uses
+                    ? ` · সীমা: ${c.used_count || 0}/${c.max_uses}`
+                    : ` · ব্যবহার: ${c.used_count || 0}`}
                 </p>
                 {c.rejection_reason && (
-                  <p className="mt-1 text-xs text-red-600">কারণ: {c.rejection_reason}</p>
+                  <p className="mt-1 text-xs text-red-600">
+                    কারণ: {c.rejection_reason}
+                  </p>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {statusBadge(c)}
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+                <div className="min-w-0">{statusBadge(c)}</div>
                 {c.approval_status !== "approved" && (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => openEdit(c)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="outline" size="sm" onClick={() => del(c.id, c.approval_status)}><Trash2 className="h-4 w-4" /></Button>
-                  </>
+                  <div className="flex gap-2 sm:justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 flex-1 sm:h-8 sm:flex-none"
+                      onClick={() => openEdit(c)}
+                      aria-label="কুপন এডিট করুন"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 flex-1 sm:h-8 sm:flex-none"
+                      onClick={() => del(c.id, c.approval_status)}
+                      aria-label="কুপন ডিলিট করুন"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
         ))}
         {coupons.length === 0 && (
-          <p className="py-10 text-center text-muted-foreground">কোনো কুপন নেই।</p>
+          <p className="py-10 text-center text-muted-foreground">
+            কোনো কুপন নেই।
+          </p>
         )}
       </div>
     </div>

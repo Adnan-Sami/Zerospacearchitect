@@ -3,24 +3,36 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export async function POST(request: Request) {
   try {
-    const { title, message, type, link, userId, userTitle, userMessage, userLink } = await request.json();
+    const {
+      title,
+      message,
+      type,
+      link,
+      userId,
+      userTitle,
+      userMessage,
+      userLink,
+    } = await request.json();
 
-    // Notify all admins
-    const { data: admins } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin");
+    // Notify all admins only when an admin-facing notification is provided.
+    // Some callers use this route only to notify a specific user/instructor.
+    if (title?.trim() && message?.trim()) {
+      const { data: admins } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
 
-    if (admins?.length) {
-      await supabaseAdmin.from("notifications").insert(
-        admins.map((a: any) => ({
-          user_id: a.user_id,
-          title,
-          message,
-          type: type || "info",
-          link: link || "/admin/orders",
-        }))
-      );
+      if (admins?.length) {
+        await supabaseAdmin.from("notifications").insert(
+          admins.map((a: any) => ({
+            user_id: a.user_id,
+            title,
+            message,
+            type: type || "info",
+            link: link || "/admin/orders",
+          })),
+        );
+      }
     }
 
     // Notify the user if provided

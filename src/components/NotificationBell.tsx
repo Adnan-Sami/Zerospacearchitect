@@ -40,9 +40,20 @@ function timeAgo(dateStr: string): string {
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
   const isInstructor = pathname.startsWith("/instructor");
+
+  const isCurrentPortalNotification = useCallback(
+    (notification: Notification) => {
+      const link = notification.link || "";
+      if (isAdmin) return link.startsWith("/admin");
+      if (isInstructor) return link.startsWith("/instructor");
+      return !link.startsWith("/admin") && !link.startsWith("/instructor");
+    },
+    [isAdmin, isInstructor],
+  );
 
   const fetchNotifications = useCallback(async () => {
     const {
@@ -55,28 +66,19 @@ export function NotificationBell() {
       .select("*")
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(50);
 
     if (data) {
-      // Filter notifications by current portal
-      const filtered = (data as Notification[]).filter((n) => {
-        if (!n.link) return true; // No link = show everywhere
-        if (isAdmin) {
-          return n.link.startsWith("/admin");
-        } else if (isInstructor) {
-          return n.link.startsWith("/instructor");
-        } else {
-          // Student portal: show only /dashboard or /learn links
-          return !n.link.startsWith("/admin") && !n.link.startsWith("/instructor");
-        }
-      });
+      const filtered = (data as Notification[]).filter(
+        isCurrentPortalNotification,
+      );
       setNotifications(filtered);
       const count = filtered.filter((n) => !n.is_read).length;
       setUnreadCount(count);
       const baseTitle = "Zero Space Architect";
       document.title = count > 0 ? `(${count}) ${baseTitle}` : baseTitle;
     }
-  }, [isAdmin, isInstructor]);
+  }, [isCurrentPortalNotification]);
 
   useEffect(() => {
     fetchNotifications();
@@ -84,7 +86,10 @@ export function NotificationBell() {
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
-  const markAllRead = async () => {
+  const markVisibleRead = useCallback(async () => {
+    const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
+    if (unreadIds.length === 0) return;
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -94,16 +99,33 @@ export function NotificationBell() {
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", session.user.id)
-      .eq("is_read", false);
+      .in("id", unreadIds);
 
+    setNotifications((items) => items.map((n) => ({ ...n, is_read: true })));
+    setUnreadCount(0);
+    document.title = "Zero Space Architect";
+  }, [notifications]);
+
+  const markAllRead = async () => {
+    await markVisibleRead();
     fetchNotifications();
   };
 
+  useEffect(() => {
+    if (open) void markVisibleRead();
+  }, [open, markVisibleRead]);
+
   const handleClick = async (notif: Notification) => {
     if (!notif.is_read) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
       await supabase
         .from("notifications")
         .update({ is_read: true })
+        .eq("user_id", session.user.id)
         .eq("id", notif.id);
       fetchNotifications();
     }
@@ -113,7 +135,13 @@ export function NotificationBell() {
   };
 
   return (
-    <Popover>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (nextOpen) void markVisibleRead();
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
