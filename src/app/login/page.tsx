@@ -8,10 +8,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BdPhoneInput, isValidBdLocalPhone } from "@/components/BdPhoneInput";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidPhone, phoneToEmail } from "@/lib/phone-auth";
+import { phoneToEmail } from "@/lib/phone-auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,7 +21,10 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [switchDialog, setSwitchDialog] = useState<{ email: string; role: string } | null>(null);
+  const [switchDialog, setSwitchDialog] = useState<{
+    email: string;
+    role: string;
+  } | null>(null);
 
   // Check current session on mount — if logged in as different role, warn before allowing re-login
   useEffect(() => {
@@ -33,9 +37,15 @@ export default function LoginPage() {
         .then(({ data: roles }) => {
           const userRoles = (roles ?? []).map((r: any) => r.role);
           if (userRoles.includes("admin")) {
-            setSwitchDialog({ email: session.user.email ?? "", role: "অ্যাডমিন" });
+            setSwitchDialog({
+              email: session.user.email ?? "",
+              role: "অ্যাডমিন",
+            });
           } else if (userRoles.includes("instructor")) {
-            setSwitchDialog({ email: session.user.email ?? "", role: "ইন্সট্রাক্টর" });
+            setSwitchDialog({
+              email: session.user.email ?? "",
+              role: "ইন্সট্রাক্টর",
+            });
           }
         });
     });
@@ -45,18 +55,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    const trimmedLoginId = loginId.trim();
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedLoginId);
-    const isPhone = isValidPhone(trimmedLoginId);
-
-    if (!isPhone && !isEmail) {
-      setError("সঠিক ফোন নম্বর বা ইমেইল দিন।");
+    if (!isValidBdLocalPhone(loginId)) {
+      setError("+88 এর পরে ১১ ডিজিটের সঠিক বাংলাদেশি ফোন নম্বর দিন।");
       return;
     }
 
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: isEmail ? trimmedLoginId : phoneToEmail(trimmedLoginId),
+      email: phoneToEmail(loginId),
       password,
     });
     if (error) {
@@ -71,7 +77,9 @@ export default function LoginPage() {
       .maybeSingle();
     if (profile?.is_banned) {
       await supabase.auth.signOut();
-      setError("আপনার অ্যাকাউন্ট ব্যান করা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।");
+      setError(
+        "আপনার অ্যাকাউন্ট ব্যান করা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।",
+      );
       setLoading(false);
       return;
     }
@@ -85,13 +93,17 @@ export default function LoginPage() {
     const userRoles = (roles ?? []).map((r: any) => r.role);
     if (userRoles.includes("admin")) {
       await supabase.auth.signOut();
-      setError("অ্যাডমিন অ্যাকাউন্ট এখানে লগ-ইন করতে পারবে না। অ্যাডমিন লগ-ইন পেজ ব্যবহার করুন।");
+      setError(
+        "অ্যাডমিন অ্যাকাউন্ট এখানে লগ-ইন করতে পারবে না। অ্যাডমিন লগ-ইন পেজ ব্যবহার করুন।",
+      );
       setLoading(false);
       return;
     }
     if (userRoles.includes("instructor")) {
       await supabase.auth.signOut();
-      setError("ইন্সট্রাক্টর অ্যাকাউন্ট এখানে লগ-ইন করতে পারবে না। ইন্সট্রাক্টর লগ-ইন পেজ ব্যবহার করুন।");
+      setError(
+        "ইন্সট্রাক্টর অ্যাকাউন্ট এখানে লগ-ইন করতে পারবে না। ইন্সট্রাক্টর লগ-ইন পেজ ব্যবহার করুন।",
+      );
       setLoading(false);
       return;
     }
@@ -108,8 +120,12 @@ export default function LoginPage() {
           <div className="grid md:grid-cols-2">
             {/* Left - Form */}
             <div className="p-4 sm:p-8 md:p-10">
-              <h1 className="mb-2 text-3xl font-black text-gray-900">স্বাগতম!</h1>
-              <p className="mb-8 text-sm text-gray-500">আপনার অ্যাকাউন্টে লগ-ইন করুন</p>
+              <h1 className="mb-2 text-3xl font-black text-gray-900">
+                স্বাগতম!
+              </h1>
+              <p className="mb-8 text-sm text-gray-500">
+                আপনার অ্যাকাউন্টে লগ-ইন করুন
+              </p>
 
               {switchDialog && (
                 <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs">
@@ -120,19 +136,35 @@ export default function LoginPage() {
                     </span>
                   </p>
                   <p className="mt-1 leading-snug text-amber-600">
-                    একই ব্রাউজারে ভিন্ন {switchDialog.role} অ্যাকাউন্টে লগ-ইন করলে বর্তমান সেশন বন্ধ হয়ে যাবে।
+                    একই ব্রাউজারে ভিন্ন {switchDialog.role} অ্যাকাউন্টে লগ-ইন
+                    করলে বর্তমান সেশন বন্ধ হয়ে যাবে।
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Button type="button" variant="outline" size="sm" className="h-7 whitespace-normal border-amber-300 px-2.5 py-1 text-xs leading-snug text-amber-800 hover:bg-amber-100" onClick={() => {
-                      const target = switchDialog.role === "অ্যাডমিন" ? "/admin/login" : "/instructor/login";
-                      router.push(target);
-                    }}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 whitespace-normal border-amber-300 px-2.5 py-1 text-xs leading-snug text-amber-800 hover:bg-amber-100"
+                      onClick={() => {
+                        const target =
+                          switchDialog.role === "অ্যাডমিন"
+                            ? "/admin/login"
+                            : "/instructor/login";
+                        router.push(target);
+                      }}
+                    >
                       {switchDialog.role} প্যানেলে যান
                     </Button>
-                    <Button type="button" variant="outline" size="sm" className="h-7 whitespace-normal border-amber-300 px-2.5 py-1 text-xs leading-snug text-amber-800 hover:bg-amber-100" onClick={async () => {
-                      await supabase.auth.signOut();
-                      setSwitchDialog(null);
-                    }}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 whitespace-normal border-amber-300 px-2.5 py-1 text-xs leading-snug text-amber-800 hover:bg-amber-100"
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        setSwitchDialog(null);
+                      }}
+                    >
                       সেশন রিসেট করে নতুন লগ-ইন করুন
                     </Button>
                   </div>
@@ -141,21 +173,20 @@ export default function LoginPage() {
 
               <form onSubmit={handleLogin} className="space-y-5">
                 {error && (
-                  <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>
+                  <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                    {error}
+                  </p>
                 )}
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">ফোন নম্বর</Label>
-                  <Input
-                    type="text"
-                    placeholder="০১XXXXXXXXX"
-                    value={loginId}
-                    onChange={(e) => setLoginId(e.target.value)}
-                    required
-                    className="mt-1.5 h-12 rounded-lg border-gray-300 bg-gray-50"
-                  />
+                  <Label className="text-sm font-medium text-gray-700">
+                    ফোন নম্বর
+                  </Label>
+                  <BdPhoneInput value={loginId} onChange={setLoginId} />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">পাসওয়ার্ড</Label>
+                  <Label className="text-sm font-medium text-gray-700">
+                    পাসওয়ার্ড
+                  </Label>
                   <div className="relative mt-1.5">
                     <Input
                       type={showPassword ? "text" : "password"}
@@ -170,18 +201,31 @@ export default function LoginPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
                 </div>
-                <Button type="submit" className="h-12 w-full rounded-lg bg-sky-600 text-base font-bold hover:bg-sky-700" disabled={loading}>
+                <Button
+                  type="submit"
+                  className="h-12 w-full rounded-lg bg-sky-600 text-base font-bold hover:bg-sky-700"
+                  disabled={loading}
+                >
                   {loading ? "অপেক্ষা করুন..." : "লগ-ইন"}
                 </Button>
               </form>
 
               <p className="mt-6 text-center text-sm text-gray-500">
                 অ্যাকাউন্ট নেই?{" "}
-                <Link href="/register" className="font-semibold text-sky-600 hover:underline">রেজিস্ট্রেশন করুন</Link>
+                <Link
+                  href="/register"
+                  className="font-semibold text-sky-600 hover:underline"
+                >
+                  রেজিস্ট্রেশন করুন
+                </Link>
               </p>
             </div>
 
