@@ -209,3 +209,13 @@ body {
   font-feature-settings: "tnum", "kern";
   -webkit-font-feature-settings: "tnum", "kern";
 }
+
+
+/* Hide scrollbar for nav */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

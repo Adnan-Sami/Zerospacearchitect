@@ -200,7 +200,7 @@ export function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden min-w-0 flex-1 justify-center md:flex">
-            <div className="flex max-w-full items-center gap-1.5 px-2 py-1.5">
+            <div className="flex max-w-full items-center gap-1 overflow-x-auto px-1 py-1.5 scrollbar-none">
               {navLinks.map((l) => {
                 const active = isActive(l.href);
 
@@ -208,7 +208,7 @@ export function Navbar() {
                   <Link
                     key={l.href}
                     href={l.href}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                    className={`shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition-all duration-200 lg:px-4 ${
                       active
                         ? "bg-sky-600 text-white shadow-[0_8px_18px_rgba(2,132,199,0.3)]"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -240,7 +240,7 @@ export function Navbar() {
           </div>
 
           {/* Auth */}
-          <div className="ml-auto hidden items-center gap-2 md:flex">
+          <div className="ml-auto hidden shrink-0 items-center gap-2 md:flex">
             {user ? (
               <>
                 <Link href={dashboardUrl}>
